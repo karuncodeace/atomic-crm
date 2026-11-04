@@ -506,7 +506,7 @@ begin
     if v_company_id is null then
         insert into public.companies (
             name, sector, city, lead_date, pitch_point, business_description, sales_id,
-            website, phone_number, email, whatsapp_number, priority, address
+            website, phone_number, email, whatsapp_number, priority, address, context_links
         )
         values (
             trim(p_company->>'name'),
@@ -521,7 +521,13 @@ begin
             nullif(trim(p_company->>'email'), ''),
             nullif(trim(p_company->>'whatsapp_number'), ''),
             coalesce(nullif(p_company->>'priority', ''), 'medium'),
-            nullif(trim(p_company->>'address'), '')
+            nullif(trim(p_company->>'address'), ''),
+            case
+                when jsonb_typeof(p_company->'context_links') = 'array'
+                    and jsonb_array_length(p_company->'context_links') > 0
+                then p_company->'context_links'
+                else null
+            end
         )
         returning id into v_company_id;
     else
@@ -538,6 +544,16 @@ begin
             whatsapp_number = case when p_company ? 'whatsapp_number' then nullif(trim(p_company->>'whatsapp_number'), '') else c.whatsapp_number end,
             priority = case when p_company ? 'priority' then coalesce(nullif(p_company->>'priority', ''), 'medium') else c.priority end,
             address = case when p_company ? 'address' then nullif(trim(p_company->>'address'), '') else c.address end,
+            context_links = case
+                when p_company ? 'context_links' then
+                    case
+                        when jsonb_typeof(p_company->'context_links') = 'array'
+                            and jsonb_array_length(p_company->'context_links') > 0
+                        then p_company->'context_links'
+                        else null
+                    end
+                else c.context_links
+            end,
             sales_id = case when p_company ? 'sales_id' then (p_company->>'sales_id')::bigint else c.sales_id end
         where c.id = v_company_id;
 
@@ -919,7 +935,7 @@ begin
             insert into public.companies (
                 name, sector, pitch_point, business_description, website,
                 phone_number, email, whatsapp_number, city, address,
-                lead_date, priority, created_at
+                context_links, lead_date, priority, created_at
             )
             values (
                 v_company_name,
@@ -932,6 +948,12 @@ begin
                 coalesce(nullif(trim(v_row->>'whatsapp_number'), ''), v_phone),
                 nullif(trim(v_row->>'city'), ''),
                 nullif(trim(v_row->>'address'), ''),
+                case
+                    when jsonb_typeof(v_row->'social_media_urls') = 'array'
+                        and jsonb_array_length(v_row->'social_media_urls') > 0
+                    then v_row->'social_media_urls'
+                    else null
+                end,
                 coalesce(nullif(trim(v_row->>'lead_date'), '')::date, current_date),
                 coalesce(nullif(trim(v_row->>'priority'), ''), 'medium'),
                 now()
@@ -947,6 +969,15 @@ begin
                 whatsapp_number = coalesce(c.whatsapp_number, nullif(trim(v_row->>'whatsapp_number'), ''), v_phone),
                 city = coalesce(c.city, nullif(trim(v_row->>'city'), '')),
                 address = coalesce(c.address, nullif(trim(v_row->>'address'), '')),
+                context_links = coalesce(
+                    c.context_links,
+                    case
+                        when jsonb_typeof(v_row->'social_media_urls') = 'array'
+                            and jsonb_array_length(v_row->'social_media_urls') > 0
+                        then v_row->'social_media_urls'
+                        else null
+                    end
+                ),
                 priority = coalesce(c.priority, nullif(trim(v_row->>'priority'), ''), 'medium')
             where c.id = v_company_id;
         end if;

@@ -74,21 +74,28 @@ describe("mapLeadRecord", () => {
         city: "",
         address: "",
         priority: "",
+        social_media_urls: [],
         domain: "acmefoods.in",
       },
     });
   });
 
-  it("maps WhatsApp, business description and calling date aliases", () => {
+  it("maps the final lead CSV headers", () => {
     const result = mapLeadRecord(
       {
-        "Business Name": "Beta Traders",
-        Mobile: "9876543210",
-        WhatsApp: "9988776655",
-        Gmail: "sales@beta.in",
-        "Business Description": "Retail electronics",
-        "Calling Date": "15/03/2026",
-        Priority: "9",
+        "lead date": "15/03/2026",
+        company: "Beta Traders",
+        website: "https://beta.in",
+        vertical: "Electronics",
+        phone: "9876543210",
+        whatsApp_number: "9988776655",
+        email: "sales@beta.in",
+        "Social Media URLs":
+          "https://instagram.com/beta, https://facebook.com/beta",
+        address: "MG Road",
+        place: "Kochi",
+        priority: "high",
+        business_description: "Retail electronics",
       },
       1,
     );
@@ -103,13 +110,17 @@ describe("mapLeadRecord", () => {
         phone: "+919876543210",
         whatsapp_number: "+919988776655",
         email: "sales@beta.in",
-        industry: "",
+        industry: "Electronics",
         pitch: "",
         business_description: "Retail electronics",
         lead_date: "2026-03-15",
-        city: "",
-        address: "",
+        city: "Kochi",
+        address: "MG Road",
         priority: "high",
+        social_media_urls: [
+          "https://instagram.com/beta",
+          "https://facebook.com/beta",
+        ],
         domain: "beta.in",
       },
     });

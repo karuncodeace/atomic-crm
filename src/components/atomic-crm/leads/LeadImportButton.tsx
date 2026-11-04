@@ -30,8 +30,8 @@ import {
   type LeadImportResult,
 } from "./leadImport";
 
-const SAMPLE_CSV = `Business Name,Mobile,WhatsApp,Gmail,Vertical,Business Description,Calling Date,City,Address,Priority
-Acme Foods,9876543210,9876543210,ravi@acmefoods.in,FMCG,Wholesale spices and oils,15/03/2026,Kochi,MG Road,high
+const SAMPLE_CSV = `lead date,company,website,vertical,phone,whatsApp_number,email,Social Media URLs,address,place,priority,business_description
+15/03/2026,Acme Foods,https://acmefoods.in,FMCG,9876543210,9876543210,ravi@acmefoods.in,"https://instagram.com/acmefoods, https://facebook.com/acmefoods",MG Road,Kochi,high,Wholesale spices and oils
 `;
 
 /**

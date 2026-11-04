@@ -23,15 +23,17 @@ import {
 export const CompanyInputs = () => (
   <div className="flex flex-col gap-4 p-1">
     <CompanyLeadInputs />
-
-    <TextInput
-      source="business_description"
-      multiline
-      helperText={false}
-      className="[&_textarea]:min-h-32"
-    />
   </div>
 );
+
+/** One URL per line in the form ↔ string[] on the company record. */
+const formatContextLinks = (value: unknown) =>
+  Array.isArray(value) ? value.filter(Boolean).join("\n") : "";
+const parseContextLinks = (value: string) =>
+  value
+    .split(/[\n,;]+/)
+    .map((url) => url.trim())
+    .filter(Boolean);
 
 const CompanyLeadInputs = () => {
   const translate = useTranslate();
@@ -60,9 +62,6 @@ const CompanyLeadInputs = () => {
         <DateInput source="lead_date" helperText={false} />
         <TextInput source="name" validate={required()} helperText={false} />
         <TextInput source="website" helperText={false} />
-        <TextInput source="email" helperText={false} />
-        <TextInput source="phone_number" helperText={false} />
-        <TextInput source="whatsapp_number" helperText={false} />
         <SelectInput
           source="sector"
           choices={verticalChoices}
@@ -75,6 +74,18 @@ const CompanyLeadInputs = () => {
           create={<CreateIndustrySuggestion />}
           createLabel="Add a new vertical"
         />
+        <TextInput source="phone_number" helperText={false} />
+        <TextInput source="whatsapp_number" helperText={false} />
+        <TextInput source="email" helperText={false} />
+        <TextInput
+          source="context_links"
+          multiline
+          helperText={false}
+          format={formatContextLinks}
+          parse={parseContextLinks}
+          className="[&_textarea]:min-h-20"
+        />
+        <TextInput source="address" helperText={false} />
         <TextInput source="city" helperText={false} />
         <SelectInput
           source="priority"
@@ -85,6 +96,13 @@ const CompanyLeadInputs = () => {
           helperText={false}
         />
       </div>
+
+      <TextInput
+        source="business_description"
+        multiline
+        helperText={false}
+        className="[&_textarea]:min-h-32"
+      />
     </div>
   );
 };

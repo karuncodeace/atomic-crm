@@ -25,6 +25,8 @@ export interface LeadImportRow {
   city: string;
   address: string;
   priority: string;
+  /** Social / profile URLs (Instagram, Facebook, LinkedIn, …). */
+  social_media_urls: string[];
   /** Company domain (`acme.com`), from the website or a business email. */
   domain: string;
 }
@@ -87,6 +89,13 @@ const COLUMN_ALIASES: Record<keyof Omit<LeadImportRow, "row">, string[]> = {
   city: ["city", "place", "location", "town"],
   address: ["address", "street", "street_address"],
   priority: ["priority", "opportunity_score", "score", "lead_score"],
+  social_media_urls: [
+    "social_media_urls",
+    "social_media",
+    "social_urls",
+    "social",
+    "socials",
+  ],
   domain: ["domain", "website", "company_website", "url", "web"],
 };
 const FULL_NAME_ALIASES = [
@@ -232,6 +241,13 @@ export const normalizeLeadDate = (raw: string): string => {
   return "";
 };
 
+/** Splits a Social Media URLs cell into individual links. */
+export const parseSocialMediaUrls = (raw: string): string[] =>
+  raw
+    .split(/[\n,;|]+/)
+    .map((url) => url.trim())
+    .filter(Boolean);
+
 /** Maps opportunity scores / labels onto high | medium | low. */
 export const normalizePriority = (raw: string): string => {
   const value = raw.trim().toLowerCase();
@@ -321,6 +337,9 @@ export const mapLeadRecord = (
       city: pick(record, COLUMN_ALIASES.city),
       address: pick(record, COLUMN_ALIASES.address),
       priority: normalizePriority(pick(record, COLUMN_ALIASES.priority)),
+      social_media_urls: parseSocialMediaUrls(
+        pick(record, COLUMN_ALIASES.social_media_urls),
+      ),
       domain:
         domainFromWebsite(pick(record, COLUMN_ALIASES.domain)) ||
         (email ? domainFromEmail(email) : ""),

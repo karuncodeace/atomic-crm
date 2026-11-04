@@ -149,6 +149,8 @@ export const ContextInfo = ({ record }: { record: Company }) => {
     !record.lead_date &&
     !sectorLabel &&
     !record.city &&
+    !record.address &&
+    !record.website &&
     !record.phone_number &&
     !record.email &&
     !record.whatsapp_number &&
@@ -176,15 +178,21 @@ export const ContextInfo = ({ record }: { record: Company }) => {
           {formatLocalizedDate(`${record.lead_date}T00:00:00`, locale)}
         </span>
       )}
+      {record.website && (
+        <span>
+          {translate("resources.companies.fields.website")}:{" "}
+          <UrlField source="website" target="_blank" />
+        </span>
+      )}
+      {sectorLabel && (
+        <span>
+          {translate("resources.companies.fields.sector")}: {sectorLabel}
+        </span>
+      )}
       {record.phone_number && (
         <span>
           {translate("resources.companies.fields.phone_number")}:{" "}
           {record.phone_number}
-        </span>
-      )}
-      {record.email && (
-        <span>
-          {translate("resources.companies.fields.email")}: {record.email}
         </span>
       )}
       {record.whatsapp_number && (
@@ -193,9 +201,14 @@ export const ContextInfo = ({ record }: { record: Company }) => {
           {record.whatsapp_number}
         </span>
       )}
-      {sectorLabel && (
+      {record.email && (
         <span>
-          {translate("resources.companies.fields.sector")}: {sectorLabel}
+          {translate("resources.companies.fields.email")}: {record.email}
+        </span>
+      )}
+      {record.address && (
+        <span>
+          {translate("resources.companies.fields.address")}: {record.address}
         </span>
       )}
       {record.city && (

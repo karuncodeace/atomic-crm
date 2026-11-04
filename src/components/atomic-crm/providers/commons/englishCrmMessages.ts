@@ -9,12 +9,12 @@ export const englishCrmMessages = {
         business_description: "Business description",
         whatsapp_number: "WhatsApp number",
         email: "Email",
-        lead_date: "Date",
-        name: "Name",
+        lead_date: "Lead date",
+        name: "Company",
         website: "Website",
         priority: "Priority",
         linkedin_url: "LinkedIn URL",
-        phone_number: "Mobile",
+        phone_number: "Phone",
         created_at: "Created at",
         nb_contacts: "Number of contacts",
         revenue: "Revenue",
@@ -27,7 +27,7 @@ export const englishCrmMessages = {
         state_abbr: "State",
         country: "Country",
         description: "Description",
-        context_links: "Context links",
+        context_links: "Social Media URLs",
         sales_id: "Account manager",
       },
       empty: {
@@ -545,7 +545,7 @@ export const englishCrmMessages = {
       in_progress: "Import in progress…",
       sample_download: "Download CSV sample",
       sample_hint:
-        "Use a CSV with Business Name, Mobile / WhatsApp, Gmail, Vertical, Business Description, Calling Date, City, Address, Priority. Pitch is optional — another app can fill it later.",
+        "CSV columns: lead date, company, website, vertical, phone, whatsApp_number, email, Social Media URLs, address, place, priority, business_description.",
       start: "Start import",
       summary:
         "Created %{created}, duplicates %{duplicates}, invalid %{invalid}",

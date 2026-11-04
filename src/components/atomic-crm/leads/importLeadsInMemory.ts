@@ -122,6 +122,9 @@ export const importLeadsInMemory = async (
           whatsapp_number: lead.whatsapp_number || lead.phone || null,
           city: lead.city || null,
           address: lead.address || null,
+          context_links: lead.social_media_urls.length
+            ? lead.social_media_urls
+            : [],
           lead_date: lead.lead_date || now.slice(0, 10),
           priority: lead.priority || "medium",
           created_at: now,

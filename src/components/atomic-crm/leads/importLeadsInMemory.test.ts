@@ -20,6 +20,7 @@ const lead = (row: number, overrides: Partial<LeadImportRow> = {}) => ({
   city: "Kochi",
   address: "",
   priority: "high",
+  social_media_urls: [],
   domain: "",
   ...overrides,
 });
