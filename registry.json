@@ -952,6 +952,22 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/calls/recordCallOutcomeInMemory.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/calls/callEngine.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/calls/assignDailyCallsInMemory.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/calls/MyCallsPage.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/brochures/index.ts",
           "type": "registry:component"
         },
