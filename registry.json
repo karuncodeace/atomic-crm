@@ -48,6 +48,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/tasks/TasksPage.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/tasks/TasksListFilter.tsx",
           "type": "registry:component"
         },
@@ -949,6 +953,10 @@
         },
         {
           "path": "src/components/atomic-crm/brochures/index.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/brochures/brochureUrl.ts",
           "type": "registry:component"
         },
         {

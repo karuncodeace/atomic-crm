@@ -1,18 +1,8 @@
-import { Button, buttonVariants } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Home, ListTodo, Plus, Settings, Users } from "lucide-react";
+import { FileText, Handshake, Home, ListTodo } from "lucide-react";
 import { useTranslate } from "ra-core";
-import { Link, matchPath, useLocation, useMatch } from "react-router";
-import { ContactCreateSheet } from "../contacts/ContactCreateSheet";
-import { useState } from "react";
-import { NoteCreateSheet } from "../notes/NoteCreateSheet";
-import { TaskCreateSheet } from "../tasks/TaskCreateSheet";
+import { Link, matchPath, useLocation } from "react-router";
 
 export const MobileNavigation = () => {
   const location = useLocation();
@@ -21,14 +11,12 @@ export const MobileNavigation = () => {
   let currentPath: string | boolean = "/";
   if (matchPath("/", location.pathname)) {
     currentPath = "/";
-  } else if (matchPath("/contacts/*", location.pathname)) {
-    currentPath = "/contacts";
-  } else if (matchPath("/companies/*", location.pathname)) {
-    currentPath = "/companies";
-  } else if (matchPath("/tasks/*", location.pathname)) {
-    currentPath = "/tasks";
   } else if (matchPath("/deals/*", location.pathname)) {
     currentPath = "/deals";
+  } else if (matchPath("/tasks/*", location.pathname)) {
+    currentPath = "/tasks";
+  } else if (matchPath("/brochures/*", location.pathname)) {
+    currentPath = "/brochures";
   } else {
     currentPath = false;
   }
@@ -53,30 +41,30 @@ export const MobileNavigation = () => {
       }}
     >
       <div className="flex justify-center">
-        <>
-          <NavigationButton
-            href="/"
-            Icon={Home}
-            label={translate("ra.page.dashboard")}
-            isActive={currentPath === "/"}
-          />
-          <NavigationButton
-            href="/contacts"
-            Icon={Users}
-            label={translate("resources.contacts.name", {
-              smart_count: 2,
-            })}
-            isActive={currentPath === "/contacts"}
-          />
-          <CreateButton />
-          <NavigationButton
-            href="/tasks"
-            Icon={ListTodo}
-            label={translate("resources.tasks.name", { smart_count: 2 })}
-            isActive={currentPath === "/tasks"}
-          />
-          <SettingsButton />
-        </>
+        <NavigationButton
+          href="/"
+          Icon={Home}
+          label={translate("ra.page.dashboard")}
+          isActive={currentPath === "/"}
+        />
+        <NavigationButton
+          href="/deals"
+          Icon={Handshake}
+          label={translate("resources.deals.name", { smart_count: 2 })}
+          isActive={currentPath === "/deals"}
+        />
+        <NavigationButton
+          href="/tasks"
+          Icon={ListTodo}
+          label={translate("resources.tasks.name", { smart_count: 2 })}
+          isActive={currentPath === "/tasks"}
+        />
+        <NavigationButton
+          href="/brochures"
+          Icon={FileText}
+          label={translate("resources.brochures.name", { smart_count: 1 })}
+          isActive={currentPath === "/brochures"}
+        />
       </div>
     </nav>
   );
@@ -105,85 +93,3 @@ const NavigationButton = ({
     <span className="text-[0.6rem] font-medium">{label}</span>
   </Link>
 );
-
-const CreateButton = () => {
-  const translate = useTranslate();
-  const contact_id = useMatch("/contacts/:id/*")?.params.id;
-  const [contactCreateOpen, setContactCreateOpen] = useState(false);
-  const [noteCreateOpen, setNoteCreateOpen] = useState(false);
-  const [taskCreateOpen, setTaskCreateOpen] = useState(false);
-
-  return (
-    <>
-      <ContactCreateSheet
-        open={contactCreateOpen}
-        onOpenChange={setContactCreateOpen}
-      />
-      <NoteCreateSheet
-        open={noteCreateOpen}
-        onOpenChange={setNoteCreateOpen}
-        contact_id={contact_id}
-      />
-      <TaskCreateSheet
-        open={taskCreateOpen}
-        onOpenChange={setTaskCreateOpen}
-        contact_id={contact_id}
-      />
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          render={
-            <Button
-              variant="default"
-              size="icon"
-              className="h-16 w-16 rounded-full -mt-3"
-              aria-label={translate("ra.action.create")}
-            />
-          }
-        >
-          <Plus className="size-10" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="center">
-          <DropdownMenuItem
-            className="h-12 px-4 text-base"
-            onClick={() => {
-              setContactCreateOpen(true);
-            }}
-          >
-            {translate("resources.contacts.forcedCaseName")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="h-12 px-4 text-base"
-            onClick={() => {
-              setNoteCreateOpen(true);
-            }}
-          >
-            {translate("resources.notes.forcedCaseName")}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            className="h-12 px-4 text-base"
-            onClick={() => {
-              setTaskCreateOpen(true);
-            }}
-          >
-            {translate("resources.tasks.forcedCaseName")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </>
-  );
-};
-
-const SettingsButton = () => {
-  const translate = useTranslate();
-  const location = useLocation();
-  const isActive = !!matchPath("/settings", location.pathname);
-
-  return (
-    <NavigationButton
-      href="/settings"
-      Icon={Settings}
-      label={translate("crm.settings.title")}
-      isActive={isActive}
-    />
-  );
-};

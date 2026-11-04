@@ -1,12 +1,11 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Building2,
   FileText,
   Handshake,
   LayoutDashboard,
+  ListTodo,
   Settings,
   Users,
-  UsersRound,
 } from "lucide-react";
 import { CanAccess, useTranslate } from "ra-core";
 import { Link, matchPath, useLocation } from "react-router";
@@ -62,24 +61,16 @@ export const CrmSidebar = () => {
                 label={translate("ra.page.dashboard")}
               />
               <NavItem
-                to="/contacts"
-                pattern="/contacts/*"
-                icon={UsersRound}
-                label={translate("resources.contacts.name", { smart_count: 2 })}
-              />
-              <NavItem
-                to="/companies"
-                pattern="/companies/*"
-                icon={Building2}
-                label={translate("resources.companies.name", {
-                  smart_count: 2,
-                })}
-              />
-              <NavItem
                 to="/deals"
                 pattern="/deals/*"
                 icon={Handshake}
                 label={translate("resources.deals.name", { smart_count: 2 })}
+              />
+              <NavItem
+                to="/tasks"
+                pattern="/tasks/*"
+                icon={ListTodo}
+                label={translate("resources.tasks.name", { smart_count: 2 })}
               />
               <CanAccess resource="brochures" action="list">
                 <NavItem

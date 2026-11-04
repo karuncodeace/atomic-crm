@@ -12,23 +12,18 @@ import { DataTable } from "@/components/admin/data-table";
 import { List } from "@/components/admin/list";
 import { ListPagination } from "@/components/admin/list-pagination";
 import { ReferenceField } from "@/components/admin/reference-field";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 import type { Brochure, BrochureStatus } from "../types";
+import { formatBrochureUrl } from "./brochureUrl";
 
 type BrochureTab = "pending" | "all";
 
 const BrochureList = () => {
-  const [tab, setTab] = useState<BrochureTab>("pending");
+  const [tab, setTab] = useState<BrochureTab>("all");
 
   return (
     <List
@@ -59,18 +54,18 @@ const BrochureTabs = ({
       <Button
         type="button"
         size="sm"
-        variant={tab === "pending" ? "default" : "outline"}
-        onClick={() => onChange("pending")}
-      >
-        {translate("resources.brochures.tabs.approval")}
-      </Button>
-      <Button
-        type="button"
-        size="sm"
         variant={tab === "all" ? "default" : "outline"}
         onClick={() => onChange("all")}
       >
         {translate("resources.brochures.tabs.all")}
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant={tab === "pending" ? "default" : "outline"}
+        onClick={() => onChange("pending")}
+      >
+        {translate("resources.brochures.tabs.approval")}
       </Button>
     </div>
   );
@@ -141,6 +136,7 @@ const BrochureTable = () => (
         source="brochure_url"
         label="resources.brochures.fields.brochure_url"
         disableSort
+        className="min-w-48 max-w-72"
       >
         <BrochureLink />
       </DataTable.Col>
@@ -156,7 +152,7 @@ const BrochureTable = () => (
         label="resources.brochures.fields.status"
         disableSort
       >
-        <BrochureStatusControl />
+        <BrochureApprovalActions />
       </DataTable.Col>
     </DataTable>
   </div>
@@ -179,7 +175,7 @@ const BrochureCard = ({ brochure }: { brochure: Brochure }) => {
   return (
     <li>
       <RecordContextProvider value={brochure}>
-        <div className="flex flex-col gap-2 rounded-xl border p-3">
+        <div className="flex flex-col gap-3 rounded-xl border p-3">
           <div className="flex items-start justify-between gap-2">
             <p className="font-medium">{brochure.title || "—"}</p>
             <CreatedAt />
@@ -202,7 +198,7 @@ const BrochureCard = ({ brochure }: { brochure: Brochure }) => {
               reference="deals"
             />
           </dl>
-          <BrochureStatusControl />
+          <BrochureApprovalActions />
         </div>
       </RecordContextProvider>
     </li>
@@ -271,19 +267,21 @@ const Truncated = ({ source }: { source: "title" }) => {
 
 const BrochureLink = () => {
   const record = useRecordContext<Brochure>();
-  const translate = useTranslate();
   if (!record?.brochure_url) {
     return <span className="text-muted-foreground">—</span>;
   }
+  const { href, label } = formatBrochureUrl(record.brochure_url);
+  if (!href) return <span className="text-muted-foreground">—</span>;
   return (
     <a
-      href={record.brochure_url}
+      href={href}
       target="_blank"
       rel="noreferrer"
-      className="text-sm text-primary underline"
+      title={href}
+      className="block max-w-72 truncate text-sm text-primary underline"
       onClick={(event) => event.stopPropagation()}
     >
-      {translate("resources.brochures.action.open")}
+      {label}
     </a>
   );
 };
@@ -311,13 +309,7 @@ const CreatedAt = () => {
   );
 };
 
-const STATUS_OPTIONS: BrochureStatus[] = [
-  "pending",
-  "approved",
-  "not_approved",
-];
-
-const BrochureStatusControl = () => {
+const BrochureApprovalActions = () => {
   const record = useRecordContext<Brochure>();
   const dataProvider = useDataProvider();
   const { refetch } = useListContext<Brochure>();
@@ -327,16 +319,17 @@ const BrochureStatusControl = () => {
 
   if (!record) return null;
 
-  const handleStatusChange = async (status: string | null) => {
-    if (!status || status === record.status || status === "pending") return;
+  const setStatus = async (status: BrochureStatus) => {
+    if (status === record.status) return;
     setIsUpdating(true);
     try {
       await dataProvider.update<Brochure>("brochures", {
         id: record.id,
-        data: { status: status as BrochureStatus },
+        data: { status },
         previousData: record,
       });
       await refetch();
+      notify(`resources.brochures.status.${status}`, { type: "info" });
     } catch (error) {
       console.error(error);
       notify("ra.notification.http_error", { type: "error" });
@@ -346,32 +339,40 @@ const BrochureStatusControl = () => {
   };
 
   return (
-    <Select value={record.status} onValueChange={handleStatusChange}>
-      <SelectTrigger
-        size="sm"
-        disabled={isUpdating}
-        className={cn(
-          "w-auto min-w-36",
-          record.status === "approved" && "text-green-700 dark:text-green-300",
-          record.status === "not_approved" && "text-red-700 dark:text-red-300",
-        )}
-      >
-        <SelectValue>
+    <div className="flex flex-col items-start gap-2">
+      {record.status !== "pending" && (
+        <Badge
+          variant="outline"
+          className={cn(
+            record.status === "approved" &&
+              "border-green-600/40 text-green-700 dark:text-green-300",
+            record.status === "not_approved" &&
+              "border-red-600/40 text-red-700 dark:text-red-300",
+          )}
+        >
           {translate(`resources.brochures.status.${record.status}`)}
-        </SelectValue>
-      </SelectTrigger>
-      <SelectContent>
-        {STATUS_OPTIONS.map((status) => (
-          <SelectItem
-            key={status}
-            value={status}
-            disabled={status === "pending"}
-          >
-            {translate(`resources.brochures.status.${status}`)}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+        </Badge>
+      )}
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          size="sm"
+          disabled={isUpdating || record.status === "approved"}
+          onClick={() => setStatus("approved")}
+        >
+          {translate("resources.brochures.action.approve")}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          disabled={isUpdating || record.status === "not_approved"}
+          onClick={() => setStatus("not_approved")}
+        >
+          {translate("resources.brochures.action.not_approve")}
+        </Button>
+      </div>
+    </div>
   );
 };
 

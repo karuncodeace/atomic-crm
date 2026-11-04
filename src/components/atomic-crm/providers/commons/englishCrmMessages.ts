@@ -291,6 +291,8 @@ export const englishCrmMessages = {
       },
       action: {
         open: "Open",
+        approve: "Approve",
+        not_approve: "Not approve",
       },
       empty: {
         title: "No brochures yet",

@@ -32,7 +32,6 @@ describe("canAccess", () => {
   it("keeps a bde away from team tools while leaving their own work open", () => {
     for (const resource of [
       "lead_import",
-      "call_assignments",
       "recycle_pool",
       "whatsapp_approvals",
       "brochures",
@@ -44,9 +43,10 @@ describe("canAccess", () => {
     expect(canAccess("bde", { action: "list", resource: "contacts" })).toBe(
       true,
     );
-    expect(canAccess("bde", { action: "list", resource: "my_calls" })).toBe(
-      true,
-    );
+    // Own dial queue — RLS still limits rows to sales_id = me.
+    expect(
+      canAccess("bde", { action: "list", resource: "call_assignments" }),
+    ).toBe(true);
   });
 });
 

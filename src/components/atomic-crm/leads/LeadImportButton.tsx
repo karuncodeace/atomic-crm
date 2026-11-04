@@ -98,9 +98,14 @@ const LeadImportDialog = ({
     setBusy(true);
     setReport(null);
     try {
+      if (typeof dataProvider.importLeads !== "function") {
+        throw new Error(
+          "Lead import is not available in this build. Redeploy the app.",
+        );
+      }
       const records = await parseCsvAsText(file);
-      setSourceRows(records);
       const { leads, invalid } = prepareLeadRecords(records);
+      setSourceRows(records);
       const server =
         leads.length === 0
           ? {
@@ -123,12 +128,16 @@ const LeadImportDialog = ({
         },
       });
     } catch (error) {
-      console.error(error);
-      notify("crm.lead_import.error", { type: "error" });
+      console.error("lead import failed", error);
+      const message =
+        error instanceof Error && error.message
+          ? error.message
+          : translate("crm.lead_import.error");
+      notify(message, { type: "error" });
     } finally {
       setBusy(false);
     }
-  }, [busy, dataProvider, file, notify, refresh, setBusy]);
+  }, [busy, dataProvider, file, notify, refresh, setBusy, translate]);
 
   const rejectsHref =
     report && sourceRows.length
@@ -147,9 +156,7 @@ const LeadImportDialog = ({
 
           <Alert>
             <AlertDescription className="flex flex-col gap-4">
-              {translate("crm.lead_import.sample_hint", {
-                _: "Use a CSV with Business Name, Mobile / WhatsApp, Gmail, Vertical, Business Description, Calling Date, City, Address, Priority. Pitch is optional — another app can fill it later.",
-              })}
+              {translate("crm.lead_import.sample_hint")}
               <Link
                 to={sampleUrl}
                 download="leads_sample.csv"
@@ -167,9 +174,13 @@ const LeadImportDialog = ({
           <FileInput
             source="csv"
             label="crm.lead_import.csv_file"
-            accept={{ "text/csv": [".csv"] }}
+            accept={{
+              "text/csv": [".csv"],
+              "application/vnd.ms-excel": [".csv"],
+              "text/plain": [".csv"],
+            }}
             onChange={(value) => {
-              setFile(value as File | null);
+              setFile(asBrowserFile(value));
               setReport(null);
             }}
           >
@@ -224,6 +235,20 @@ const LeadImportDialog = ({
   );
 };
 
+/** FileInput stores `{ rawFile, src, title }`; Papa needs the browser File. */
+const asBrowserFile = (value: unknown): File | null => {
+  if (value instanceof File) return value;
+  if (
+    value &&
+    typeof value === "object" &&
+    "rawFile" in value &&
+    (value as { rawFile: unknown }).rawFile instanceof File
+  ) {
+    return (value as { rawFile: File }).rawFile;
+  }
+  return null;
+};
+
 const parseCsvAsText = (file: File) =>
   new Promise<Record<string, unknown>[]>((resolve, reject) => {
     Papa.parse<Record<string, unknown>>(file, {
@@ -233,11 +258,17 @@ const parseCsvAsText = (file: File) =>
       dynamicTyping: false,
       complete(results) {
         if (results.errors.length && !results.data.length) {
-          reject(results.errors[0]);
+          reject(
+            new Error(
+              results.errors[0]?.message || "Could not parse this CSV file",
+            ),
+          );
           return;
         }
         resolve(results.data);
       },
-      error: reject,
+      error(error) {
+        reject(error instanceof Error ? error : new Error(String(error)));
+      },
     });
   });

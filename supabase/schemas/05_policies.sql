@@ -16,6 +16,8 @@ alter table public.configuration enable row level security;
 alter table public.favicons_excluded_domains enable row level security;
 alter table public.company_sectors enable row level security;
 alter table public.import_batches enable row level security;
+alter table public.call_assignments enable row level security;
+alter table public.call_logs enable row level security;
 alter table public.brochures enable row level security;
 alter table public.user_invitations enable row level security;
 
@@ -68,8 +70,22 @@ create policy "Enable insert for authenticated users only" on public.tasks for i
 create policy "Task Update Policy" on public.tasks for update to authenticated using (exists (select 1 from public.contacts c where c.id = contact_id));
 create policy "Task Delete Policy" on public.tasks for delete to authenticated using (exists (select 1 from public.contacts c where c.id = contact_id));
 
--- Import batches (lead import history, admins and managers)
+-- Import batches (lead import history, admins and managers).
+-- import_leads() is SECURITY INVOKER, so these policies must allow the
+-- manager who runs the RPC to insert the batch and update its counters.
 create policy "Enable read for managers" on public.import_batches for select to authenticated using (public.is_manager());
+create policy "Enable insert for managers" on public.import_batches for insert to authenticated with check (public.is_manager());
+create policy "Enable update for managers" on public.import_batches for update to authenticated using (public.is_manager()) with check (public.is_manager());
+create policy "Enable delete for managers" on public.import_batches for delete to authenticated using (public.is_manager());
+
+-- Daily dial queue: BDEs see their own rows; managers see all.
+-- Writes go through assign_daily_calls / record_call_outcome (SECURITY DEFINER).
+create policy "Enable read for own or managers" on public.call_assignments
+    for select to authenticated
+    using (public.is_manager() or sales_id = public.current_sales_id());
+create policy "Enable read for own or managers" on public.call_logs
+    for select to authenticated
+    using (public.is_manager() or sales_id = public.current_sales_id());
 
 -- Brochures are written by the other app (service role bypasses RLS).
 -- Signed-in users can read them. Only a manager or admin can set the status.
