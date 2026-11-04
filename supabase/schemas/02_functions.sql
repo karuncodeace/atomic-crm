@@ -525,7 +525,7 @@ begin
             case
                 when jsonb_typeof(p_company->'context_links') = 'array'
                     and jsonb_array_length(p_company->'context_links') > 0
-                then p_company->'context_links'
+                then (p_company->'context_links')::json
                 else null
             end
         )
@@ -549,7 +549,7 @@ begin
                     case
                         when jsonb_typeof(p_company->'context_links') = 'array'
                             and jsonb_array_length(p_company->'context_links') > 0
-                        then p_company->'context_links'
+                        then (p_company->'context_links')::json
                         else null
                     end
                 else c.context_links
@@ -638,12 +638,48 @@ begin
     -- A new company with at least one contact opens one cold deal.
     -- A later edit does not open another.
     if v_is_new and coalesce(array_length(v_kept_ids, 1), 0) > 0 then
-        perform public.open_cold_deal(
-            v_company_id,
-            v_kept_ids,
-            coalesce(nullif(p_company->>'sales_id', '')::bigint, public.current_sales_id()),
-            trim(p_company->>'name')
-        );
+        declare
+            v_owner bigint := coalesce(
+                nullif(p_company->>'sales_id', '')::bigint,
+                public.current_sales_id()
+            );
+            v_dialer bigint;
+        begin
+            -- Prefer an active BDE; fall back to a manager dialer / company owner.
+            select s.id into v_dialer
+            from public.sales s
+            where not s.disabled
+              and (
+                  s.id = v_owner
+                  or s.role in ('bde', 'manager')
+              )
+            order by
+                case when s.id = v_owner then 0 else 1 end,
+                case when s.role = 'bde' then 0 else 1 end,
+                s.id
+            limit 1;
+
+            v_dialer := coalesce(v_dialer, v_owner);
+
+            update public.companies
+            set sales_id = coalesce(sales_id, v_dialer)
+            where id = v_company_id;
+
+            update public.contacts
+            set
+                lead_stage = coalesce(lead_stage, 'queued'),
+                sales_id = coalesce(sales_id, v_dialer),
+                assigned_to = coalesce(assigned_to, v_dialer),
+                assigned_at = coalesce(assigned_at, now())
+            where id = any (v_kept_ids);
+
+            perform public.open_cold_deal(
+                v_company_id,
+                v_kept_ids,
+                v_dialer,
+                trim(p_company->>'name')
+            );
+        end;
     end if;
 
     return v_company_id;
@@ -687,16 +723,8 @@ CREATE OR REPLACE FUNCTION "public"."can_see_company"("p_company_id" bigint) RET
     LANGUAGE "sql" STABLE SECURITY DEFINER
     SET "search_path" TO ''
     AS $$
-  select public.is_manager()
-    or exists (
-      select 1 from public.companies c
-      where c.id = p_company_id and c.sales_id = public.current_sales_id()
-    )
-    or exists (
-      select 1 from public.contacts co
-      where co.company_id = p_company_id
-        and (co.assigned_to = public.current_sales_id() or co.sales_id = public.current_sales_id())
-    );
+  -- Shared CRM: any active sales role sees every company.
+  select public.crm_role() is not null;
 $$;
 
 CREATE OR REPLACE FUNCTION "public"."sync_sales_role"() RETURNS "trigger"
@@ -792,8 +820,8 @@ declare
     v_assigned_total integer := 0;
     v_sales_count integer := 0;
 begin
-    if coalesce(auth.role(), '') <> 'service_role' and not public.is_manager() then
-        raise exception 'Only managers can assign daily calls' using errcode = '42501';
+    if coalesce(auth.role(), '') <> 'service_role' and public.crm_role() is null then
+        raise exception 'Not authorized' using errcode = '42501';
     end if;
 
     if not (v_working @> to_jsonb(v_dow)) then
@@ -884,7 +912,7 @@ begin
                   where a.contact_id = c.id
                     and a.status = 'open'
               )
-            order by c.created_at nulls last, c.id
+            order by c.first_seen nulls last, c.id
             limit v_slots
             for update skip locked
         loop
@@ -974,8 +1002,9 @@ begin
     if v_assignment.status <> 'open' then
         raise exception 'Assignment % is already done', p_assignment_id using errcode = '22023';
     end if;
-    if not public.is_manager() and v_assignment.sales_id is distinct from v_sales_id then
-        raise exception 'Not your assignment' using errcode = '42501';
+    -- Shared queue: any active sales user can complete any open assignment.
+    if public.crm_role() is null then
+        raise exception 'Not authorized' using errcode = '42501';
     end if;
 
     select retry_count into v_retry from public.contacts where id = v_assignment.contact_id;
@@ -1170,6 +1199,9 @@ declare
     v_sector text;
     v_company_id bigint;
     v_contact_id bigint;
+    v_assignee bigint;
+    v_dialers bigint[];
+    v_dialer_count int;
     v_seen_phones text[] := '{}';
     v_seen_emails text[] := '{}';
     v_created int := 0;
@@ -1177,8 +1209,8 @@ declare
     v_invalid int := 0;
     v_reason text;
 begin
-    if not public.is_manager() then
-        raise exception 'Only admins and managers can import leads' using errcode = '42501';
+    if public.crm_role() is null then
+        raise exception 'Not authorized' using errcode = '42501';
     end if;
     if jsonb_typeof(p_rows) is distinct from 'array' then
         raise exception 'p_rows must be an array' using errcode = '22023';
@@ -1186,6 +1218,14 @@ begin
 
     -- Never wait on favicon / gravatar HTTP calls during a bulk import.
     perform set_config('crm.skip_enrichment', 'on', true);
+
+    -- Round-robin across active dialers (BDE first, then managers).
+    select coalesce(array_agg(s.id order by case when s.role = 'bde' then 0 else 1 end, s.id), '{}'::bigint[])
+      into v_dialers
+    from public.sales s
+    where not s.disabled
+      and s.role in ('bde', 'manager');
+    v_dialer_count := coalesce(array_length(v_dialers, 1), 0);
 
     insert into public.import_batches (created_by, file_name, total_rows)
     values (public.current_sales_id(), p_file_name, jsonb_array_length(p_rows))
@@ -1259,11 +1299,17 @@ begin
         order by c.id
         limit 1;
 
+        if v_dialer_count > 0 then
+            v_assignee := v_dialers[1 + (v_created % v_dialer_count)];
+        else
+            v_assignee := public.current_sales_id();
+        end if;
+
         if v_company_id is null then
             insert into public.companies (
                 name, sector, pitch_point, business_description, website,
                 phone_number, email, whatsapp_number, city, address,
-                context_links, lead_date, priority, created_at
+                context_links, lead_date, priority, sales_id, created_at
             )
             values (
                 v_company_name,
@@ -1279,11 +1325,12 @@ begin
                 case
                     when jsonb_typeof(v_row->'social_media_urls') = 'array'
                         and jsonb_array_length(v_row->'social_media_urls') > 0
-                    then v_row->'social_media_urls'
+                    then (v_row->'social_media_urls')::json
                     else null
                 end,
                 coalesce(nullif(trim(v_row->>'lead_date'), '')::date, current_date),
                 coalesce(nullif(trim(v_row->>'priority'), ''), 'medium'),
+                v_assignee,
                 now()
             )
             returning id into v_company_id;
@@ -1297,23 +1344,26 @@ begin
                 whatsapp_number = coalesce(c.whatsapp_number, nullif(trim(v_row->>'whatsapp_number'), ''), v_phone),
                 city = coalesce(c.city, nullif(trim(v_row->>'city'), '')),
                 address = coalesce(c.address, nullif(trim(v_row->>'address'), '')),
+                -- context_links is json; social_media_urls from jsonb payload must cast
                 context_links = coalesce(
                     c.context_links,
                     case
                         when jsonb_typeof(v_row->'social_media_urls') = 'array'
                             and jsonb_array_length(v_row->'social_media_urls') > 0
-                        then v_row->'social_media_urls'
-                        else null
+                        then (v_row->'social_media_urls')::json
+                        else null::json
                     end
                 ),
-                priority = coalesce(c.priority, nullif(trim(v_row->>'priority'), ''), 'medium')
+                priority = coalesce(c.priority, nullif(trim(v_row->>'priority'), ''), 'medium'),
+                sales_id = coalesce(c.sales_id, v_assignee)
             where c.id = v_company_id;
         end if;
 
         insert into public.contacts (
             first_name, last_name, title, company_id, whatsapp_number, is_primary,
             email_jsonb, phone_jsonb, phone_e164,
-            lead_stage, import_batch_id, first_seen, last_seen, tags
+            lead_stage, sales_id, assigned_to, assigned_at,
+            import_batch_id, first_seen, last_seen, tags
         )
         values (
             nullif(trim(v_row->>'first_name'), ''),
@@ -1328,7 +1378,10 @@ begin
             case when v_email is not null then jsonb_build_array(jsonb_build_object('email', v_email, 'type', 'Work')) end,
             case when v_phone is not null then jsonb_build_array(jsonb_build_object('number', v_phone, 'type', 'Work')) end,
             v_phone,
-            'new',
+            'queued',
+            v_assignee,
+            v_assignee,
+            now(),
             v_batch_id,
             now(),
             now(),
@@ -1341,6 +1394,7 @@ begin
             array[v_contact_id],
             coalesce(
                 (select c.sales_id from public.companies c where c.id = v_company_id),
+                v_assignee,
                 public.current_sales_id()
             ),
             v_company_name

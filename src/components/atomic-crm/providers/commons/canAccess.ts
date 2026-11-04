@@ -9,23 +9,6 @@ type CanAccessParams<
   record?: RecordType;
 };
 
-/** Resources only an admin can reach. */
-const ADMIN_RESOURCES = new Set(["sales", "configuration"]);
-
-/**
- * Team-management resources: lead import, assignments, recycle pool,
- * WhatsApp approvals and reports. The database enforces the same split
- * (is_manager() in RLS and RPCs); this only shapes the UI.
- */
-export const MANAGER_RESOURCES = new Set([
-  "import_batches",
-  "lead_import",
-  "recycle_pool",
-  "whatsapp_approvals",
-  "brochures",
-  "reports",
-]);
-
 const ROLES: readonly SalesRole[] = ["admin", "manager", "bde"];
 
 /**
@@ -43,20 +26,14 @@ export const resolveRole = (sale: {
   return sale.administrator ? "admin" : "manager";
 };
 
+/**
+ * Shared product: BDE and admin (and manager) use the same menus and see the
+ * same data. Disabled users never get a role from the auth provider, so they
+ * never reach canAccess.
+ */
 export const canAccess = <
   RecordType extends Record<string, any> = Record<string, any>,
 >(
-  role: SalesRole,
-  params: CanAccessParams<RecordType>,
-) => {
-  if (role === "admin") {
-    return true;
-  }
-  if (ADMIN_RESOURCES.has(params.resource)) {
-    return false;
-  }
-  if (MANAGER_RESOURCES.has(params.resource)) {
-    return role === "manager";
-  }
-  return true;
-};
+  _role: SalesRole,
+  _params: CanAccessParams<RecordType>,
+) => true;

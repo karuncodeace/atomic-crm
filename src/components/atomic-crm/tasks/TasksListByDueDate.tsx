@@ -39,9 +39,7 @@ export const TasksListByDueDate = ({
       pagination: { page: 1, perPage: 1000 },
       sort: { field: "due_date", order: "ASC" },
       filter: {
-        ...(filterByContact != null
-          ? { contact_id: filterByContact }
-          : { sales_id: identity?.id }),
+        ...(filterByContact != null ? { contact_id: filterByContact } : {}),
       },
     },
     { enabled: filterByContact != null ? true : !!identity },

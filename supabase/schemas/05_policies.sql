@@ -21,82 +21,77 @@ alter table public.call_logs enable row level security;
 alter table public.brochures enable row level security;
 alter table public.user_invitations enable row level security;
 
--- Role model: admin / manager see everything; a bde sees the leads assigned
--- to them or created by them, and what hangs off those leads. Disabled users
--- get no role (crm_role() is null) and therefore no rows at all.
+-- Shared product: any active sales role (admin / manager / bde) sees and
+-- edits the same CRM data. Disabled users have crm_role() = null → no rows.
 
 -- Companies
-create policy "Enable read access for authenticated users" on public.companies for select to authenticated using (public.can_see_company(id));
+create policy "Enable read access for authenticated users" on public.companies for select to authenticated using (public.crm_role() is not null);
 create policy "Enable insert for authenticated users only" on public.companies for insert to authenticated with check (public.crm_role() is not null);
-create policy "Enable update for authenticated users only" on public.companies for update to authenticated using (public.can_see_company(id)) with check (public.crm_role() is not null);
-create policy "Company Delete Policy" on public.companies for delete to authenticated using (public.is_manager() or sales_id = public.current_sales_id());
+create policy "Enable update for authenticated users only" on public.companies for update to authenticated using (public.crm_role() is not null) with check (public.crm_role() is not null);
+create policy "Company Delete Policy" on public.companies for delete to authenticated using (public.crm_role() is not null);
 
 -- Contacts (leads)
-create policy "Enable read access for authenticated users" on public.contacts for select to authenticated using (public.is_manager() or assigned_to = public.current_sales_id() or sales_id = public.current_sales_id());
-create policy "Enable insert for authenticated users only" on public.contacts for insert to authenticated with check (public.is_manager() or (public.crm_role() is not null and assigned_to is null));
-create policy "Enable update for authenticated users only" on public.contacts for update to authenticated using (public.is_manager() or assigned_to = public.current_sales_id() or sales_id = public.current_sales_id()) with check (public.is_manager() or assigned_to = public.current_sales_id() or sales_id = public.current_sales_id());
-create policy "Contact Delete Policy" on public.contacts for delete to authenticated using (public.is_manager() or sales_id = public.current_sales_id());
+create policy "Enable read access for authenticated users" on public.contacts for select to authenticated using (public.crm_role() is not null);
+create policy "Enable insert for authenticated users only" on public.contacts for insert to authenticated with check (public.crm_role() is not null);
+create policy "Enable update for authenticated users only" on public.contacts for update to authenticated using (public.crm_role() is not null) with check (public.crm_role() is not null);
+create policy "Contact Delete Policy" on public.contacts for delete to authenticated using (public.crm_role() is not null);
 
--- Contact Notes (visible when their contact is visible)
-create policy "Enable read access for authenticated users" on public.contact_notes for select to authenticated using (exists (select 1 from public.contacts c where c.id = contact_id));
-create policy "Enable insert for authenticated users only" on public.contact_notes for insert to authenticated with check (exists (select 1 from public.contacts c where c.id = contact_id));
-create policy "Contact Notes Update policy" on public.contact_notes for update to authenticated using (exists (select 1 from public.contacts c where c.id = contact_id));
-create policy "Contact Notes Delete Policy" on public.contact_notes for delete to authenticated using (public.is_manager() or sales_id = public.current_sales_id());
+-- Contact Notes
+create policy "Enable read access for authenticated users" on public.contact_notes for select to authenticated using (public.crm_role() is not null);
+create policy "Enable insert for authenticated users only" on public.contact_notes for insert to authenticated with check (public.crm_role() is not null);
+create policy "Contact Notes Update policy" on public.contact_notes for update to authenticated using (public.crm_role() is not null);
+create policy "Contact Notes Delete Policy" on public.contact_notes for delete to authenticated using (public.crm_role() is not null);
 
--- Deals
-create policy "Enable read access for authenticated users" on public.deals for select to authenticated using (public.is_manager() or sales_id = public.current_sales_id());
+-- Deals (Leads board)
+create policy "Enable read access for authenticated users" on public.deals for select to authenticated using (public.crm_role() is not null);
 create policy "Enable insert for authenticated users only" on public.deals for insert to authenticated with check (public.crm_role() is not null);
-create policy "Enable update for authenticated users only" on public.deals for update to authenticated using (public.is_manager() or sales_id = public.current_sales_id()) with check (public.crm_role() is not null);
-create policy "Deals Delete Policy" on public.deals for delete to authenticated using (public.is_manager() or sales_id = public.current_sales_id());
+create policy "Enable update for authenticated users only" on public.deals for update to authenticated using (public.crm_role() is not null) with check (public.crm_role() is not null);
+create policy "Deals Delete Policy" on public.deals for delete to authenticated using (public.crm_role() is not null);
 
--- Deal Notes (visible when their deal is visible)
-create policy "Enable read access for authenticated users" on public.deal_notes for select to authenticated using (exists (select 1 from public.deals d where d.id = deal_id));
-create policy "Enable insert for authenticated users only" on public.deal_notes for insert to authenticated with check (exists (select 1 from public.deals d where d.id = deal_id));
-create policy "Deal Notes Update Policy" on public.deal_notes for update to authenticated using (exists (select 1 from public.deals d where d.id = deal_id));
-create policy "Deal Notes Delete Policy" on public.deal_notes for delete to authenticated using (public.is_manager() or sales_id = public.current_sales_id());
+-- Deal Notes
+create policy "Enable read access for authenticated users" on public.deal_notes for select to authenticated using (public.crm_role() is not null);
+create policy "Enable insert for authenticated users only" on public.deal_notes for insert to authenticated with check (public.crm_role() is not null);
+create policy "Deal Notes Update Policy" on public.deal_notes for update to authenticated using (public.crm_role() is not null);
+create policy "Deal Notes Delete Policy" on public.deal_notes for delete to authenticated using (public.crm_role() is not null);
 
--- Sales (team directory, read-only from the client)
+-- Sales (team directory)
 create policy "Enable read access for authenticated users" on public.sales for select to authenticated using (public.crm_role() is not null or user_id = auth.uid());
 
 -- Tags
 create policy "Enable read access for authenticated users" on public.tags for select to authenticated using (public.crm_role() is not null);
 create policy "Enable insert for authenticated users only" on public.tags for insert to authenticated with check (public.crm_role() is not null);
 create policy "Enable update for authenticated users only" on public.tags for update to authenticated using (public.crm_role() is not null);
-create policy "Enable delete for authenticated users only" on public.tags for delete to authenticated using (public.is_manager());
+create policy "Enable delete for authenticated users only" on public.tags for delete to authenticated using (public.crm_role() is not null);
 
--- Tasks (visible when their contact is visible)
-create policy "Enable read access for authenticated users" on public.tasks for select to authenticated using (exists (select 1 from public.contacts c where c.id = contact_id));
-create policy "Enable insert for authenticated users only" on public.tasks for insert to authenticated with check (exists (select 1 from public.contacts c where c.id = contact_id));
-create policy "Task Update Policy" on public.tasks for update to authenticated using (exists (select 1 from public.contacts c where c.id = contact_id));
-create policy "Task Delete Policy" on public.tasks for delete to authenticated using (exists (select 1 from public.contacts c where c.id = contact_id));
+-- Tasks
+create policy "Enable read access for authenticated users" on public.tasks for select to authenticated using (public.crm_role() is not null);
+create policy "Enable insert for authenticated users only" on public.tasks for insert to authenticated with check (public.crm_role() is not null);
+create policy "Task Update Policy" on public.tasks for update to authenticated using (public.crm_role() is not null);
+create policy "Task Delete Policy" on public.tasks for delete to authenticated using (public.crm_role() is not null);
 
--- Import batches (lead import history, admins and managers).
--- import_leads() is SECURITY INVOKER, so these policies must allow the
--- manager who runs the RPC to insert the batch and update its counters.
-create policy "Enable read for managers" on public.import_batches for select to authenticated using (public.is_manager());
-create policy "Enable insert for managers" on public.import_batches for insert to authenticated with check (public.is_manager());
-create policy "Enable update for managers" on public.import_batches for update to authenticated using (public.is_manager()) with check (public.is_manager());
-create policy "Enable delete for managers" on public.import_batches for delete to authenticated using (public.is_manager());
+-- Import batches
+create policy "Enable read for managers" on public.import_batches for select to authenticated using (public.crm_role() is not null);
+create policy "Enable insert for managers" on public.import_batches for insert to authenticated with check (public.crm_role() is not null);
+create policy "Enable update for managers" on public.import_batches for update to authenticated using (public.crm_role() is not null) with check (public.crm_role() is not null);
+create policy "Enable delete for managers" on public.import_batches for delete to authenticated using (public.crm_role() is not null);
 
--- Daily dial queue: BDEs see their own rows; managers see all.
--- Writes go through assign_daily_calls / record_call_outcome (SECURITY DEFINER).
+-- Daily dial queue (shared)
 create policy "Enable read for own or managers" on public.call_assignments
     for select to authenticated
-    using (public.is_manager() or sales_id = public.current_sales_id());
+    using (public.crm_role() is not null);
 create policy "Enable read for own or managers" on public.call_logs
     for select to authenticated
-    using (public.is_manager() or sales_id = public.current_sales_id());
+    using (public.crm_role() is not null);
 
--- Brochures are written by the other app (service role bypasses RLS).
--- Signed-in users can read them. Only a manager or admin can set the status.
+-- Brochures
 create policy "Enable read access for authenticated users" on public.brochures for select to authenticated using (public.crm_role() is not null);
-create policy "Enable update for managers" on public.brochures for update to authenticated using (public.is_manager()) with check (public.is_manager());
+create policy "Enable update for managers" on public.brochures for update to authenticated using (public.crm_role() is not null) with check (public.crm_role() is not null);
 
 -- Company Sectors
 create policy "Enable read access for authenticated users" on public.company_sectors for select to authenticated using (public.crm_role() is not null);
-create policy "Enable insert for authenticated users only" on public.company_sectors for insert to authenticated with check (public.is_manager());
+create policy "Enable insert for authenticated users only" on public.company_sectors for insert to authenticated with check (public.crm_role() is not null);
 
--- Configuration (admin-only for writes)
+-- Configuration (still admin-only for writes)
 create policy "Enable read for authenticated" on public.configuration for select to authenticated using (true);
 create policy "Enable insert for admins" on public.configuration for insert to authenticated with check (public.is_admin());
 create policy "Enable update for admins" on public.configuration for update to authenticated using (public.is_admin()) with check (public.is_admin());

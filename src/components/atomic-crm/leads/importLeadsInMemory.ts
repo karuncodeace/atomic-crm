@@ -150,13 +150,15 @@ export const importLeadsInMemory = async (
         phone_e164: lead.phone || null,
         whatsapp_number: lead.whatsapp_number || lead.phone || null,
         is_primary: isPrimary,
-        lead_stage: "new",
+        lead_stage: "queued",
         retry_count: 0,
         import_batch_id: batch.id,
         first_seen: now,
         last_seen: now,
         tags: [],
         sales_id: salesId,
+        assigned_to: salesId,
+        assigned_at: now,
       },
     });
     if (isPrimary) companiesWithPrimary.add(String(company.id));

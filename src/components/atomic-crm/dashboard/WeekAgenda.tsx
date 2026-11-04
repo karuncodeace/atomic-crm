@@ -55,7 +55,6 @@ export const WeekAgenda = () => {
       pagination: { page: 1, perPage: 100 },
       sort: { field: "due_date", order: "ASC" },
       filter: {
-        sales_id: identity?.id,
         "due_date@gte": weekStart.toISOString(),
         "due_date@lte": endOfWeek(selectedDay, WEEK_OPTIONS).toISOString(),
       },

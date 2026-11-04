@@ -18,7 +18,7 @@ export const RecentNotesCard = () => {
     {
       pagination: { page: 1, perPage: NOTES_SHOWN },
       sort: { field: "date", order: "DESC" },
-      filter: { sales_id: identity?.id },
+      filter: {},
     },
     { enabled: identity?.id != null },
   );
