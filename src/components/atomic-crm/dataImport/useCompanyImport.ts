@@ -67,7 +67,7 @@ export function useCompanyImport(): ProcessImportBatch {
             data: {
               name,
               sector: toConfiguredValue(
-                cell(row, "sector", "vertical", "industry"),
+                cell(row, "sector", "vertical", "industry") ?? null,
                 companySectors,
               ),
               size: sizeOf(cell(row, "size")),
@@ -99,7 +99,7 @@ export function useCompanyImport(): ProcessImportBatch {
               lead_date: leadDate,
               pitch_point: cell(row, "pitch_point", "pitch"),
               priority: toConfiguredValue(
-                cell(row, "priority"),
+                cell(row, "priority") ?? null,
                 PRIORITY_OPTIONS,
               ),
               context_links:

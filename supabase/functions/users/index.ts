@@ -248,8 +248,22 @@ async function inviteUser(req: Request, currentUserSale: any) {
       console.error("Error inviting user: undefined user");
       return createErrorResponse(500, "Internal Server Error");
     }
+    // Land on auth-callback.html first so invite tokens in the hash are
+    // copied into query params before the SPA Supabase client strips them.
+    // handleCallback then routes to /set-password with those tokens.
+    const crmBaseUrl = (
+      Deno.env.get("CRM_BASE_URL") ??
+      Deno.env.get("SITE_URL") ??
+      ""
+    ).replace(/\/$/, "");
+    const redirectTo = crmBaseUrl
+      ? `${crmBaseUrl}/auth-callback.html`
+      : undefined;
     const { error: emailError } =
-      await supabaseAdmin.auth.admin.inviteUserByEmail(email);
+      await supabaseAdmin.auth.admin.inviteUserByEmail(
+        email,
+        redirectTo ? { redirectTo } : undefined,
+      );
 
     if (emailError) {
       console.error(`Error inviting user, email_error=${emailError}`);

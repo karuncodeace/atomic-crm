@@ -31,8 +31,6 @@
                 background-color: #fafafa;
             }
 
-            /* CSS Spinner from https://projects.lukehaas.me/css-loaders/ */
-
             .loader,
             .loader:before,
             .loader:after {
@@ -118,24 +116,21 @@
         </div>
     </body>
     <script>
-        const getUrlParams = () => {
-            const urlSearchParams = new URLSearchParams(
-                window.location.hash.substring(1)
-            );
-            const access_token = urlSearchParams.get('access_token');
-            const refresh_token = urlSearchParams.get('refresh_token');
-            const type = urlSearchParams.get('type');
+        // Capture invite/recovery tokens from the hash BEFORE the SPA's
+        // Supabase client can consume and clear them, then hand them to the
+        // browser-router /auth-callback route as query params.
+        const params = new URLSearchParams(window.location.hash.substring(1));
+        const access_token = params.get('access_token');
+        const refresh_token = params.get('refresh_token');
+        const type = params.get('type') || '';
 
-            return { access_token, refresh_token, type };
-        };
+        const next = new URLSearchParams();
+        if (access_token) next.set('access_token', access_token);
+        if (refresh_token) next.set('refresh_token', refresh_token);
+        if (type) next.set('type', type);
 
-        function interceptAuthCallback() {
-                const hash = window.location.hash;
-                const {access_token, refresh_token, type} = getUrlParams();
-                window.location.href = `./#/auth-callback?access_token=${access_token}&refresh_token=${refresh_token}&type=${type}`;
-        }
-    
-        // Call the function to intercept the auth callback
-        interceptAuthCallback();
+        window.location.replace(
+            './auth-callback' + (next.toString() ? '?' + next.toString() : ''),
+        );
     </script>
 </html>

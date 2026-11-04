@@ -89,4 +89,4 @@ export const ForgotPasswordPage = () => {
   );
 };
 
-ForgotPasswordPage.path = "forgot-password";
+ForgotPasswordPage.path = "/forgot-password";

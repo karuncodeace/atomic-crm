@@ -13,9 +13,13 @@ interface SetPasswordFormData {
 export const SetPasswordPage = () => {
   const [loading, setLoading] = useState(false);
 
-  const access_token = useSupabaseAccessToken();
+  // Never bounce to "/" when tokens are missing — that lands admins on the
+  // dashboard and looks like the invite "failed". Show the missing-token
+  // message instead (redirectTo: false).
+  const access_token = useSupabaseAccessToken({ redirectTo: false });
   const refresh_token = useSupabaseAccessToken({
     parameterName: "refresh_token",
+    redirectTo: false,
   });
 
   const notify = useNotify();
@@ -114,4 +118,4 @@ export const SetPasswordPage = () => {
   );
 };
 
-SetPasswordPage.path = "set-password";
+SetPasswordPage.path = "/set-password";
