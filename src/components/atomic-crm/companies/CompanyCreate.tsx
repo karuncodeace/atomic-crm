@@ -1,10 +1,4 @@
-import {
-  CanAccess,
-  CreateBase,
-  Form,
-  useGetIdentity,
-  useTranslate,
-} from "ra-core";
+import { CanAccess, CreateBase, Form, useTranslate } from "ra-core";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { CancelButton } from "@/components/admin/cancel-button";
@@ -16,7 +10,6 @@ import { CompanyInputs } from "./CompanyInputs";
 import { omitContactSearch } from "./companyForm";
 
 export const CompanyCreate = () => {
-  const { identity } = useGetIdentity();
   const translate = useTranslate();
 
   return (
@@ -42,7 +35,8 @@ export const CompanyCreate = () => {
           </div>
           <Form
             defaultValues={{
-              sales_id: identity?.id,
+              // Backend assigns an active BDE; admin must not own the lead.
+              sales_id: undefined,
               lead_date: new Date().toLocaleDateString("en-CA"),
               contacts: [],
             }}

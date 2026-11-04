@@ -645,31 +645,27 @@ begin
             );
             v_dialer bigint;
         begin
-            -- Prefer an active BDE; fall back to a manager dialer / company owner.
+            -- Leads always belong to a BDE. Admin only oversees.
             select s.id into v_dialer
             from public.sales s
             where not s.disabled
-              and (
-                  s.id = v_owner
-                  or s.role in ('bde', 'manager')
-              )
+              and s.role = 'bde'
             order by
                 case when s.id = v_owner then 0 else 1 end,
-                case when s.role = 'bde' then 0 else 1 end,
                 s.id
             limit 1;
 
             v_dialer := coalesce(v_dialer, v_owner);
 
             update public.companies
-            set sales_id = coalesce(sales_id, v_dialer)
+            set sales_id = v_dialer
             where id = v_company_id;
 
             update public.contacts
             set
                 lead_stage = coalesce(lead_stage, 'queued'),
-                sales_id = coalesce(sales_id, v_dialer),
-                assigned_to = coalesce(assigned_to, v_dialer),
+                sales_id = v_dialer,
+                assigned_to = v_dialer,
                 assigned_at = coalesce(assigned_at, now())
             where id = any (v_kept_ids);
 
@@ -837,7 +833,7 @@ begin
         select s.id
         from public.sales s
         where not s.disabled
-          and s.role in ('bde', 'manager')
+          and s.role = 'bde'
         order by s.id
     loop
         v_sales_count := v_sales_count + 1;
@@ -1221,13 +1217,16 @@ begin
     -- Never wait on favicon / gravatar HTTP calls during a bulk import.
     perform set_config('crm.skip_enrichment', 'on', true);
 
-    -- Round-robin across active dialers (BDE first, then managers).
-    select coalesce(array_agg(s.id order by case when s.role = 'bde' then 0 else 1 end, s.id), '{}'::bigint[])
+    -- Round-robin across active BDEs only (admin oversees, does not own leads).
+    select coalesce(array_agg(s.id order by s.id), '{}'::bigint[])
       into v_dialers
     from public.sales s
     where not s.disabled
-      and s.role in ('bde', 'manager');
+      and s.role = 'bde';
     v_dialer_count := coalesce(array_length(v_dialers, 1), 0);
+    if v_dialer_count = 0 then
+        raise exception 'No active BDE to assign leads to' using errcode = 'P0001';
+    end if;
 
     insert into public.import_batches (created_by, file_name, total_rows)
     values (public.current_sales_id(), p_file_name, jsonb_array_length(p_rows))
@@ -1301,11 +1300,7 @@ begin
         order by c.id
         limit 1;
 
-        if v_dialer_count > 0 then
-            v_assignee := v_dialers[1 + (v_created % v_dialer_count)];
-        else
-            v_assignee := public.current_sales_id();
-        end if;
+        v_assignee := v_dialers[1 + (v_created % v_dialer_count)];
 
         if v_company_id is null then
             insert into public.companies (
@@ -1394,13 +1389,28 @@ begin
         perform public.open_cold_deal(
             v_company_id,
             array[v_contact_id],
-            coalesce(
-                (select c.sales_id from public.companies c where c.id = v_company_id),
-                v_assignee,
-                public.current_sales_id()
-            ),
+            v_assignee,
             v_company_name
         );
+
+        -- Put imported leads straight into today's BDE call queue.
+        insert into public.call_assignments (
+            assignment_date, sales_id, contact_id, company_id, deal_id, status
+        )
+        select
+            (timezone(coalesce((public.call_engine_settings()->>'timezone'), 'Asia/Kolkata'), now()))::date,
+            v_assignee,
+            v_contact_id,
+            v_company_id,
+            d.id,
+            'open'
+        from public.deals d
+        where d.company_id = v_company_id
+          and d.archived_at is null
+          and v_contact_id = any (d.contact_ids)
+        order by d.id
+        limit 1
+        on conflict (sales_id, contact_id, assignment_date) do nothing;
 
         if v_phone is not null then v_seen_phones := v_seen_phones || v_phone; end if;
         if v_email is not null then v_seen_emails := v_seen_emails || v_email; end if;

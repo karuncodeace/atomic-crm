@@ -61,10 +61,7 @@ export const assignDailyCallsInMemory = async (
     }),
   ]);
 
-  const dialers = sales.filter(
-    (sale) =>
-      !sale.disabled && (sale.role === "bde" || sale.role === "manager"),
-  );
+  const dialers = sales.filter((sale) => !sale.disabled && sale.role === "bde");
   let assigned = 0;
   const openBySales = new Map<string, CallAssignment[]>();
   for (const row of assignments) {

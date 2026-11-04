@@ -87,10 +87,10 @@ describe("assignDailyCallsInMemory", () => {
     expect(result).toMatchObject({
       date: today,
       skipped: false,
-      // BDE: leftover 1 + callback + 1 new; manager: remaining new
-      assigned: 3,
+      // BDE only: leftover 1 + callback + 1 new (quota 3 → 2 new slots)
+      assigned: 2,
       quota: 3,
-      sales_processed: 2,
+      sales_processed: 1,
     });
 
     const { data: assignments } = await dataProvider.getList(
@@ -101,19 +101,13 @@ describe("assignDailyCallsInMemory", () => {
         filter: { status: "open" },
       },
     );
-    expect(assignments).toHaveLength(4);
+    expect(assignments).toHaveLength(3);
     const { data: bdeContacts } = await dataProvider.getList("contacts", {
       pagination: { page: 1, perPage: 20 },
       sort: { field: "id", order: "ASC" },
       filter: { assigned_to: 1 },
     });
     expect(bdeContacts.map((contact) => contact.id).sort()).toEqual([10, 12]);
-    const { data: managerContacts } = await dataProvider.getList("contacts", {
-      pagination: { page: 1, perPage: 20 },
-      sort: { field: "id", order: "ASC" },
-      filter: { assigned_to: 2 },
-    });
-    expect(managerContacts.map((contact) => contact.id)).toEqual([11]);
   });
 
   it("skips non-working days", async () => {
