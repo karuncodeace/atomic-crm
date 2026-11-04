@@ -199,6 +199,8 @@ revoke all on table public.tags from anon;
 revoke all on table public.tasks from anon;
 revoke all on table public.configuration from anon;
 revoke all on table public.favicons_excluded_domains from anon;
+grant select, insert, references, trigger on table public.company_sectors to authenticated;
+grant all on table public.company_sectors to service_role;
 revoke all on table public.company_sectors from anon;
 revoke all on table public.import_batches from anon;
 revoke all on table public.activity_log from anon;
