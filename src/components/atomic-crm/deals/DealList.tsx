@@ -1,5 +1,4 @@
 import {
-  useCanAccess,
   useGetIdentity,
   useListContext,
   useStore,
@@ -22,7 +21,6 @@ import { DealCreate } from "./DealCreate";
 import { DealEdit } from "./DealEdit";
 import { DealEmpty } from "./DealEmpty";
 import { DealListContent } from "./DealListContent";
-import { OnlyMineInput } from "./OnlyMineInput";
 import { DealTableView } from "./DealTableView";
 import { DealCompanyView } from "./DealCompanyView";
 import {
@@ -34,30 +32,18 @@ import {
 const DealList = () => {
   const { identity } = useGetIdentity();
   const translate = useTranslate();
-  const { canAccess: canAccessSalesList, isPending } = useCanAccess({
-    resource: "sales",
-    action: "list",
-  });
 
   if (!identity) return null;
 
   const dealFilters = [
-    <SearchInput source="q" alwaysOn />,
-    <ReferenceInput source="company_id" reference="companies">
+    <SearchInput source="q" alwaysOn key="q" />,
+    <ReferenceInput source="company_id" reference="companies" key="company">
       <AutocompleteInput
         label={false}
         placeholder={translate("resources.deals.fields.company_id")}
       />
     </ReferenceInput>,
-    ...(isPending
-      ? []
-      : [
-          canAccessSalesList ? (
-            <AccountManagerInput source="sales_id" alwaysOn />
-          ) : (
-            <OnlyMineInput source="sales_id" alwaysOn />
-          ),
-        ]),
+    <AccountManagerInput source="sales_id" alwaysOn key="sales" />,
   ];
 
   return (

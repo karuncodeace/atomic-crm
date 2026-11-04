@@ -61,9 +61,20 @@ export const useConfigurationContext = () => {
   );
 
   return useMemo(() => {
-    const mergedConfig = {
+    // Ignore null/empty overrides from a stale store or empty DB row so a
+    // missing dealStages never crashes the Leads board.
+    const safeConfig = Object.fromEntries(
+      Object.entries(config ?? {}).filter(([, value]) => {
+        if (value == null) return false;
+        if (Array.isArray(value) && value.length === 0) return false;
+        if (typeof value === "string" && value.trim() === "") return false;
+        return true;
+      }),
+    ) as Partial<ConfigurationContextValue>;
+
+    const mergedConfig: ConfigurationContextValue = {
       ...defaultConfiguration,
-      ...config,
+      ...safeConfig,
     };
 
     // Merge new defaults with previously saved custom industries.
@@ -93,6 +104,16 @@ export const useConfigurationContext = () => {
       mergedConfig.noteStatuses = [
         ...defaultConfiguration.noteStatuses.map((status) => ({ ...status })),
       ];
+    }
+
+    if (!mergedConfig.dealStages?.length) {
+      mergedConfig.dealStages = [
+        ...defaultDealStages.map((stage) => ({ ...stage })),
+      ];
+    }
+
+    if (!mergedConfig.currency) {
+      mergedConfig.currency = defaultConfiguration.currency;
     }
 
     return {

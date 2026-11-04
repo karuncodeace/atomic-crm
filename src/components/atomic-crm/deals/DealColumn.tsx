@@ -7,12 +7,16 @@ import { DealCard } from "./DealCard";
 
 export const DealColumn = ({
   stage,
-  deals,
+  deals = [],
 }: {
   stage: string;
-  deals: Deal[];
+  deals?: Deal[];
 }) => {
-  const totalAmount = deals.reduce((sum, deal) => sum + deal.amount, 0);
+  const columnDeals = deals ?? [];
+  const totalAmount = columnDeals.reduce(
+    (sum, deal) => sum + (Number(deal.amount) || 0),
+    0,
+  );
   const { dealStages, currency } = useConfigurationContext();
   return (
     <div className="flex-1 pb-8">
@@ -24,7 +28,7 @@ export const DealColumn = ({
           {totalAmount.toLocaleString("en-US", {
             notation: "compact",
             style: "currency",
-            currency,
+            currency: currency || "USD",
             currencyDisplay: "narrowSymbol",
             minimumSignificantDigits: 3,
           })}
@@ -39,7 +43,7 @@ export const DealColumn = ({
               snapshot.isDraggingOver ? "bg-muted" : ""
             }`}
           >
-            {deals.map((deal, index) => (
+            {columnDeals.map((deal, index) => (
               <DealCard key={deal.id} deal={deal} index={index} />
             ))}
             {droppableProvided.placeholder}

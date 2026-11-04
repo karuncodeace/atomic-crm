@@ -7,7 +7,8 @@ export const getDealsByStage = (
   unorderedDeals: Deal[],
   dealStages: ConfigurationContextValue["dealStages"],
 ) => {
-  if (!dealStages) return {};
+  if (!dealStages?.length) return {};
+  const fallbackStage = dealStages[0].value;
   const dealsByStage: Record<Deal["stage"], Deal[]> = unorderedDeals.reduce(
     (acc, deal) => {
       // A deal with a stage that is not configured cannot be placed on the
@@ -19,7 +20,7 @@ export const getDealsByStage = (
       // of disappearing from the board.
       const stage = dealStages.find((s) => s.value === deal.stage)
         ? deal.stage
-        : dealStages[0].value;
+        : fallbackStage;
       acc[stage].push(deal);
       return acc;
     },
@@ -31,7 +32,8 @@ export const getDealsByStage = (
   // order each column by index
   dealStages.forEach((stage) => {
     dealsByStage[stage.value] = dealsByStage[stage.value].sort(
-      (recordA: Deal, recordB: Deal) => recordA.index - recordB.index,
+      (recordA: Deal, recordB: Deal) =>
+        (recordA.index ?? 0) - (recordB.index ?? 0),
     );
   });
   return dealsByStage;

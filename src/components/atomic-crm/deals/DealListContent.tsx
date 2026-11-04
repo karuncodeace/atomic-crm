@@ -71,13 +71,15 @@ export const DealListContent = () => {
     });
   };
 
+  const stages = dealStages?.length ? dealStages : [];
+
   return (
     <DragDropContext onDragEnd={onDragEnd}>
       <div className="flex gap-4">
-        {dealStages.map((stage) => (
+        {stages.map((stage) => (
           <DealColumn
             stage={stage.value}
-            deals={dealsByStage[stage.value]}
+            deals={dealsByStage[stage.value] ?? []}
             key={stage.value}
           />
         ))}

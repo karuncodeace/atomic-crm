@@ -11,7 +11,7 @@ describe("DealList", () => {
     page.viewport(1600, 900);
   });
 
-  it("lets an admin filter the board by account manager instead of only-mine", async () => {
+  it("lets an admin filter the board by account manager", async () => {
     const screen = await render(<AdminAccountManagerFilter />);
 
     await expect.element(screen.getByText("Acme - Jane deal")).toBeVisible();
@@ -35,12 +35,16 @@ describe("DealList", () => {
     await expect.element(screen.getByText("Acme - Marie deal")).toBeVisible();
   });
 
-  it("keeps the only-mine switch for a user who is not an admin", async () => {
+  it("gives BDE the same account-manager filter (shared access)", async () => {
     const screen = await render(<NonAdminAccountManagerFilter />);
 
-    await expect.element(screen.getByText("Only deals I manage")).toBeVisible();
+    await expect.element(screen.getByText("Acme - Jane deal")).toBeVisible();
+    await expect.element(screen.getByText("Acme - Marie deal")).toBeVisible();
+    await expect
+      .element(screen.getByText("Only deals I manage"))
+      .not.toBeInTheDocument();
     await expect
       .element(screen.getByRole("combobox", { name: "Account manager" }))
-      .not.toBeInTheDocument();
+      .toBeVisible();
   });
 });
