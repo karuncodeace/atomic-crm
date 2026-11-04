@@ -162,6 +162,20 @@ grant all on sequence public.brochures_id_seq to service_role;
 revoke all on table public.brochures from anon;
 revoke all on sequence public.brochures_id_seq from anon;
 
+grant select on table public.call_assignments to authenticated;
+grant all on table public.call_assignments to service_role;
+grant select on sequence public.call_assignments_id_seq to authenticated;
+grant all on sequence public.call_assignments_id_seq to service_role;
+revoke all on table public.call_assignments from anon;
+revoke all on sequence public.call_assignments_id_seq from anon;
+
+grant select on table public.call_logs to authenticated;
+grant all on table public.call_logs to service_role;
+grant select on sequence public.call_logs_id_seq to authenticated;
+grant all on sequence public.call_logs_id_seq to service_role;
+revoke all on table public.call_logs from anon;
+revoke all on sequence public.call_logs_id_seq from anon;
+
 grant all on function public.crm_role() to authenticated;
 grant all on function public.crm_role() to service_role;
 grant all on function public.current_sales_id() to authenticated;

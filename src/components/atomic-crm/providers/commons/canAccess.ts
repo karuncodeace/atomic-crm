@@ -20,7 +20,6 @@ const ADMIN_RESOURCES = new Set(["sales", "configuration"]);
 export const MANAGER_RESOURCES = new Set([
   "import_batches",
   "lead_import",
-  "call_assignments",
   "recycle_pool",
   "whatsapp_approvals",
   "brochures",
