@@ -552,6 +552,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/leads/LeadImportButton.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/layout/useRefreshData.ts",
           "type": "registry:component"
         },
