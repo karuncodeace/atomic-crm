@@ -283,7 +283,6 @@ export const frenchCrmMessages = {
       no_file: "Aucun fichier lié",
       change_decision: "Modifier la décision",
       tabs: {
-        approval: "En attente",
         all: "Toutes",
       },
       fields: {
@@ -293,7 +292,9 @@ export const frenchCrmMessages = {
         company_id: "Entreprise",
         contact_id: "Contact",
         deal_id: "Affaire",
-        created_at: "Créée le",
+        created_at: "Reçue le",
+        linked_to: "Liée à",
+        actions: "Actions",
       },
       status: {
         pending: "En attente",
@@ -305,9 +306,16 @@ export const frenchCrmMessages = {
         approve: "Approuver",
         not_approve: "Refuser",
       },
+      notification: {
+        pending: "Brochure remise en attente",
+        approved: "Brochure approuvée",
+        not_approved: "Brochure refusée",
+        error: "Impossible de mettre à jour la brochure. Veuillez réessayer.",
+      },
       empty: {
-        title: "Aucune brochure",
+        title: "Aucune brochure ici",
         approval_title: "Tout est à jour",
+        approval_description: "Aucune brochure n'attend votre validation.",
         description:
           "Lorsqu'une brochure est générée pour un lead, elle apparaît ici pour révision.",
       },

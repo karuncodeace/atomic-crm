@@ -278,7 +278,6 @@ export const englishCrmMessages = {
       no_file: "No file linked",
       change_decision: "Change decision",
       tabs: {
-        approval: "Pending",
         all: "All",
       },
       fields: {
@@ -288,7 +287,9 @@ export const englishCrmMessages = {
         company_id: "Company",
         contact_id: "Contact",
         deal_id: "Deal",
-        created_at: "Created at",
+        created_at: "Received",
+        linked_to: "Linked to",
+        actions: "Actions",
       },
       status: {
         pending: "Pending",
@@ -300,9 +301,16 @@ export const englishCrmMessages = {
         approve: "Approve",
         not_approve: "Decline",
       },
+      notification: {
+        pending: "Brochure moved back to pending",
+        approved: "Brochure approved",
+        not_approved: "Brochure declined",
+        error: "Could not update the brochure. Please try again.",
+      },
       empty: {
-        title: "No brochures yet",
+        title: "No brochures here",
         approval_title: "You're all caught up",
+        approval_description: "There are no brochures waiting for your review.",
         description:
           "When the other app generates a brochure for a lead, it lands here for review.",
       },
