@@ -1,60 +1,36 @@
 import { useGetIdentity, useGetList, useTranslate } from "ra-core";
 
-import type { Contact, ContactNote } from "../types";
+import type { Contact } from "../types";
 import { ClientsCard } from "./ClientsCard";
 import { DashboardActivityLog } from "./DashboardActivityLog";
 import { DashboardKpis } from "./DashboardKpis";
 import { DashboardPanel, DashboardPanelDrawer } from "./DashboardPanel";
-import { DashboardStepper } from "./DashboardStepper";
 import { DealsChart } from "./DealsChart";
 import { HotContacts } from "./HotContacts";
 import { RecentNotesCard } from "./RecentNotesCard";
 import { Welcome } from "./Welcome";
 
 export const Dashboard = () => {
-  const {
-    data: dataContact,
-    total: totalContact,
-    isPending: isPendingContact,
-  } = useGetList<Contact>("contacts", {
-    pagination: { page: 1, perPage: 1 },
-  });
-
-  const { total: totalContactNotes, isPending: isPendingContactNotes } =
-    useGetList<ContactNote>("contact_notes", {
+  const { total: totalContact, isPending: isPendingContact } =
+    useGetList<Contact>("contacts", {
       pagination: { page: 1, perPage: 1 },
     });
 
-  const { total: totalDeal, isPending: isPendingDeal } = useGetList<Contact>(
-    "deals",
-    {
-      pagination: { page: 1, perPage: 1 },
-    },
-  );
+  const { total: totalDeal, isPending: isPendingDeal } = useGetList("deals", {
+    pagination: { page: 1, perPage: 1 },
+  });
 
-  const isPending = isPendingContact || isPendingContactNotes || isPendingDeal;
+  const isPending = isPendingContact || isPendingDeal;
 
   if (isPending) {
     return null;
-  }
-
-  if (!totalContact) {
-    return <DashboardStepper step={1} />;
-  }
-
-  if (!totalContactNotes) {
-    return <DashboardStepper step={2} contactId={dataContact?.[0]?.id} />;
   }
 
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="flex min-w-0 flex-col gap-6">
         <DashboardGreeting />
-        <DashboardKpis
-          totalContacts={totalContact}
-          totalDeals={totalDeal}
-          totalNotes={totalContactNotes}
-        />
+        <DashboardKpis totalContacts={totalContact} totalDeals={totalDeal} />
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
           <div className="min-w-0 lg:col-span-7">
             <RecentNotesCard />

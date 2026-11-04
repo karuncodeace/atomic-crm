@@ -1,5 +1,5 @@
 import { Bell, FileText, Import, Settings, User, Users } from "lucide-react";
-import { CanAccess, useGetList, useTranslate, useUserMenu } from "ra-core";
+import { useGetList, useTranslate, useUserMenu } from "ra-core";
 import { Link } from "react-router";
 import { RefreshButton } from "@/components/admin/refresh-button";
 import { ThemeModeToggle } from "@/components/admin/theme-mode-toggle";
@@ -23,19 +23,13 @@ const Header = () => (
     <div className="ml-auto flex items-center gap-1">
       <NewRecordButton />
       <Separator orientation="vertical" className="mx-2 h-5" />
-      <CanAccess resource="brochures" action="list">
-        <NotificationsButton />
-      </CanAccess>
+      <NotificationsButton />
       <ThemeModeToggle />
       <RefreshButton />
       <UserMenu>
         <ProfileMenu />
-        <CanAccess resource="sales" action="list">
-          <UsersMenu />
-        </CanAccess>
-        <CanAccess resource="configuration" action="edit">
-          <SettingsMenu />
-        </CanAccess>
+        <UsersMenu />
+        <SettingsMenu />
         <ImportFromJsonMenuItem />
         <ChangelogMenuItem />
       </UserMenu>

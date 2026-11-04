@@ -8,7 +8,7 @@ import {
   Settings,
   Users,
 } from "lucide-react";
-import { CanAccess, useGetList, useTranslate } from "ra-core";
+import { useGetList, useTranslate } from "ra-core";
 import { Link, matchPath, useLocation } from "react-router";
 import {
   Sidebar,
@@ -78,17 +78,15 @@ export const CrmSidebar = () => {
                   _: "Tasks",
                 })}
               />
-              <CanAccess resource="brochures" action="list">
-                <NavItem
-                  to="/brochures"
-                  pattern="/brochures/*"
-                  icon={FileText}
-                  label={translate("resources.brochures.name", {
-                    smart_count: 2,
-                  })}
-                  badge={<PendingBrochuresBadge />}
-                />
-              </CanAccess>
+              <NavItem
+                to="/brochures"
+                pattern="/brochures/*"
+                icon={FileText}
+                label={translate("resources.brochures.name", {
+                  smart_count: 2,
+                })}
+                badge={<PendingBrochuresBadge />}
+              />
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -106,22 +104,18 @@ const AdminGroup = () => {
       <SidebarGroupLabel>{translate("crm.sidebar.admin")}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          <CanAccess resource="sales" action="list">
-            <NavItem
-              to="/sales"
-              pattern="/sales/*"
-              icon={Users}
-              label={translate("resources.sales.name", { smart_count: 2 })}
-            />
-          </CanAccess>
-          <CanAccess resource="configuration" action="edit">
-            <NavItem
-              to="/settings"
-              pattern="/settings"
-              icon={Settings}
-              label={translate("crm.settings.title")}
-            />
-          </CanAccess>
+          <NavItem
+            to="/sales"
+            pattern="/sales/*"
+            icon={Users}
+            label={translate("resources.sales.name", { smart_count: 2 })}
+          />
+          <NavItem
+            to="/settings"
+            pattern="/settings"
+            icon={Settings}
+            label={translate("crm.settings.title")}
+          />
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

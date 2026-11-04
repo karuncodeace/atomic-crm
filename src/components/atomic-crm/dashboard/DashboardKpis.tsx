@@ -1,4 +1,4 @@
-import { CanAccess, useGetList, useTranslate } from "ra-core";
+import { useGetList, useTranslate } from "ra-core";
 import { Link } from "react-router";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -6,7 +6,6 @@ import {
   ArrowUpRight,
   FileClock,
   Handshake,
-  NotebookPen,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -82,11 +81,9 @@ const PendingBrochuresKpi = () => {
 export const DashboardKpis = ({
   totalContacts,
   totalDeals,
-  totalNotes,
 }: {
   totalContacts: number | undefined;
   totalDeals: number | undefined;
-  totalNotes: number | undefined;
 }) => {
   const translate = useTranslate();
   return (
@@ -105,21 +102,7 @@ export const DashboardKpis = ({
         tone="blue"
         to="/deals"
       />
-      <CanAccess
-        resource="brochures"
-        action="list"
-        accessDenied={
-          <KpiCard
-            label={translate("resources.notes.name", { smart_count: 2 })}
-            value={totalNotes}
-            icon={NotebookPen}
-            tone="lavender"
-            to="/contacts"
-          />
-        }
-      >
-        <PendingBrochuresKpi />
-      </CanAccess>
+      <PendingBrochuresKpi />
     </div>
   );
 };
