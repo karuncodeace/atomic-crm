@@ -186,6 +186,14 @@ grant all on function public.can_see_company(bigint) to authenticated;
 grant all on function public.can_see_company(bigint) to service_role;
 grant all on function public.call_engine_settings() to authenticated;
 grant all on function public.call_engine_settings() to service_role;
+grant all on function public.add_working_days(date, integer) to authenticated;
+grant all on function public.add_working_days(date, integer) to service_role;
+revoke all on function public.assign_daily_calls() from public, anon;
+grant all on function public.assign_daily_calls() to authenticated;
+grant all on function public.assign_daily_calls() to service_role;
+revoke all on function public.record_call_outcome(bigint, text, text, timestamp with time zone) from public, anon;
+grant all on function public.record_call_outcome(bigint, text, text, timestamp with time zone) to authenticated;
+grant all on function public.record_call_outcome(bigint, text, text, timestamp with time zone) to service_role;
 revoke all on function public.import_leads(text, jsonb) from public, anon;
 grant all on function public.import_leads(text, jsonb) to authenticated;
 grant all on function public.import_leads(text, jsonb) to service_role;
@@ -200,6 +208,7 @@ revoke all on function public.current_sales_id() from public, anon;
 revoke all on function public.is_manager() from public, anon;
 revoke all on function public.can_see_company(bigint) from public, anon;
 revoke all on function public.call_engine_settings() from public, anon;
+revoke all on function public.add_working_days(date, integer) from public, anon;
 
 -- Supabase default privileges grant anon everything on new objects: take it
 -- back explicitly (no anon RLS policy exists, this keeps it that way).

@@ -326,6 +326,36 @@ const getDataProviderWithCustomMethods = () => {
       }
       return data as LeadImportResult;
     },
+    async assignDailyCalls() {
+      const { data, error } =
+        await getSupabaseClient().rpc("assign_daily_calls");
+      if (error) {
+        console.error("assign_daily_calls.error", error);
+        throw new Error(error.message);
+      }
+      return data;
+    },
+    async recordCallOutcome(params: {
+      assignmentId: Identifier;
+      outcome: string;
+      notes?: string | null;
+      nextAttemptAt?: string | null;
+    }) {
+      const { data, error } = await getSupabaseClient().rpc(
+        "record_call_outcome",
+        {
+          p_assignment_id: params.assignmentId,
+          p_outcome: params.outcome,
+          p_notes: params.notes ?? null,
+          p_next_attempt_at: params.nextAttemptAt ?? null,
+        },
+      );
+      if (error) {
+        console.error("record_call_outcome.error", error);
+        throw new Error(error.message);
+      }
+      return data;
+    },
     async mergeContacts(sourceId: Identifier, targetId: Identifier) {
       const { data, error } = await getSupabaseClient().functions.invoke(
         "merge_contacts",

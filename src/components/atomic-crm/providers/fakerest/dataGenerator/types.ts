@@ -1,5 +1,7 @@
 import type {
   Brochure,
+  CallAssignment,
+  CallLog,
   Company,
   Contact,
   ContactNote,
@@ -23,5 +25,7 @@ export interface Db {
   tasks: Task[];
   import_batches: ImportBatch[];
   brochures: Brochure[];
+  call_assignments: CallAssignment[];
+  call_logs: CallLog[];
   configuration: Array<{ id: number; config: ConfigurationContextValue }>;
 }

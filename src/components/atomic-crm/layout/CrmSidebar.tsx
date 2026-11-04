@@ -67,10 +67,13 @@ export const CrmSidebar = () => {
                 label={translate("resources.deals.name", { smart_count: 2 })}
               />
               <NavItem
-                to="/tasks"
-                pattern="/tasks/*"
+                to="/call_assignments"
+                pattern="/call_assignments/*"
                 icon={ListTodo}
-                label={translate("resources.tasks.name", { smart_count: 2 })}
+                label={translate("resources.call_assignments.name", {
+                  smart_count: 2,
+                  _: "Tasks",
+                })}
               />
               <CanAccess resource="brochures" action="list">
                 <NavItem

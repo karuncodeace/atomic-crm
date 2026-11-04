@@ -739,6 +739,334 @@ CREATE OR REPLACE FUNCTION "public"."call_engine_settings"() RETURNS "jsonb"
     ) || coalesce((select config -> 'callEngine' from public.configuration where id = 1), '{}'::jsonb);
 $$;
 
+-- Advance a date by N working days (Mon–Fri by default from call_engine_settings).
+CREATE OR REPLACE FUNCTION "public"."add_working_days"("p_from" "date", "p_days" integer) RETURNS "date"
+    LANGUAGE "plpgsql"
+    STABLE
+    SET "search_path" TO ''
+    AS $$
+declare
+    v_settings jsonb := public.call_engine_settings();
+    v_working jsonb := coalesce(v_settings->'workingDays', '[1,2,3,4,5]'::jsonb);
+    v_holidays jsonb := coalesce(v_settings->'holidays', '[]'::jsonb);
+    v_date date := p_from;
+    v_left integer := greatest(coalesce(p_days, 0), 0);
+    v_dow integer;
+begin
+    if v_left = 0 then
+        return v_date;
+    end if;
+    while v_left > 0 loop
+        v_date := v_date + 1;
+        v_dow := extract(isodow from v_date)::integer;
+        if v_working @> to_jsonb(v_dow) then
+            if not (v_holidays @> to_jsonb(v_date::text)) then
+                v_left := v_left - 1;
+            end if;
+        end if;
+    end loop;
+    return v_date;
+end;
+$$;
+
+-- Fill each active dialer's queue up to dailyCallQuota for today (IST).
+-- Dialers = role bde or manager (admins are excluded). Priority: open leftovers
+-- → due callbacks → new leads. Never exceeds quota.
+CREATE OR REPLACE FUNCTION "public"."assign_daily_calls"() RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+declare
+    v_settings jsonb := public.call_engine_settings();
+    v_quota integer := greatest(coalesce((v_settings->>'dailyCallQuota')::integer, 25), 0);
+    v_tz text := coalesce(v_settings->>'timezone', 'Asia/Kolkata');
+    v_today date := (timezone(v_tz, now()))::date;
+    v_dow integer := extract(isodow from v_today)::integer;
+    v_working jsonb := coalesce(v_settings->'workingDays', '[1,2,3,4,5]'::jsonb);
+    v_sales record;
+    v_open_count integer;
+    v_slots integer;
+    v_contact record;
+    v_deal_id bigint;
+    v_new_id bigint;
+    v_assigned_total integer := 0;
+    v_sales_count integer := 0;
+begin
+    if coalesce(auth.role(), '') <> 'service_role' and not public.is_manager() then
+        raise exception 'Only managers can assign daily calls' using errcode = '42501';
+    end if;
+
+    if not (v_working @> to_jsonb(v_dow)) then
+        return jsonb_build_object(
+            'date', v_today,
+            'skipped', true,
+            'reason', 'non_working_day',
+            'assigned', 0
+        );
+    end if;
+
+    for v_sales in
+        select s.id
+        from public.sales s
+        where not s.disabled
+          and s.role in ('bde', 'manager')
+        order by s.id
+    loop
+        v_sales_count := v_sales_count + 1;
+
+        -- Carry leftover open assignments into today's cap (do not re-insert).
+        select count(*)::integer into v_open_count
+        from public.call_assignments a
+        where a.sales_id = v_sales.id
+          and a.status = 'open';
+
+        v_slots := greatest(v_quota - v_open_count, 0);
+        if v_slots = 0 then
+            continue;
+        end if;
+
+        -- Due callbacks / no-answers already owned by this BDE.
+        for v_contact in
+            select c.id, c.company_id
+            from public.contacts c
+            where c.assigned_to = v_sales.id
+              and coalesce(c.do_not_contact, false) = false
+              and c.lead_stage is not null
+              and c.lead_stage not in ('interested', 'not_interested', 'recycled')
+              and c.last_outcome in ('callback', 'no_answer')
+              and (c.next_attempt_at is null or (timezone(v_tz, c.next_attempt_at))::date <= v_today)
+              and not exists (
+                  select 1 from public.call_assignments a
+                  where a.sales_id = v_sales.id
+                    and a.contact_id = c.id
+                    and a.status = 'open'
+              )
+            order by c.next_attempt_at nulls first, c.id
+            limit v_slots
+        loop
+            select d.id into v_deal_id
+            from public.deals d
+            where d.company_id = v_contact.company_id
+              and d.archived_at is null
+              and v_contact.id = any (d.contact_ids)
+            order by d.id
+            limit 1;
+
+            insert into public.call_assignments (
+                assignment_date, sales_id, contact_id, company_id, deal_id, status
+            ) values (
+                v_today, v_sales.id, v_contact.id, v_contact.company_id, v_deal_id, 'open'
+            )
+            on conflict (sales_id, contact_id, assignment_date) do nothing
+            returning id into v_new_id;
+
+            if v_new_id is not null then
+                v_assigned_total := v_assigned_total + 1;
+                v_slots := v_slots - 1;
+                v_new_id := null;
+            end if;
+            exit when v_slots <= 0;
+        end loop;
+
+        if v_slots <= 0 then
+            continue;
+        end if;
+
+        -- Fill with new / queued leads from the unassigned pool.
+        for v_contact in
+            select c.id, c.company_id
+            from public.contacts c
+            where c.assigned_to is null
+              and coalesce(c.do_not_contact, false) = false
+              and c.lead_stage in ('new', 'queued')
+              and not exists (
+                  select 1 from public.call_assignments a
+                  where a.contact_id = c.id
+                    and a.status = 'open'
+              )
+            order by c.created_at nulls last, c.id
+            limit v_slots
+            for update skip locked
+        loop
+            update public.contacts
+            set assigned_to = v_sales.id,
+                assigned_at = now(),
+                lead_stage = case
+                    when lead_stage = 'new' then 'queued'
+                    else lead_stage
+                end
+            where id = v_contact.id;
+
+            select d.id into v_deal_id
+            from public.deals d
+            where d.company_id = v_contact.company_id
+              and d.archived_at is null
+              and v_contact.id = any (d.contact_ids)
+            order by d.id
+            limit 1;
+
+            insert into public.call_assignments (
+                assignment_date, sales_id, contact_id, company_id, deal_id, status
+            ) values (
+                v_today, v_sales.id, v_contact.id, v_contact.company_id, v_deal_id, 'open'
+            )
+            on conflict (sales_id, contact_id, assignment_date) do nothing
+            returning id into v_new_id;
+
+            if v_new_id is not null then
+                v_assigned_total := v_assigned_total + 1;
+                v_slots := v_slots - 1;
+                v_new_id := null;
+            end if;
+            exit when v_slots <= 0;
+        end loop;
+    end loop;
+
+    return jsonb_build_object(
+        'date', v_today,
+        'skipped', false,
+        'sales_processed', v_sales_count,
+        'assigned', v_assigned_total,
+        'quota', v_quota
+    );
+end;
+$$;
+
+-- Complete one call: write log, close assignment, sync contact + deal stage.
+CREATE OR REPLACE FUNCTION "public"."record_call_outcome"(
+    "p_assignment_id" bigint,
+    "p_outcome" "text",
+    "p_notes" "text" DEFAULT NULL,
+    "p_next_attempt_at" timestamp with time zone DEFAULT NULL
+) RETURNS "jsonb"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+declare
+    v_assignment public.call_assignments%rowtype;
+    v_sales_id bigint := public.current_sales_id();
+    v_outcome text := lower(trim(p_outcome));
+    v_settings jsonb := public.call_engine_settings();
+    v_tz text := coalesce(v_settings->>'timezone', 'Asia/Kolkata');
+    v_retry_days integer := greatest(coalesce((v_settings->>'retryWindowWorkingDays')::integer, 3), 1);
+    v_today date := (timezone(v_tz, now()))::date;
+    v_next timestamp with time zone;
+    v_retry integer;
+    v_lead_stage text;
+    v_deal_stage text;
+    v_log_id bigint;
+begin
+    if v_sales_id is null then
+        raise exception 'Not authenticated as a sales user' using errcode = '42501';
+    end if;
+    if v_outcome not in ('interested', 'callback', 'no_answer', 'not_interested') then
+        raise exception 'Invalid outcome: %', p_outcome using errcode = '22023';
+    end if;
+
+    select * into v_assignment
+    from public.call_assignments
+    where id = p_assignment_id
+    for update;
+
+    if not found then
+        raise exception 'Assignment % not found', p_assignment_id using errcode = 'P0002';
+    end if;
+    if v_assignment.status <> 'open' then
+        raise exception 'Assignment % is already done', p_assignment_id using errcode = '22023';
+    end if;
+    if not public.is_manager() and v_assignment.sales_id is distinct from v_sales_id then
+        raise exception 'Not your assignment' using errcode = '42501';
+    end if;
+
+    select retry_count into v_retry from public.contacts where id = v_assignment.contact_id;
+    v_retry := coalesce(v_retry, 0);
+
+    if v_outcome = 'callback' then
+        v_next := coalesce(
+            p_next_attempt_at,
+            (public.add_working_days(v_today, 1)::text || ' 10:00:00')::timestamp
+                at time zone v_tz
+        );
+        v_lead_stage := 'in_progress';
+        v_deal_stage := 'callback';
+    elsif v_outcome = 'no_answer' then
+        v_retry := v_retry + 1;
+        if v_retry >= v_retry_days then
+            v_next := null;
+            v_lead_stage := 'recycled';
+            v_deal_stage := 'not_answered';
+        else
+            v_next := coalesce(
+                p_next_attempt_at,
+                (public.add_working_days(v_today, 1)::text || ' 10:00:00')::timestamp
+                    at time zone v_tz
+            );
+            v_lead_stage := 'in_progress';
+            v_deal_stage := 'not_answered';
+        end if;
+    elsif v_outcome = 'interested' then
+        v_next := null;
+        v_lead_stage := 'interested';
+        v_deal_stage := 'interested';
+    else
+        v_next := null;
+        v_lead_stage := 'not_interested';
+        v_deal_stage := 'not_interested';
+    end if;
+
+    insert into public.call_logs (
+        assignment_id, sales_id, contact_id, outcome, notes, next_attempt_at
+    ) values (
+        v_assignment.id,
+        coalesce(v_sales_id, v_assignment.sales_id),
+        v_assignment.contact_id,
+        v_outcome,
+        nullif(trim(coalesce(p_notes, '')), ''),
+        v_next
+    )
+    returning id into v_log_id;
+
+    update public.call_assignments
+    set status = 'done', done_at = now()
+    where id = v_assignment.id;
+
+    update public.contacts set
+        last_outcome = v_outcome,
+        last_attempt_at = now(),
+        next_attempt_at = v_next,
+        retry_count = v_retry,
+        lead_stage = v_lead_stage,
+        recycled_at = case when v_lead_stage = 'recycled' then now() else recycled_at end,
+        recycle_reason = case
+            when v_lead_stage = 'recycled' then 'max_no_answer_retries'
+            else recycle_reason
+        end
+    where id = v_assignment.contact_id;
+
+    if v_assignment.deal_id is not null then
+        update public.deals
+        set stage = v_deal_stage, updated_at = now()
+        where id = v_assignment.deal_id
+          and archived_at is null;
+    else
+        update public.deals d
+        set stage = v_deal_stage, updated_at = now()
+        where d.company_id = v_assignment.company_id
+          and d.archived_at is null
+          and v_assignment.contact_id = any (d.contact_ids);
+    end if;
+
+    return jsonb_build_object(
+        'assignment_id', v_assignment.id,
+        'log_id', v_log_id,
+        'outcome', v_outcome,
+        'lead_stage', v_lead_stage,
+        'deal_stage', v_deal_stage,
+        'next_attempt_at', v_next
+    );
+end;
+$$;
+
 CREATE OR REPLACE FUNCTION "public"."open_cold_deal"("p_company_id" bigint, "p_contact_ids" bigint[], "p_sales_id" bigint, "p_deal_name" "text") RETURNS bigint
     LANGUAGE "plpgsql"
     SET "search_path" TO ''

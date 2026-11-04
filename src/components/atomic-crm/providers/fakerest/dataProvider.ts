@@ -13,6 +13,9 @@ import {
   syncCompanyContacts,
 } from "../commons/companyContacts";
 import fakeRestDataProvider from "ra-data-fakerest";
+import { assignDailyCallsInMemory } from "../../calls/assignDailyCallsInMemory";
+import { recordCallOutcomeInMemory } from "../../calls/recordCallOutcomeInMemory";
+import type { CallOutcome } from "../../types";
 import { importLeadsInMemory } from "../../leads/importLeadsInMemory";
 import type { LeadImportResult, LeadImportRow } from "../../leads/leadImport";
 
@@ -261,6 +264,22 @@ export const createDataProvider = ({
     ): Promise<LeadImportResult> => {
       const identity = await getIdentity();
       return importLeadsInMemory(dataProvider, fileName, rows, identity?.id);
+    },
+    assignDailyCalls: async () => assignDailyCallsInMemory(dataProvider),
+    recordCallOutcome: async (params: {
+      assignmentId: Identifier;
+      outcome: string;
+      notes?: string | null;
+      nextAttemptAt?: string | null;
+    }) => {
+      const identity = await getIdentity();
+      return recordCallOutcomeInMemory(dataProvider, {
+        assignmentId: params.assignmentId,
+        outcome: params.outcome as CallOutcome,
+        notes: params.notes,
+        nextAttemptAt: params.nextAttemptAt,
+        salesId: identity?.id,
+      });
     },
     salesCreate: async ({ ...data }: SalesFormData): Promise<Sale> => {
       const response = await dataProvider.create("sales", {

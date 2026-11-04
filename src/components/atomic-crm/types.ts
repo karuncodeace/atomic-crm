@@ -42,6 +42,47 @@ export type LeadStage =
 export type CallOutcome =
   "interested" | "callback" | "no_answer" | "not_interested";
 
+export type CallAssignmentStatus = "open" | "done";
+
+export type CallAssignment = {
+  assignment_date: string;
+  sales_id: Identifier;
+  contact_id: Identifier;
+  company_id?: Identifier | null;
+  deal_id?: Identifier | null;
+  status: CallAssignmentStatus;
+  done_at?: string | null;
+  created_at: string;
+} & Pick<RaRecord, "id">;
+
+export type CallLog = {
+  assignment_id: Identifier;
+  sales_id: Identifier;
+  contact_id: Identifier;
+  outcome: CallOutcome;
+  notes?: string | null;
+  next_attempt_at?: string | null;
+  created_at: string;
+} & Pick<RaRecord, "id">;
+
+export type AssignDailyCallsResult = {
+  date: string;
+  skipped: boolean;
+  reason?: string;
+  sales_processed?: number;
+  assigned: number;
+  quota?: number;
+};
+
+export type RecordCallOutcomeResult = {
+  assignment_id: number;
+  log_id: number;
+  outcome: CallOutcome;
+  lead_stage: LeadStage;
+  deal_stage: string;
+  next_attempt_at?: string | null;
+};
+
 export type ImportBatch = {
   created_at: string;
   created_by?: Identifier | null;

@@ -276,6 +276,12 @@ export const frenchCrmMessages = {
     },
     brochures: {
       name: "Brochure |||| Brochures",
+      page_title: "Approbation des brochures",
+      page_subtitle:
+        "Vérifiez les fichiers générés pour un lead, puis approuvez ou refusez.",
+      untitled: "Brochure sans titre",
+      no_file: "Aucun fichier lié",
+      change_decision: "Modifier la décision",
       tabs: {
         approval: "En attente",
         all: "Toutes",
@@ -292,18 +298,18 @@ export const frenchCrmMessages = {
       status: {
         pending: "En attente",
         approved: "Approuvée",
-        not_approved: "Non approuvée",
+        not_approved: "Refusée",
       },
       action: {
-        open: "Ouvrir",
+        open: "Ouvrir la brochure",
         approve: "Approuver",
-        not_approve: "Ne pas approuver",
+        not_approve: "Refuser",
       },
       empty: {
         title: "Aucune brochure",
-        approval_title: "Rien en attente d'approbation",
+        approval_title: "Tout est à jour",
         description:
-          "Les brochures écrites par l'autre application apparaissent ici pour approbation.",
+          "Lorsqu'une brochure est générée pour un lead, elle apparaît ici pour révision.",
       },
     },
     notes: {
@@ -388,6 +394,34 @@ export const frenchCrmMessages = {
       },
       action: {
         new: "Nouvel utilisateur",
+      },
+    },
+    call_assignments: {
+      name: "Tâche |||| Tâches",
+      empty:
+        "Aucune appel dans votre file. Demandez à un manager de lancer l'affectation du jour.",
+      progress:
+        "%{done} terminés aujourd'hui · %{open} ouverts · quota %{quota}",
+      assign_today: "Affecter les appels du jour",
+      assigning: "Affectation…",
+      assign_done: "%{assigned} nouveaux appels affectés",
+      assign_skipped: "Ignoré — jour non ouvré",
+      assign_error: "Impossible d'affecter les appels du jour",
+      complete_title: "Comment s'est passé l'appel ?",
+      fields: {
+        assignment_date: "Planifié pour",
+        next_attempt_at: "Rappeler le",
+        notes: "Notes",
+      },
+      action: {
+        complete: "Terminer",
+        save_outcome: "Enregistrer le résultat",
+      },
+      outcome: {
+        callback: "Rappel",
+        no_answer: "Sans réponse",
+        interested: "Intéressé",
+        not_interested: "Pas intéressé",
       },
     },
     tasks: {

@@ -2,20 +2,32 @@ import { useState } from "react";
 import {
   RecordContextProvider,
   useDataProvider,
+  useGetList,
   useListContext,
   useNotify,
   useRecordContext,
   useTranslate,
   type RaRecord,
 } from "ra-core";
-import { DataTable } from "@/components/admin/data-table";
 import { List } from "@/components/admin/list";
 import { ListPagination } from "@/components/admin/list-pagination";
 import { ReferenceField } from "@/components/admin/reference-field";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import {
+  Building2,
+  Check,
+  ExternalLink,
+  FileText,
+  Handshake,
+  UserRound,
+  X,
+} from "lucide-react";
 
 import type { Brochure, BrochureStatus } from "../types";
 import { formatBrochureUrl } from "./brochureUrl";
@@ -23,220 +35,231 @@ import { formatBrochureUrl } from "./brochureUrl";
 type BrochureTab = "pending" | "all";
 
 const BrochureList = () => {
-  const [tab, setTab] = useState<BrochureTab>("all");
+  const [tab, setTab] = useState<BrochureTab>("pending");
+  const translate = useTranslate();
+  const isMobile = useIsMobile();
+  const { total: pendingTotal } = useGetList<Brochure>("brochures", {
+    pagination: { page: 1, perPage: 1 },
+    sort: { field: "created_at", order: "DESC" },
+    filter: { status: "pending" },
+  });
 
   return (
     <List
       key={tab}
+      title={translate("resources.brochures.page_title")}
       perPage={25}
       sort={{ field: "created_at", order: "DESC" }}
       filter={tab === "pending" ? { status: "pending" } : {}}
-      actions={<BrochureTabs tab={tab} onChange={setTab} />}
+      actions={false}
       pagination={<ListPagination rowsPerPageOptions={[25, 50, 100]} />}
       disableSyncWithLocation
       storeKey={`brochures.${tab}`}
+      className={cn(isMobile && "px-1 pb-16")}
     >
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <p className="max-w-xl text-sm text-muted-foreground">
+          {translate("resources.brochures.page_subtitle")}
+        </p>
+        <Tabs
+          value={tab}
+          onValueChange={(value) => setTab(value as BrochureTab)}
+        >
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="pending" className="gap-2 px-3">
+              {translate("resources.brochures.tabs.approval")}
+              {typeof pendingTotal === "number" && pendingTotal > 0 ? (
+                <Badge
+                  variant="secondary"
+                  className="h-5 min-w-5 justify-center rounded-full px-1.5 tabular-nums"
+                >
+                  {pendingTotal}
+                </Badge>
+              ) : null}
+            </TabsTrigger>
+            <TabsTrigger value="all" className="px-3">
+              {translate("resources.brochures.tabs.all")}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
       <BrochureListBody />
     </List>
   );
 };
 
-const BrochureTabs = ({
-  tab,
-  onChange,
-}: {
-  tab: BrochureTab;
-  onChange: (tab: BrochureTab) => void;
-}) => {
-  const translate = useTranslate();
-  return (
-    <div className="flex flex-wrap gap-2">
-      <Button
-        type="button"
-        size="sm"
-        variant={tab === "all" ? "default" : "outline"}
-        onClick={() => onChange("all")}
-      >
-        {translate("resources.brochures.tabs.all")}
-      </Button>
-      <Button
-        type="button"
-        size="sm"
-        variant={tab === "pending" ? "default" : "outline"}
-        onClick={() => onChange("pending")}
-      >
-        {translate("resources.brochures.tabs.approval")}
-      </Button>
-    </div>
-  );
-};
-
 const BrochureListBody = () => {
   const { data, isPending, filterValues } = useListContext<Brochure>();
-  const isMobile = useIsMobile();
   const translate = useTranslate();
 
-  if (isPending) return null;
-  if (!data?.length) {
-    const waiting = filterValues?.status === "pending";
+  if (isPending) {
     return (
-      <div className="flex flex-col items-center gap-2 px-4 py-16 text-center">
-        <p className="text-lg font-medium">
-          {translate(
-            waiting
-              ? "resources.brochures.empty.approval_title"
-              : "resources.brochures.empty.title",
-          )}
-        </p>
-        <p className="max-w-md text-sm text-muted-foreground">
-          {translate("resources.brochures.empty.description")}
-        </p>
-      </div>
+      <ul className="flex flex-col gap-3" aria-busy="true">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <li
+            key={index}
+            className="h-36 animate-pulse rounded-xl border bg-muted/40"
+          />
+        ))}
+      </ul>
     );
   }
 
-  if (isMobile) return <BrochureCards />;
-  return <BrochureTable />;
-};
+  if (!data?.length) {
+    const waiting = filterValues?.status === "pending";
+    return (
+      <Card className="flex flex-col items-center gap-3 border-dashed px-6 py-16 text-center shadow-none">
+        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+          <FileText className="size-5 text-muted-foreground" aria-hidden />
+        </div>
+        <div className="space-y-1">
+          <p className="text-base font-medium">
+            {translate(
+              waiting
+                ? "resources.brochures.empty.approval_title"
+                : "resources.brochures.empty.title",
+            )}
+          </p>
+          <p className="max-w-md text-sm text-muted-foreground">
+            {translate("resources.brochures.empty.description")}
+          </p>
+        </div>
+      </Card>
+    );
+  }
 
-const BrochureTable = () => (
-  <div className="overflow-x-auto">
-    <DataTable<Brochure> bulkActionButtons={false} rowClick={false}>
-      <DataTable.Col
-        source="company_id"
-        label="resources.brochures.fields.company_id"
-        disableSort
-      >
-        <LinkedName source="company_id" reference="companies" />
-      </DataTable.Col>
-      <DataTable.Col
-        source="contact_id"
-        label="resources.brochures.fields.contact_id"
-        disableSort
-        className="hidden md:table-cell"
-      >
-        <LinkedName source="contact_id" reference="contacts" />
-      </DataTable.Col>
-      <DataTable.Col
-        source="deal_id"
-        label="resources.brochures.fields.deal_id"
-        disableSort
-        className="hidden lg:table-cell"
-      >
-        <LinkedName source="deal_id" reference="deals" />
-      </DataTable.Col>
-      <DataTable.Col
-        source="title"
-        label="resources.brochures.fields.title"
-        className="max-w-40"
-      >
-        <Truncated source="title" />
-      </DataTable.Col>
-      <DataTable.Col
-        source="brochure_url"
-        label="resources.brochures.fields.brochure_url"
-        disableSort
-        className="min-w-48 max-w-72"
-      >
-        <BrochureLink />
-      </DataTable.Col>
-      <DataTable.Col
-        source="created_at"
-        label="resources.brochures.fields.created_at"
-        className="hidden md:table-cell whitespace-nowrap"
-      >
-        <CreatedAt />
-      </DataTable.Col>
-      <DataTable.Col
-        source="status"
-        label="resources.brochures.fields.status"
-        disableSort
-      >
-        <BrochureApprovalActions />
-      </DataTable.Col>
-    </DataTable>
-  </div>
-);
-
-const BrochureCards = () => {
-  const { data } = useListContext<Brochure>();
-  if (!data) return null;
   return (
     <ul className="flex flex-col gap-3">
       {data.map((brochure) => (
-        <BrochureCard key={brochure.id} brochure={brochure} />
+        <li key={brochure.id}>
+          <RecordContextProvider value={brochure}>
+            <BrochureCard />
+          </RecordContextProvider>
+        </li>
       ))}
     </ul>
   );
 };
 
-const BrochureCard = ({ brochure }: { brochure: Brochure }) => {
+const BrochureCard = () => {
+  const record = useRecordContext<Brochure>();
   const translate = useTranslate();
+  const isMobile = useIsMobile();
+
+  if (!record) return null;
+
   return (
-    <li>
-      <RecordContextProvider value={brochure}>
-        <div className="flex flex-col gap-3 rounded-xl border p-3">
-          <div className="flex items-start justify-between gap-2">
-            <p className="font-medium">{brochure.title || "—"}</p>
-            <CreatedAt />
+    <Card
+      className={cn(
+        "overflow-hidden p-0 shadow-none transition-colors",
+        record.status === "pending" && "border-primary/25",
+      )}
+    >
+      <div
+        className={cn(
+          "flex flex-col gap-4 p-4",
+          !isMobile && "sm:flex-row sm:items-stretch sm:gap-0 sm:p-0",
+        )}
+      >
+        <div className="flex min-w-0 flex-1 flex-col gap-3 sm:p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="truncate text-base font-semibold tracking-tight">
+                  {record.title?.trim() ||
+                    translate("resources.brochures.untitled")}
+                </h3>
+                <StatusBadge status={record.status} />
+              </div>
+              <CreatedAt />
+            </div>
           </div>
-          <BrochureLink />
-          <dl className="grid grid-cols-1 gap-1 text-sm">
-            <CardLink
-              label={translate("resources.brochures.fields.company_id")}
+
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-muted-foreground">
+            <MetaLink
+              icon={Building2}
               source="company_id"
               reference="companies"
+              label={translate("resources.brochures.fields.company_id")}
             />
-            <CardLink
-              label={translate("resources.brochures.fields.contact_id")}
+            <MetaLink
+              icon={UserRound}
               source="contact_id"
               reference="contacts"
+              label={translate("resources.brochures.fields.contact_id")}
             />
-            <CardLink
-              label={translate("resources.brochures.fields.deal_id")}
+            <MetaLink
+              icon={Handshake}
               source="deal_id"
               reference="deals"
+              label={translate("resources.brochures.fields.deal_id")}
             />
-          </dl>
+          </div>
+
+          <BrochureFileLink />
+        </div>
+
+        {!isMobile ? (
+          <Separator orientation="vertical" className="hidden sm:block" />
+        ) : (
+          <Separator />
+        )}
+
+        <div
+          className={cn(
+            "flex shrink-0 flex-col justify-center gap-2 sm:w-52 sm:p-4",
+            isMobile && "pt-0",
+          )}
+        >
           <BrochureApprovalActions />
         </div>
-      </RecordContextProvider>
-    </li>
+      </div>
+    </Card>
   );
 };
 
-const CardLink = ({
-  label,
-  source,
-  reference,
-}: {
-  label: string;
-  source: "company_id" | "contact_id" | "deal_id";
-  reference: string;
-}) => (
-  <div className="flex gap-2">
-    <dt className="text-muted-foreground">{label}</dt>
-    <dd>
-      <LinkedName source={source} reference={reference} />
-    </dd>
-  </div>
-);
+const StatusBadge = ({ status }: { status: BrochureStatus }) => {
+  const translate = useTranslate();
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        "capitalize",
+        status === "pending" &&
+          "border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-200",
+        status === "approved" &&
+          "border-emerald-600/40 bg-emerald-500/10 text-emerald-800 dark:text-emerald-200",
+        status === "not_approved" &&
+          "border-red-600/40 bg-red-500/10 text-red-800 dark:text-red-200",
+      )}
+    >
+      {translate(`resources.brochures.status.${status}`)}
+    </Badge>
+  );
+};
 
-const LinkedName = ({
+const MetaLink = ({
+  icon: Icon,
   source,
   reference,
+  label,
 }: {
+  icon: typeof Building2;
   source: "company_id" | "contact_id" | "deal_id";
   reference: string;
+  label: string;
 }) => {
   const record = useRecordContext<Brochure>();
-  if (!record?.[source]) {
-    return <span className="text-muted-foreground">—</span>;
-  }
+  if (!record?.[source]) return null;
+
   return (
-    <ReferenceField source={source} reference={reference} link="show">
-      <RecordLabel />
-    </ReferenceField>
+    <div className="flex min-w-0 items-center gap-1.5">
+      <Icon className="size-3.5 shrink-0" aria-hidden />
+      <span className="sr-only">{label}</span>
+      <ReferenceField source={source} reference={reference} link="show">
+        <RecordLabel />
+      </ReferenceField>
+    </div>
   );
 };
 
@@ -246,42 +269,53 @@ const RecordLabel = () => {
   const name =
     (typeof record.name === "string" && record.name) ||
     [record.first_name, record.last_name].filter(Boolean).join(" ");
-  if (!name) return <span className="text-muted-foreground">—</span>;
+  if (!name) return <span>—</span>;
   return (
-    <span title={name} className="block max-w-40 truncate">
+    <span title={name} className="truncate text-foreground hover:underline">
       {name}
     </span>
   );
 };
 
-const Truncated = ({ source }: { source: "title" }) => {
+const BrochureFileLink = () => {
   const record = useRecordContext<Brochure>();
-  const value = record?.[source];
-  if (!value) return <span className="text-muted-foreground">—</span>;
-  return (
-    <span title={value} className="block max-w-56 truncate">
-      {value}
-    </span>
-  );
-};
-
-const BrochureLink = () => {
-  const record = useRecordContext<Brochure>();
+  const translate = useTranslate();
   if (!record?.brochure_url) {
-    return <span className="text-muted-foreground">—</span>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        {translate("resources.brochures.no_file")}
+      </p>
+    );
   }
   const { href, label } = formatBrochureUrl(record.brochure_url);
-  if (!href) return <span className="text-muted-foreground">—</span>;
+  if (!href) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        {translate("resources.brochures.no_file")}
+      </p>
+    );
+  }
+
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer"
       title={href}
-      className="block max-w-72 truncate text-sm text-primary underline"
-      onClick={(event) => event.stopPropagation()}
+      className={cn(
+        buttonVariants({ variant: "secondary", size: "sm" }),
+        "h-9 max-w-full justify-start gap-2 px-3 font-normal",
+      )}
     >
-      {label}
+      <FileText className="size-4 shrink-0" aria-hidden />
+      <span className="truncate">{label}</span>
+      <ExternalLink
+        className="ml-auto size-3.5 shrink-0 opacity-60"
+        aria-hidden
+      />
+      <span className="sr-only">
+        {translate("resources.brochures.action.open")}
+      </span>
     </a>
   );
 };
@@ -290,22 +324,28 @@ const CreatedAt = () => {
   const record = useRecordContext<Brochure>();
   if (!record?.created_at) return null;
   const date = new Date(record.created_at);
-  const fullDate = date.toLocaleDateString("en-US", {
+  const fullDate = date.toLocaleString(undefined, {
     day: "numeric",
     month: "short",
     year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
-  const shortDate =
-    date.getFullYear() === new Date().getFullYear()
-      ? date.toLocaleDateString("en-US", { day: "numeric", month: "short" })
-      : fullDate;
+  const shortDate = date.toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    ...(date.getFullYear() === new Date().getFullYear()
+      ? {}
+      : { year: "numeric" }),
+  });
   return (
-    <span
+    <time
+      dateTime={record.created_at}
       title={fullDate}
-      className="text-sm whitespace-nowrap text-muted-foreground"
+      className="text-xs text-muted-foreground"
     >
       {shortDate}
-    </span>
+    </time>
   );
 };
 
@@ -338,37 +378,35 @@ const BrochureApprovalActions = () => {
     }
   };
 
+  const isPending = record.status === "pending";
+
   return (
-    <div className="flex flex-col items-start gap-2">
-      {record.status !== "pending" && (
-        <Badge
-          variant="outline"
-          className={cn(
-            record.status === "approved" &&
-              "border-green-600/40 text-green-700 dark:text-green-300",
-            record.status === "not_approved" &&
-              "border-red-600/40 text-red-700 dark:text-red-300",
-          )}
-        >
-          {translate(`resources.brochures.status.${record.status}`)}
-        </Badge>
-      )}
-      <div className="flex flex-wrap gap-2">
+    <div className="flex w-full flex-col gap-2">
+      {!isPending ? (
+        <p className="text-xs text-muted-foreground sm:text-center">
+          {translate("resources.brochures.change_decision")}
+        </p>
+      ) : null}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-1">
         <Button
           type="button"
           size="sm"
+          className="gap-1.5"
           disabled={isUpdating || record.status === "approved"}
           onClick={() => setStatus("approved")}
         >
+          <Check className="size-4" aria-hidden />
           {translate("resources.brochures.action.approve")}
         </Button>
         <Button
           type="button"
           size="sm"
           variant="outline"
+          className="gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
           disabled={isUpdating || record.status === "not_approved"}
           onClick={() => setStatus("not_approved")}
         >
+          <X className="size-4" aria-hidden />
           {translate("resources.brochures.action.not_approve")}
         </Button>
       </div>

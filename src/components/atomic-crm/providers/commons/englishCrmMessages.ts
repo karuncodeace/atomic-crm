@@ -271,6 +271,12 @@ export const englishCrmMessages = {
     },
     brochures: {
       name: "Brochure |||| Brochures",
+      page_title: "Brochure approvals",
+      page_subtitle:
+        "Review files generated for a lead, then approve or decline them.",
+      untitled: "Untitled brochure",
+      no_file: "No file linked",
+      change_decision: "Change decision",
       tabs: {
         approval: "Pending",
         all: "All",
@@ -287,18 +293,18 @@ export const englishCrmMessages = {
       status: {
         pending: "Pending",
         approved: "Approved",
-        not_approved: "Not approved",
+        not_approved: "Declined",
       },
       action: {
-        open: "Open",
+        open: "Open brochure",
         approve: "Approve",
-        not_approve: "Not approve",
+        not_approve: "Decline",
       },
       empty: {
         title: "No brochures yet",
-        approval_title: "Nothing waiting for approval",
+        approval_title: "You're all caught up",
         description:
-          "Brochures written by the other app show up here for approval.",
+          "When the other app generates a brochure for a lead, it lands here for review.",
       },
     },
     notes: {
@@ -382,6 +388,32 @@ export const englishCrmMessages = {
       },
       action: {
         new: "New user",
+      },
+    },
+    call_assignments: {
+      name: "Task |||| Tasks",
+      empty: "No calls in your queue. Ask a manager to run today's assignment.",
+      progress: "%{done} done today · %{open} open · quota %{quota}",
+      assign_today: "Assign today's calls",
+      assigning: "Assigning…",
+      assign_done: "Assigned %{assigned} new calls",
+      assign_skipped: "Skipped — not a working day",
+      assign_error: "Could not assign today's calls",
+      complete_title: "How did the call go?",
+      fields: {
+        assignment_date: "Queued for",
+        next_attempt_at: "Call back on",
+        notes: "Notes",
+      },
+      action: {
+        complete: "Complete",
+        save_outcome: "Save outcome",
+      },
+      outcome: {
+        callback: "Callback",
+        no_answer: "Not answered",
+        interested: "Interested",
+        not_interested: "Not interested",
       },
     },
     tasks: {

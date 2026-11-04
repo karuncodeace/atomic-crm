@@ -21,6 +21,8 @@ export default (): Db => {
   db.tasks = generateTasks(db);
   db.import_batches = [];
   db.brochures = [];
+  db.call_assignments = [];
+  db.call_logs = [];
   db.configuration = [
     {
       id: 1,

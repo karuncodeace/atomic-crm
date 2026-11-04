@@ -13,8 +13,8 @@ export const MobileNavigation = () => {
     currentPath = "/";
   } else if (matchPath("/deals/*", location.pathname)) {
     currentPath = "/deals";
-  } else if (matchPath("/tasks/*", location.pathname)) {
-    currentPath = "/tasks";
+  } else if (matchPath("/call_assignments/*", location.pathname)) {
+    currentPath = "/call_assignments";
   } else if (matchPath("/brochures/*", location.pathname)) {
     currentPath = "/brochures";
   } else {
@@ -54,10 +54,13 @@ export const MobileNavigation = () => {
           isActive={currentPath === "/deals"}
         />
         <NavigationButton
-          href="/tasks"
+          href="/call_assignments"
           Icon={ListTodo}
-          label={translate("resources.tasks.name", { smart_count: 2 })}
-          isActive={currentPath === "/tasks"}
+          label={translate("resources.call_assignments.name", {
+            smart_count: 2,
+            _: "Tasks",
+          })}
+          isActive={currentPath === "/call_assignments"}
         />
         <NavigationButton
           href="/brochures"
