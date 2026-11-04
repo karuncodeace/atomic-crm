@@ -17,7 +17,7 @@ test.describe("company lead form", () => {
     await page.getByLabel("Email").fill("ada@lead.test");
     await page.getByLabel("Password").fill("password");
     await page.getByRole("button", { name: "Sign in" }).click();
-    await expect(page).toHaveTitle(/Atomic CRM/);
+    await expect(page).toHaveTitle(/LEGO/);
 
     await page.getByRole("link", { name: "Companies" }).click();
     await page

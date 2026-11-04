@@ -510,7 +510,7 @@ export const frenchCrmMessages = {
         creating: "Création...",
         initial_user_created: "Utilisateur initial créé avec succès",
       },
-      welcome_title: "Bienvenue sur Atomic CRM",
+      welcome_title: "Bienvenue sur LEGO",
     },
     common: {
       account_manager: "Responsable de compte",
@@ -557,11 +557,33 @@ export const frenchCrmMessages = {
       latest_notes: "Mes dernières notes",
       latest_notes_added_ago: "ajouté %{timeAgo}",
       stepper: {
-        install: "Installer Atomic CRM",
+        install: "Installer LEGO",
         progress: "%{step}/3 terminé",
         whats_next: "Et ensuite ?",
       },
       upcoming_tasks: "Tâches à venir",
+      welcome_back: "Bon retour, %{name}",
+      kpi: {
+        pending_brochures: "Brochures en attente",
+      },
+      panel: {
+        title: "Ma journée",
+        open: "Ma journée",
+        online: "En ligne",
+        today: "Aujourd'hui",
+        week: "Semaine",
+        empty_day: "Rien de prévu ce jour-là.",
+        all_tasks: "Toutes les tâches à venir",
+        hide_tasks: "Masquer les tâches à venir",
+      },
+      view_all: "Tout voir",
+      notes_empty: "Les notes ajoutées aux contacts apparaîtront ici.",
+      clients: {
+        new_this_week:
+          "%{smart_count} nouveau contact cette semaine |||| %{smart_count} nouveaux contacts cette semaine",
+        show_more: "Afficher %{count} contacts de plus",
+        recently_seen: "Vus récemment",
+      },
     },
     data_import: {
       button: "Importer un fichier CSV",
@@ -605,6 +627,9 @@ export const frenchCrmMessages = {
     header: {
       new: "Nouveau",
       import_data: "Importer depuis JSON",
+      notifications: "Notifications",
+      pending_brochures:
+        "%{smart_count} brochure en attente de validation |||| %{smart_count} brochures en attente de validation",
     },
     search: {
       title: "Rechercher",
@@ -725,7 +750,7 @@ export const frenchCrmMessages = {
         "Autres adresses depuis lesquelles vous envoyez des e-mails. Laissez-en une vide pour la supprimer.",
       inbound: {
         description:
-          "Vous pouvez commencer à envoyer des e-mails vers l'adresse de réception de votre serveur, par exemple en l'ajoutant au champ %{field}. Atomic CRM traitera les e-mails et ajoutera des notes aux contacts correspondants.",
+          "Vous pouvez commencer à envoyer des e-mails vers l'adresse de réception de votre serveur, par exemple en l'ajoutant au champ %{field}. LEGO traitera les e-mails et ajoutera des notes aux contacts correspondants.",
         title: "E-mail entrant",
       },
       mcp: {

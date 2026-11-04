@@ -62,9 +62,16 @@ export const UserMiddleware = async (
 
   try {
     const authHeader = req.headers.get("Authorization")!;
+    // Prefer the project publishable secret (set by remote init). Fall back to
+    // SUPABASE_ANON_KEY, which Edge Functions always receive locally and on
+    // hosted projects — otherwise createClient throws "supabaseKey is required".
+    const supabaseKey =
+      Deno.env.get("SB_PUBLISHABLE_KEY") ??
+      Deno.env.get("SUPABASE_ANON_KEY") ??
+      "";
     const localClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SB_PUBLISHABLE_KEY") ?? "",
+      supabaseKey,
       { global: { headers: { Authorization: authHeader } } },
     );
 

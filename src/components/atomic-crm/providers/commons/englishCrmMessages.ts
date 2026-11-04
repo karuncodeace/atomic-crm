@@ -502,7 +502,7 @@ export const englishCrmMessages = {
         creating: "Creating...",
         initial_user_created: "Initial user successfully created",
       },
-      welcome_title: "Welcome to Atomic CRM",
+      welcome_title: "Welcome to LEGO",
     },
     common: {
       account_manager: "Account manager",
@@ -548,11 +548,33 @@ export const englishCrmMessages = {
       latest_notes: "My Latest Notes",
       latest_notes_added_ago: "added %{timeAgo}",
       stepper: {
-        install: "Install Atomic CRM",
+        install: "Install LEGO",
         progress: "%{step}/3 done",
         whats_next: "What's next?",
       },
       upcoming_tasks: "Upcoming Tasks",
+      welcome_back: "Welcome back, %{name}",
+      kpi: {
+        pending_brochures: "Pending brochures",
+      },
+      panel: {
+        title: "My day",
+        open: "My day",
+        online: "Online",
+        today: "Today",
+        week: "Week",
+        empty_day: "Nothing scheduled for this day.",
+        all_tasks: "All upcoming tasks",
+        hide_tasks: "Hide upcoming tasks",
+      },
+      view_all: "View all",
+      notes_empty: "Notes you add on contacts will show up here.",
+      clients: {
+        new_this_week:
+          "%{smart_count} new contact this week |||| %{smart_count} new contacts this week",
+        show_more: "Show %{count} more contacts",
+        recently_seen: "Recently seen",
+      },
     },
     data_import: {
       button: "Import CSV",
@@ -597,6 +619,9 @@ export const englishCrmMessages = {
     header: {
       new: "New",
       import_data: "Import from JSON",
+      notifications: "Notifications",
+      pending_brochures:
+        "%{smart_count} brochure awaiting review |||| %{smart_count} brochures awaiting review",
     },
     search: {
       title: "Search",
@@ -714,7 +739,7 @@ export const englishCrmMessages = {
         "Other addresses you send emails from. Leave one empty to remove it.",
       inbound: {
         description:
-          "You can start sending emails to your server's inbound email address, e.g. by adding it to the %{field} field. Atomic CRM will process the emails and add notes to the corresponding contacts.",
+          "You can start sending emails to your server's inbound email address, e.g. by adding it to the %{field} field. LEGO will process the emails and add notes to the corresponding contacts.",
         title: "Inbound email",
       },
       mcp: {

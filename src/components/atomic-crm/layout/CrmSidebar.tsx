@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   FileText,
@@ -7,7 +8,7 @@ import {
   Settings,
   Users,
 } from "lucide-react";
-import { CanAccess, useTranslate } from "ra-core";
+import { CanAccess, useGetList, useTranslate } from "ra-core";
 import { Link, matchPath, useLocation } from "react-router";
 import {
   Sidebar,
@@ -17,20 +18,22 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import type { Brochure } from "../types";
 
 export const CrmSidebar = () => {
   const { darkModeLogo, lightModeLogo, title } = useConfigurationContext();
   const translate = useTranslate();
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className="h-14 justify-center border-b">
+    <Sidebar collapsible="icon" variant="floating">
+      <SidebarHeader className="h-16 justify-center px-3">
         <Link
           to="/"
           className="flex items-center gap-2 px-2 text-sidebar-foreground no-underline"
@@ -45,12 +48,12 @@ export const CrmSidebar = () => {
             src={lightModeLogo}
             alt={title}
           />
-          <span className="truncate text-base font-semibold text-foreground group-data-[collapsible=icon]:hidden">
+          <span className="truncate text-lg font-semibold tracking-tight text-foreground group-data-[collapsible=icon]:hidden">
             {title}
           </span>
         </Link>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="px-1">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -83,6 +86,7 @@ export const CrmSidebar = () => {
                   label={translate("resources.brochures.name", {
                     smart_count: 2,
                   })}
+                  badge={<PendingBrochuresBadge />}
                 />
               </CanAccess>
             </SidebarMenu>
@@ -129,25 +133,49 @@ const NavItem = ({
   pattern,
   icon: Icon,
   label,
+  badge,
 }: {
   to: string;
   pattern: string;
   icon: LucideIcon;
   label: string;
+  badge?: ReactNode;
 }) => {
   const location = useLocation();
   const isActive = !!matchPath(pattern, location.pathname);
   return (
     <SidebarMenuItem>
+      {isActive ? (
+        <span
+          aria-hidden
+          className="absolute top-1/2 -left-3 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-foreground"
+        />
+      ) : null}
       <SidebarMenuButton
         isActive={isActive}
         tooltip={label}
-        render={<Link to={to} />}
-        className="font-medium"
+        render={<Link to={to} aria-current={isActive ? "page" : undefined} />}
+        className="h-9 rounded-full px-3 font-medium data-active:font-semibold"
       >
         <Icon />
         <span>{label}</span>
       </SidebarMenuButton>
+      {badge}
     </SidebarMenuItem>
+  );
+};
+
+/** Dark count bubble; shares its query with the brochures page so both stay in sync. */
+const PendingBrochuresBadge = () => {
+  const { total } = useGetList<Brochure>("brochures", {
+    pagination: { page: 1, perPage: 1 },
+    sort: { field: "created_at", order: "DESC" },
+    filter: { status: "pending" },
+  });
+  if (!total) return null;
+  return (
+    <SidebarMenuBadge className="top-2! right-2 rounded-full bg-foreground px-1.5 text-background! peer-hover/menu-button:text-background">
+      {total > 99 ? "99+" : total}
+    </SidebarMenuBadge>
   );
 };

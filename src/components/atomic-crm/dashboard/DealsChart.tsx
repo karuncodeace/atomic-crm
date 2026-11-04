@@ -106,18 +106,18 @@ export const DealsChart = memo(() => {
     <div className="flex flex-col">
       <div className="flex items-center mb-4">
         <div className="mr-3 flex">
-          <TrendingUp className="text-muted-foreground w-6 h-6" />
+          <TrendingUp className="text-muted-foreground size-5" />
         </div>
-        <h2 className="text-xl font-semibold text-muted-foreground">
+        <h2 className="text-base font-medium text-foreground">
           {translate("crm.dashboard.deals_chart")}
         </h2>
       </div>
-      <div className="h-[400px]">
+      <div className="h-[400px] rounded-3xl border bg-card p-4">
         <ResponsiveBar
           data={months}
           indexBy="date"
           keys={["won", "pending", "lost"]}
-          colors={["#61cdbb", "#97e3d5", "#e25c3b"]}
+          colors={["#5bae7a", "#b9dcc6", "#d9453f"]}
           margin={{ top: 30, right: 50, bottom: 30, left: 0 }}
           padding={0.3}
           valueScale={{
@@ -130,7 +130,7 @@ export const DealsChart = memo(() => {
           enableGridY={false}
           enableLabel={false}
           tooltip={({ value, indexValue }) => (
-            <div className="p-2 bg-secondary rounded shadow inline-flex items-center gap-1 text-secondary-foreground">
+            <div className="p-2 bg-popover rounded-xl ring-1 ring-border inline-flex items-center gap-1 text-popover-foreground">
               <strong>{indexValue}: </strong>&nbsp;{value > 0 ? "+" : ""}
               {value.toLocaleString(acceptedLanguages.at(0) ?? DEFAULT_LOCALE, {
                 style: "currency",
@@ -195,7 +195,7 @@ export const DealsChart = memo(() => {
                 axis: "y",
                 value: 0,
                 lineStyle: { strokeOpacity: 0 },
-                textStyle: { fill: "#2ebca6" },
+                textStyle: { fill: "#2f7a4d" },
                 legend: wonLabel,
                 legendPosition: "top-left",
                 legendOrientation: "vertical",
@@ -204,10 +204,10 @@ export const DealsChart = memo(() => {
                 axis: "y",
                 value: 0,
                 lineStyle: {
-                  stroke: "#f47560",
+                  stroke: "#d9453f",
                   strokeWidth: 1,
                 },
-                textStyle: { fill: "#e25c3b" },
+                textStyle: { fill: "#c23a34" },
                 legend: lostLabel,
                 legendPosition: "bottom-left",
                 legendOrientation: "vertical",
