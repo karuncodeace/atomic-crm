@@ -49,10 +49,14 @@ export const frenchCrmMessages = {
       },
       action: {
         create: "Créer une entreprise",
+        create_one: "Créer une fiche",
         edit: "Modifier l'entreprise",
+        more: "Plus d'options de création",
         new: "Nouvelle entreprise",
         show: "Afficher l'entreprise",
       },
+      create_hint:
+        "Remplissez un prospect, ou importez-en plusieurs via un CSV.",
       contacts: {
         add_new: "Ajouter un nouveau contact",
         already_added: "Ce contact est déjà dans la liste",
@@ -607,7 +611,7 @@ export const frenchCrmMessages = {
       title: "Importer des données",
     },
     lead_import: {
-      button: "Importer des prospects",
+      button: "Importer CSV",
       complete:
         "Import terminé. Créés %{created}, doublons %{duplicates}, invalides %{invalid}",
       csv_file: "Fichier CSV",

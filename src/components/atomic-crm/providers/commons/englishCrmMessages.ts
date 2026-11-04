@@ -47,10 +47,13 @@ export const englishCrmMessages = {
       },
       action: {
         create: "Create Company",
+        create_one: "Create one",
         edit: "Edit company",
+        more: "More create options",
         new: "New Company",
         show: "Show company",
       },
+      create_hint: "Fill in one lead, or import many from a CSV.",
       contacts: {
         add_new: "Add new contact",
         already_added: "This contact is already in the list",
@@ -597,7 +600,7 @@ export const englishCrmMessages = {
       title: "Import data",
     },
     lead_import: {
-      button: "Import leads",
+      button: "Import CSV",
       complete:
         "Lead import complete. Created %{created}, duplicates %{duplicates}, invalid %{invalid}",
       csv_file: "CSV File",

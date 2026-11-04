@@ -39,7 +39,13 @@ const SAMPLE_CSV = `lead date,company,website,vertical,phone,whatsApp_number,ema
  * Uses `import_leads` (or its FakeRest twin), with client-side column mapping
  * and phone / email normalization first.
  */
-export const LeadImportButton = () => {
+export const LeadImportButton = ({
+  variant = "outline",
+  size = "default",
+}: {
+  variant?: "outline" | "default" | "secondary" | "ghost";
+  size?: "default" | "sm" | "lg";
+} = {}) => {
   const translate = useTranslate();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -47,7 +53,8 @@ export const LeadImportButton = () => {
   return (
     <>
       <Button
-        variant="outline"
+        variant={variant}
+        size={size}
         onClick={() => setOpen(true)}
         disabled={busy}
         className="flex items-center gap-2 cursor-pointer"
@@ -64,7 +71,7 @@ export const LeadImportButton = () => {
   );
 };
 
-const LeadImportDialog = ({
+export const LeadImportDialog = ({
   open,
   busy,
   setBusy,
