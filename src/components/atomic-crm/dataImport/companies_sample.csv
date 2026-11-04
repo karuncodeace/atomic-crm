@@ -1,3 +1,3 @@
-name,sector,size,linkedin_url,website,phone_number,address,zipcode,city,state_abbr,country,description,revenue,tax_identifier,lead_date,pitch_point
-Acme,Information Technology,50,https://www.linkedin.com/company/acme,https://acme.example,555-0100,1 Main Street,10001,New York,NY,USA,Long-time partner on print projects,5M,US-123456789,2026-10-15,Offer a bulk print discount for their Q4 campaign
-Globex,Industrials,250,,https://globex.example,555-0111,42 Industrial Road,60601,Chicago,IL,USA,,20M,,,
+lead date,company,website,vertical,phone,whatsApp_number,email,Social Media URLs,address,place,priority,business_description
+2026-03-15,Acme Foods,https://acmefoods.in,FMCG,9876543210,9876543210,ravi@acmefoods.in,"https://instagram.com/acmefoods, https://facebook.com/acmefoods",MG Road,Kochi,high,Wholesale spices and oils
+2026-03-16,Beta Traders,https://beta.in,Electronics,9988776655,9988776655,sales@beta.in,https://instagram.com/beta,Industrial Estate,Kochi,medium,Retail electronics

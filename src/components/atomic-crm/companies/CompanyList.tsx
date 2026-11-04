@@ -5,7 +5,6 @@ import { List } from "@/components/admin/list";
 import { ListPagination } from "@/components/admin/list-pagination";
 import { SortButton } from "@/components/admin/sort-button";
 
-import { DataImportButton } from "../dataImport/DataImportButton";
 import { LeadImportButton } from "../leads/LeadImportButton";
 import { TopToolbar } from "../layout/TopToolbar";
 import { CompanyEmpty } from "./CompanyEmpty";
@@ -53,7 +52,6 @@ const CompanyListActions = () => {
     <TopToolbar>
       <SortButton fields={["name", "created_at", "nb_contacts"]} />
       <LeadImportButton />
-      <DataImportButton resource="companies" />
       <ExportButton />
       <CreateButton
         label={translate("resources.companies.action.new", {
