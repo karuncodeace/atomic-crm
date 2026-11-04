@@ -14,13 +14,12 @@ import {
   BrochureActions,
   BrochureSummary,
   CreatedAt,
-  LinkedRecords,
   StatusBadge,
 } from "./BrochureParts";
 
 const SKELETON_ROWS = 5;
 
-export const BrochureTable = ({ showStatus }: { showStatus: boolean }) => {
+export const BrochureTable = () => {
   const { data, isPending } = useListContext<Brochure>();
   const translate = useTranslate();
 
@@ -29,21 +28,16 @@ export const BrochureTable = ({ showStatus }: { showStatus: boolean }) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[38%] pl-4">
+            <TableHead className="pl-4">
               {translate("resources.brochures.fields.brochure_url")}
             </TableHead>
-            <TableHead>
-              {translate("resources.brochures.fields.linked_to")}
-            </TableHead>
-            <TableHead className="w-32">
+            <TableHead className="w-40">
               {translate("resources.brochures.fields.created_at")}
             </TableHead>
-            {showStatus ? (
-              <TableHead className="w-32">
-                {translate("resources.brochures.fields.status")}
-              </TableHead>
-            ) : null}
-            <TableHead className="w-52 pr-4 text-right">
+            <TableHead className="w-36">
+              {translate("resources.brochures.fields.status")}
+            </TableHead>
+            <TableHead className="w-14 pr-4">
               <span className="sr-only">
                 {translate("resources.brochures.fields.actions")}
               </span>
@@ -64,18 +58,13 @@ export const BrochureTable = ({ showStatus }: { showStatus: boolean }) => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-4 w-36" />
-                  </TableCell>
-                  <TableCell>
                     <Skeleton className="h-4 w-16" />
                   </TableCell>
-                  {showStatus ? (
-                    <TableCell>
-                      <Skeleton className="h-5 w-20 rounded-full" />
-                    </TableCell>
-                  ) : null}
+                  <TableCell>
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                  </TableCell>
                   <TableCell className="pr-4">
-                    <Skeleton className="ml-auto h-8 w-40" />
+                    <Skeleton className="ml-auto size-8" />
                   </TableCell>
                 </TableRow>
               ))
@@ -85,17 +74,12 @@ export const BrochureTable = ({ showStatus }: { showStatus: boolean }) => {
                     <TableCell className="max-w-0 py-3 pl-4">
                       <BrochureSummary />
                     </TableCell>
-                    <TableCell className="max-w-0">
-                      <LinkedRecords />
-                    </TableCell>
                     <TableCell>
                       <CreatedAt />
                     </TableCell>
-                    {showStatus ? (
-                      <TableCell>
-                        <StatusBadge status={brochure.status} />
-                      </TableCell>
-                    ) : null}
+                    <TableCell>
+                      <StatusBadge status={brochure.status} />
+                    </TableCell>
                     <TableCell className="pr-4">
                       <BrochureActions />
                     </TableCell>

@@ -281,7 +281,6 @@ export const frenchCrmMessages = {
         "Vérifiez les fichiers générés pour un lead, puis approuvez ou refusez.",
       untitled: "Brochure sans titre",
       no_file: "Aucun fichier lié",
-      change_decision: "Modifier la décision",
       tabs: {
         all: "Toutes",
       },
@@ -293,7 +292,6 @@ export const frenchCrmMessages = {
         contact_id: "Contact",
         deal_id: "Affaire",
         created_at: "Reçue le",
-        linked_to: "Liée à",
         actions: "Actions",
       },
       status: {

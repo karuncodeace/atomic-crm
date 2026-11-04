@@ -6,13 +6,12 @@ import {
   BrochureActions,
   BrochureSummary,
   CreatedAt,
-  LinkedRecords,
   StatusBadge,
 } from "./BrochureParts";
 
 const SKELETON_ROWS = 4;
 
-export const BrochureMobileList = ({ showStatus }: { showStatus: boolean }) => {
+export const BrochureMobileList = () => {
   const { data, isPending } = useListContext<Brochure>();
 
   if (isPending) {
@@ -27,7 +26,7 @@ export const BrochureMobileList = ({ showStatus }: { showStatus: boolean }) => {
                 <Skeleton className="h-3 w-1/2" />
               </div>
             </div>
-            <Skeleton className="h-8 w-full" />
+            <Skeleton className="h-5 w-1/3" />
           </li>
         ))}
       </ul>
@@ -38,23 +37,15 @@ export const BrochureMobileList = ({ showStatus }: { showStatus: boolean }) => {
     <ul className="flex flex-col gap-3">
       {data?.map((brochure) => (
         <RecordContextProvider key={brochure.id} value={brochure}>
-          <li className="rounded-lg border bg-card">
-            <div className="flex items-start gap-2 p-4 pb-3">
+          <li className="rounded-lg border bg-card p-4">
+            <div className="flex items-start gap-2">
               <BrochureSummary className="flex-1" />
-              {brochure.status !== "pending" ? <BrochureActions /> : null}
+              <BrochureActions />
             </div>
-            <div className="flex items-end justify-between gap-3 px-4 pb-4 text-sm">
-              <LinkedRecords className="flex-1" />
-              <div className="flex shrink-0 flex-col items-end gap-1.5 text-right">
-                {showStatus ? <StatusBadge status={brochure.status} /> : null}
-                <CreatedAt className="text-xs text-muted-foreground" />
-              </div>
+            <div className="mt-3 flex items-center justify-between gap-3 text-sm">
+              <StatusBadge status={brochure.status} />
+              <CreatedAt inline className="text-xs text-muted-foreground" />
             </div>
-            {brochure.status === "pending" ? (
-              <div className="border-t p-3">
-                <BrochureActions fullWidth />
-              </div>
-            ) : null}
           </li>
         </RecordContextProvider>
       ))}

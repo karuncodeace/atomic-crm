@@ -140,15 +140,10 @@ const BrochureListBody = ({
   isMobile: boolean;
 }) => {
   const { data, isPending } = useListContext<Brochure>();
-  const showStatus = tab === "all";
 
   if (!isPending && !data?.length) return <EmptyState tab={tab} />;
 
-  return isMobile ? (
-    <BrochureMobileList showStatus={showStatus} />
-  ) : (
-    <BrochureTable showStatus={showStatus} />
-  );
+  return isMobile ? <BrochureMobileList /> : <BrochureTable />;
 };
 
 const EmptyState = ({ tab }: { tab: BrochureTab }) => {

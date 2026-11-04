@@ -276,7 +276,6 @@ export const englishCrmMessages = {
         "Review files generated for a lead, then approve or decline them.",
       untitled: "Untitled brochure",
       no_file: "No file linked",
-      change_decision: "Change decision",
       tabs: {
         all: "All",
       },
@@ -287,8 +286,7 @@ export const englishCrmMessages = {
         company_id: "Company",
         contact_id: "Contact",
         deal_id: "Deal",
-        created_at: "Received",
-        linked_to: "Linked to",
+        created_at: "Received at",
         actions: "Actions",
       },
       status: {

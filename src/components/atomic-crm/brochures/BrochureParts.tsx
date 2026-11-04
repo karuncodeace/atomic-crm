@@ -1,12 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  useNotify,
-  useRecordContext,
-  useTranslate,
-  useUpdate,
-  type RaRecord,
-} from "ra-core";
-import { ReferenceField } from "@/components/admin/reference-field";
+import { useNotify, useRecordContext, useTranslate, useUpdate } from "ra-core";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,22 +7,11 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
-import {
-  Building2,
-  Check,
-  ExternalLink,
-  FileText,
-  Handshake,
-  MoreHorizontal,
-  UserRound,
-  X,
-  type LucideIcon,
-} from "lucide-react";
+import { Check, ExternalLink, FileText, MoreHorizontal, X } from "lucide-react";
 
 import type { Brochure, BrochureStatus } from "../types";
 import { formatBrochureUrl } from "./brochureUrl";
@@ -116,65 +98,26 @@ export const BrochureSummary = ({ className }: { className?: string }) => {
   );
 };
 
-const LINKS: Array<{
-  source: "company_id" | "contact_id" | "deal_id";
-  reference: string;
-  icon: LucideIcon;
-}> = [
-  { source: "company_id", reference: "companies", icon: Building2 },
-  { source: "contact_id", reference: "contacts", icon: UserRound },
-  { source: "deal_id", reference: "deals", icon: Handshake },
-];
-
-export const LinkedRecords = ({ className }: { className?: string }) => {
-  const record = useRecordContext<Brochure>();
-  const translate = useTranslate();
-  if (!record) return null;
-
-  const links = LINKS.filter(({ source }) => record[source]);
-  if (!links.length) {
-    return <span className="text-muted-foreground">—</span>;
-  }
-
-  return (
-    <ul className={cn("flex min-w-0 flex-col gap-1", className)}>
-      {links.map(({ source, reference, icon: Icon }) => (
-        <li key={source} className="flex min-w-0 items-center gap-2 text-sm">
-          <Icon
-            className="size-3.5 shrink-0 text-muted-foreground"
-            aria-hidden
-          />
-          <span className="sr-only">
-            {translate(`resources.brochures.fields.${source}`)}:
-          </span>
-          <ReferenceField source={source} reference={reference} link="show">
-            <RecordLabel />
-          </ReferenceField>
-        </li>
-      ))}
-    </ul>
-  );
-};
-
-const RecordLabel = () => {
-  const record = useRecordContext<RaRecord>();
-  if (!record) return null;
-  const name =
-    (typeof record.name === "string" && record.name) ||
-    [record.first_name, record.last_name].filter(Boolean).join(" ");
-  if (!name) return <span>—</span>;
-  return (
-    <span title={name} className="block truncate hover:underline">
-      {name}
-    </span>
-  );
-};
-
-export const CreatedAt = ({ className }: { className?: string }) => {
+export const CreatedAt = ({
+  className,
+  inline = false,
+}: {
+  className?: string;
+  inline?: boolean;
+}) => {
   const record = useRecordContext<Brochure>();
   if (!record?.created_at) return null;
   const date = new Date(record.created_at);
   const isThisYear = date.getFullYear() === new Date().getFullYear();
+  const day = date.toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+    ...(isThisYear ? {} : { year: "numeric" }),
+  });
+  const time = date.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
   return (
     <time
       dateTime={record.created_at}
@@ -184,17 +127,14 @@ export const CreatedAt = ({ className }: { className?: string }) => {
       })}
       className={cn("tabular-nums", className)}
     >
-      {date.toLocaleDateString(undefined, {
-        day: "numeric",
-        month: "short",
-        ...(isThisYear ? {} : { year: "numeric" }),
-      })}
-      <span className="block text-xs text-muted-foreground">
-        {date.toLocaleTimeString(undefined, {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
-      </span>
+      {inline ? (
+        `${day}, ${time}`
+      ) : (
+        <>
+          {day}
+          <span className="block text-xs text-muted-foreground">{time}</span>
+        </>
+      )}
     </time>
   );
 };
@@ -227,56 +167,11 @@ const useBrochureDecision = (record: Brochure | undefined) => {
   return { decide, isPending };
 };
 
-/**
- * Pending brochures get explicit Approve / Decline buttons; decided ones keep
- * the row calm and tuck the change behind a menu to avoid accidental clicks.
- */
-export const BrochureActions = ({
-  fullWidth = false,
-}: {
-  fullWidth?: boolean;
-}) => {
+export const BrochureActions = () => {
   const record = useRecordContext<Brochure>();
   const translate = useTranslate();
   const { decide, isPending } = useBrochureDecision(record);
   if (!record) return null;
-
-  if (record.status === "pending") {
-    return (
-      <div
-        className={cn(
-          "flex items-center gap-2",
-          fullWidth ? "grid grid-cols-2" : "justify-end",
-        )}
-      >
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          disabled={isPending}
-          onClick={() => decide("not_approved")}
-          className="gap-1.5 hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
-        >
-          <X className="size-4" aria-hidden />
-          {translate("resources.brochures.action.not_approve")}
-        </Button>
-        <Button
-          type="button"
-          size="sm"
-          disabled={isPending}
-          onClick={() => decide("approved")}
-          className="gap-1.5"
-        >
-          {isPending ? (
-            <Spinner className="size-4" />
-          ) : (
-            <Check className="size-4" aria-hidden />
-          )}
-          {translate("resources.brochures.action.approve")}
-        </Button>
-      </div>
-    );
-  }
 
   return (
     <div className="flex justify-end">
@@ -289,7 +184,7 @@ export const BrochureActions = ({
               size="icon"
               variant="ghost"
               className="size-8 text-muted-foreground"
-              aria-label={translate("resources.brochures.change_decision")}
+              aria-label={translate("resources.brochures.fields.actions")}
             />
           }
         >
@@ -299,11 +194,8 @@ export const BrochureActions = ({
             <MoreHorizontal className="size-4" aria-hidden />
           )}
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuGroup>
-            <DropdownMenuLabel>
-              {translate("resources.brochures.change_decision")}
-            </DropdownMenuLabel>
             <DropdownMenuItem
               disabled={record.status === "approved"}
               onClick={() => decide("approved")}
