@@ -409,7 +409,7 @@ export const frenchCrmMessages = {
     call_assignments: {
       name: "Tâche |||| Tâches",
       empty:
-        "Aucune appel dans votre file. Demandez à un manager de lancer l'affectation du jour.",
+        "Aucun appel dans votre file. Cliquez sur « Affecter les appels du jour ».",
       progress:
         "%{done} terminés aujourd'hui · %{open} ouverts · quota %{quota}",
       assign_today: "Affecter les appels du jour",

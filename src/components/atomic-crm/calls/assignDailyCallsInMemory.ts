@@ -102,17 +102,26 @@ export const assignDailyCallsInMemory = async (
         !openContactIds.has(String(contact.id)),
     );
 
-    const newLeads = contacts.filter(
-      (contact) =>
-        contact.assigned_to == null &&
-        !contact.do_not_contact &&
-        (contact.lead_stage === "new" || contact.lead_stage === "queued") &&
-        !assignments.some(
-          (row) =>
-            row.status === "open" &&
-            String(row.contact_id) === String(contact.id),
-        ),
-    );
+    const newLeads = contacts
+      .filter(
+        (contact) =>
+          (contact.assigned_to == null ||
+            String(contact.assigned_to) === String(sale.id)) &&
+          !contact.do_not_contact &&
+          (contact.lead_stage === "new" || contact.lead_stage === "queued") &&
+          !assignments.some(
+            (row) =>
+              row.status === "open" &&
+              String(row.contact_id) === String(contact.id),
+          ) &&
+          !openContactIds.has(String(contact.id)),
+      )
+      .sort((left, right) => {
+        const leftOwned = String(left.assigned_to) === String(sale.id) ? 0 : 1;
+        const rightOwned =
+          String(right.assigned_to) === String(sale.id) ? 0 : 1;
+        return leftOwned - rightOwned;
+      });
 
     const plan = planDailySlots({
       quota,
@@ -127,7 +136,10 @@ export const assignDailyCallsInMemory = async (
     ];
 
     for (const contact of toAssign) {
-      if (contact.assigned_to == null) {
+      if (
+        contact.assigned_to == null ||
+        String(contact.assigned_to) !== String(sale.id)
+      ) {
         await dataProvider.update<Contact>("contacts", {
           id: contact.id,
           data: {
@@ -139,6 +151,13 @@ export const assignDailyCallsInMemory = async (
           previousData: contact,
         });
         contact.assigned_to = sale.id;
+      } else if (contact.lead_stage === "new") {
+        await dataProvider.update<Contact>("contacts", {
+          id: contact.id,
+          data: { lead_stage: "queued" },
+          previousData: contact,
+        });
+        contact.lead_stage = "queued";
       }
       const deal = dealForContact(contact);
       await dataProvider.create<CallAssignment>("call_assignments", {

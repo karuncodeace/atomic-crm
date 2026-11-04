@@ -900,11 +900,12 @@ begin
             continue;
         end if;
 
-        -- Fill with new / queued leads from the unassigned pool.
+        -- Fill with new / queued leads: unassigned pool OR already owned by
+        -- this dialer (import pre-assigns BDEs, so those must still dial).
         for v_contact in
             select c.id, c.company_id
             from public.contacts c
-            where c.assigned_to is null
+            where (c.assigned_to is null or c.assigned_to = v_sales.id)
               and coalesce(c.do_not_contact, false) = false
               and c.lead_stage in ('new', 'queued')
               and not exists (
@@ -912,13 +913,14 @@ begin
                   where a.contact_id = c.id
                     and a.status = 'open'
               )
-            order by c.first_seen nulls last, c.id
+            order by case when c.assigned_to = v_sales.id then 0 else 1 end,
+                     c.first_seen nulls last, c.id
             limit v_slots
             for update skip locked
         loop
             update public.contacts
             set assigned_to = v_sales.id,
-                assigned_at = now(),
+                assigned_at = coalesce(assigned_at, now()),
                 lead_stage = case
                     when lead_stage = 'new' then 'queued'
                     else lead_stage

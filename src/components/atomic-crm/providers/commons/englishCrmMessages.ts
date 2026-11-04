@@ -401,7 +401,8 @@ export const englishCrmMessages = {
     },
     call_assignments: {
       name: "Task |||| Tasks",
-      empty: "No calls in your queue. Ask a manager to run today's assignment.",
+      empty:
+        "No calls in your queue. Click “Assign today's calls” to pull today's leads.",
       progress: "%{done} done today · %{open} open · quota %{quota}",
       assign_today: "Assign today's calls",
       assigning: "Assigning…",

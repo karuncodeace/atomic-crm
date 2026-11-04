@@ -124,4 +124,62 @@ describe("assignDailyCallsInMemory", () => {
     expect(result.skipped).toBe(true);
     expect(result.assigned).toBe(0);
   });
+
+  it("queues new/queued leads already assigned to the dialer", async () => {
+    const dataProvider = fakeRestDataProvider({
+      sales: [
+        {
+          id: 4,
+          first_name: "Karun",
+          last_name: "BDE",
+          role: "bde",
+          disabled: false,
+          administrator: false,
+          email: "karun@example.com",
+          user_id: "u4",
+        },
+      ],
+      contacts: [
+        {
+          id: 3,
+          first_name: "Preassigned",
+          last_name: "Lead",
+          company_id: 1,
+          lead_stage: "queued",
+          assigned_to: 4,
+          do_not_contact: false,
+        },
+      ],
+      call_assignments: [],
+      call_logs: [],
+      deals: [
+        {
+          id: 3,
+          company_id: 1,
+          contact_ids: [3],
+          archived_at: null,
+        },
+      ],
+      companies: [],
+    });
+
+    const result = await assignDailyCallsInMemory(dataProvider, {
+      quota: 25,
+      today,
+    });
+
+    expect(result.assigned).toBe(1);
+    const { data: open } = await dataProvider.getList("call_assignments", {
+      pagination: { page: 1, perPage: 20 },
+      sort: { field: "id", order: "ASC" },
+      filter: { status: "open" },
+    });
+    expect(open).toHaveLength(1);
+    expect(open[0]).toMatchObject({
+      sales_id: 4,
+      contact_id: 3,
+      company_id: 1,
+      deal_id: 3,
+    });
+  });
 });
