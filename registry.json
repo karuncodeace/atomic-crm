@@ -976,6 +976,18 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/brochures/BrochureTable.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/brochures/BrochureParts.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/brochures/BrochureMobileList.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/brochures/BrochureList.tsx",
           "type": "registry:component"
         },
