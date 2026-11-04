@@ -12,11 +12,19 @@ export interface LeadImportRow {
   first_name: string;
   last_name: string;
   title: string;
-  /** E.164 (`+919876543210`), or empty. */
+  /** Calling contact, E.164 (`+919876543210`), or empty. */
   phone: string;
+  /** Business WhatsApp, E.164, or empty. */
+  whatsapp_number: string;
   email: string;
   industry: string;
+  /** Optional — usually filled later by another app. */
   pitch: string;
+  business_description: string;
+  lead_date: string;
+  city: string;
+  address: string;
+  priority: string;
   /** Company domain (`acme.com`), from the website or a business email. */
   domain: string;
 }
@@ -57,12 +65,28 @@ const COLUMN_ALIASES: Record<keyof Omit<LeadImportRow, "row">, string[]> = {
     "mobile",
     "mobile_number",
     "contact_number",
-    "whatsapp",
-    "whatsapp_number",
+    "calling_number",
   ],
-  email: ["email", "email_address", "e_mail", "mail"],
+  whatsapp_number: ["whatsapp_number", "whatsapp", "wa", "whatsapp_no"],
+  email: ["email", "email_address", "e_mail", "mail", "gmail"],
   industry: ["industry", "sector", "vertical", "category"],
-  pitch: ["pitch", "pitch_script", "pitch_point", "script", "notes"],
+  pitch: ["pitch", "pitch_script", "pitch_point", "script"],
+  business_description: [
+    "business_description",
+    "description",
+    "about",
+    "about_business",
+  ],
+  lead_date: [
+    "lead_date",
+    "calling_date",
+    "collection_date",
+    "date",
+    "lead_collection_date",
+  ],
+  city: ["city", "place", "location", "town"],
+  address: ["address", "street", "street_address"],
+  priority: ["priority", "opportunity_score", "score", "lead_score"],
   domain: ["domain", "website", "company_website", "url", "web"],
 };
 const FULL_NAME_ALIASES = [
@@ -187,6 +211,43 @@ const splitFullName = (fullName: string) => {
   };
 };
 
+/** Accepts YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY, or Excel-ish dates. */
+export const normalizeLeadDate = (raw: string): string => {
+  const value = raw.trim();
+  if (!value) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+
+  const slash = value.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/);
+  if (slash) {
+    const day = slash[1].padStart(2, "0");
+    const month = slash[2].padStart(2, "0");
+    const year = slash[3];
+    return `${year}-${month}-${day}`;
+  }
+
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toISOString().slice(0, 10);
+  }
+  return "";
+};
+
+/** Maps opportunity scores / labels onto high | medium | low. */
+export const normalizePriority = (raw: string): string => {
+  const value = raw.trim().toLowerCase();
+  if (!value) return "";
+  if (["high", "h", "hot"].includes(value)) return "high";
+  if (["medium", "med", "m", "mid", "warm"].includes(value)) return "medium";
+  if (["low", "l", "cold"].includes(value)) return "low";
+  const score = Number(value);
+  if (!Number.isNaN(score)) {
+    if (score >= 8) return "high";
+    if (score >= 5) return "medium";
+    return "low";
+  }
+  return "";
+};
+
 /**
  * Maps one parsed CSV record to a lead row, or to the reason it is invalid.
  */
@@ -207,7 +268,13 @@ export const mapLeadRecord = (
     ));
   }
   const company_name = pick(record, COLUMN_ALIASES.company_name);
+  // Files without a contact person still import: use the company as the contact.
+  if (!first_name && !last_name && company_name) {
+    first_name = company_name;
+  }
+
   const rawPhone = pick(record, COLUMN_ALIASES.phone);
+  const rawWhatsapp = pick(record, COLUMN_ALIASES.whatsapp_number);
   const email = normalizeEmail(pick(record, COLUMN_ALIASES.email));
 
   const invalid = (reason: string) => ({
@@ -216,7 +283,8 @@ export const mapLeadRecord = (
 
   if (!company_name) return invalid("missing company name");
   if (!first_name && !last_name) return invalid("missing contact name");
-  if (!rawPhone && !email) return invalid("missing phone and email");
+  if (!rawPhone && !rawWhatsapp && !email)
+    return invalid("missing phone and email");
 
   let phone = "";
   if (rawPhone) {
@@ -224,6 +292,16 @@ export const mapLeadRecord = (
     if ("error" in result) return invalid(`${result.error}: ${rawPhone}`);
     phone = result.phone;
   }
+
+  let whatsapp_number = "";
+  if (rawWhatsapp) {
+    const result = normalizePhone(rawWhatsapp);
+    if ("error" in result) return invalid(`${result.error}: ${rawWhatsapp}`);
+    whatsapp_number = result.phone;
+  } else if (phone) {
+    whatsapp_number = phone;
+  }
+
   if (email && !isValidEmail(email)) return invalid(`invalid email: ${email}`);
 
   return {
@@ -234,9 +312,15 @@ export const mapLeadRecord = (
       last_name,
       title: pick(record, COLUMN_ALIASES.title),
       phone,
+      whatsapp_number,
       email,
       industry: pick(record, COLUMN_ALIASES.industry),
       pitch: pick(record, COLUMN_ALIASES.pitch),
+      business_description: pick(record, COLUMN_ALIASES.business_description),
+      lead_date: normalizeLeadDate(pick(record, COLUMN_ALIASES.lead_date)),
+      city: pick(record, COLUMN_ALIASES.city),
+      address: pick(record, COLUMN_ALIASES.address),
+      priority: normalizePriority(pick(record, COLUMN_ALIASES.priority)),
       domain:
         domainFromWebsite(pick(record, COLUMN_ALIASES.domain)) ||
         (email ? domainFromEmail(email) : ""),

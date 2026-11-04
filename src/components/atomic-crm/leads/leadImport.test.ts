@@ -65,17 +65,58 @@ describe("mapLeadRecord", () => {
         last_name: "Kumar Shah",
         title: "",
         phone: "+919876543210",
+        whatsapp_number: "+919876543210",
         email: "ravi@acmefoods.in",
         industry: "FMCG",
         pitch: "Ask about distribution",
+        business_description: "",
+        lead_date: "",
+        city: "",
+        address: "",
+        priority: "",
         domain: "acmefoods.in",
+      },
+    });
+  });
+
+  it("maps WhatsApp, business description and calling date aliases", () => {
+    const result = mapLeadRecord(
+      {
+        "Business Name": "Beta Traders",
+        Mobile: "9876543210",
+        WhatsApp: "9988776655",
+        Gmail: "sales@beta.in",
+        "Business Description": "Retail electronics",
+        "Calling Date": "15/03/2026",
+        Priority: "9",
+      },
+      1,
+    );
+
+    expect(result).toEqual({
+      lead: {
+        row: 1,
+        company_name: "Beta Traders",
+        first_name: "Beta Traders",
+        last_name: "",
+        title: "",
+        phone: "+919876543210",
+        whatsapp_number: "+919988776655",
+        email: "sales@beta.in",
+        industry: "",
+        pitch: "",
+        business_description: "Retail electronics",
+        lead_date: "2026-03-15",
+        city: "",
+        address: "",
+        priority: "high",
+        domain: "beta.in",
       },
     });
   });
 
   it.each([
     [{ name: "Ravi", phone: "9876543210" }, "missing company name"],
-    [{ company: "Acme", phone: "9876543210" }, "missing contact name"],
     [{ company: "Acme", name: "Ravi" }, "missing phone and email"],
     [{ company: "Acme", name: "Ravi", phone: "12" }, "invalid phone: 12"],
     [{ company: "Acme", name: "Ravi", email: "ravi@" }, "invalid email: ravi@"],

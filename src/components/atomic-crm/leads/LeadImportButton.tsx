@@ -1,0 +1,243 @@
+import { useCallback, useEffect, useState } from "react";
+import { Upload } from "lucide-react";
+import * as Papa from "papaparse";
+import {
+  Form,
+  useDataProvider,
+  useNotify,
+  useRefresh,
+  useTranslate,
+} from "ra-core";
+import { Link } from "react-router";
+import { FileField } from "@/components/admin/file-field";
+import { FileInput } from "@/components/admin/file-input";
+import { FormToolbar } from "@/components/admin/simple-form";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+
+import type { CrmDataProvider } from "../providers/types";
+import {
+  mergeReports,
+  prepareLeadRecords,
+  rejectsToCsv,
+  type LeadImportResult,
+} from "./leadImport";
+
+const SAMPLE_CSV = `Business Name,Mobile,WhatsApp,Gmail,Vertical,Business Description,Calling Date,City,Address,Priority
+Acme Foods,9876543210,9876543210,ravi@acmefoods.in,FMCG,Wholesale spices and oils,15/03/2026,Kochi,MG Road,high
+`;
+
+/**
+ * Imports calling leads from a CSV: company + contact + New-stage deal.
+ * Uses `import_leads` (or its FakeRest twin), with client-side column mapping
+ * and phone / email normalization first.
+ */
+export const LeadImportButton = () => {
+  const translate = useTranslate();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  return (
+    <>
+      <Button
+        variant="outline"
+        onClick={() => setOpen(true)}
+        disabled={busy}
+        className="flex items-center gap-2 cursor-pointer"
+      >
+        <Upload /> {translate("crm.lead_import.button", { _: "Import leads" })}
+      </Button>
+      <LeadImportDialog
+        open={open}
+        busy={busy}
+        setBusy={setBusy}
+        onClose={() => !busy && setOpen(false)}
+      />
+    </>
+  );
+};
+
+const LeadImportDialog = ({
+  open,
+  busy,
+  setBusy,
+  onClose,
+}: {
+  open: boolean;
+  busy: boolean;
+  setBusy: (busy: boolean) => void;
+  onClose: () => void;
+}) => {
+  const translate = useTranslate();
+  const notify = useNotify();
+  const refresh = useRefresh();
+  const dataProvider = useDataProvider<CrmDataProvider>();
+  const [file, setFile] = useState<File | null>(null);
+  const [report, setReport] = useState<LeadImportResult | null>(null);
+  const [sourceRows, setSourceRows] = useState<Record<string, unknown>[]>([]);
+
+  useEffect(() => {
+    if (!open) {
+      setFile(null);
+      setReport(null);
+      setSourceRows([]);
+    }
+  }, [open]);
+
+  const sampleUrl = `data:text/csv;name=leads_sample.csv;charset=utf-8,${encodeURIComponent(SAMPLE_CSV)}`;
+
+  const handleStart = useCallback(async () => {
+    if (!file || busy) return;
+    setBusy(true);
+    setReport(null);
+    try {
+      const records = await parseCsvAsText(file);
+      setSourceRows(records);
+      const { leads, invalid } = prepareLeadRecords(records);
+      const server =
+        leads.length === 0
+          ? {
+              batch_id: null,
+              created: 0,
+              duplicates: 0,
+              invalid: 0,
+              rows: [],
+            }
+          : await dataProvider.importLeads(file.name, leads);
+      const merged = mergeReports(server, invalid);
+      setReport(merged);
+      refresh();
+      notify("crm.lead_import.complete", {
+        type: merged.created > 0 ? "success" : "warning",
+        messageArgs: {
+          created: merged.created,
+          duplicates: merged.duplicates,
+          invalid: merged.invalid,
+        },
+      });
+    } catch (error) {
+      console.error(error);
+      notify("crm.lead_import.error", { type: "error" });
+    } finally {
+      setBusy(false);
+    }
+  }, [busy, dataProvider, file, notify, refresh, setBusy]);
+
+  const rejectsHref =
+    report && sourceRows.length
+      ? `data:text/csv;name=leads_rejects.csv;charset=utf-8,${encodeURIComponent(rejectsToCsv(report.rows, sourceRows))}`
+      : null;
+
+  return (
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="max-w-[calc(100%-2rem)] gap-6 p-6 sm:max-w-2xl sm:p-8">
+        <Form className="flex flex-col gap-6">
+          <DialogHeader>
+            <DialogTitle>
+              {translate("crm.lead_import.title", { _: "Import leads" })}
+            </DialogTitle>
+          </DialogHeader>
+
+          <Alert>
+            <AlertDescription className="flex flex-col gap-4">
+              {translate("crm.lead_import.sample_hint", {
+                _: "Use a CSV with Business Name, Mobile / WhatsApp, Gmail, Vertical, Business Description, Calling Date, City, Address, Priority. Pitch is optional — another app can fill it later.",
+              })}
+              <Link
+                to={sampleUrl}
+                download="leads_sample.csv"
+                target="_blank"
+                rel="noreferrer"
+                className={cn(buttonVariants({ variant: "outline" }), "w-fit")}
+              >
+                {translate("crm.lead_import.sample_download", {
+                  _: "Download CSV sample",
+                })}
+              </Link>
+            </AlertDescription>
+          </Alert>
+
+          <FileInput
+            source="csv"
+            label="crm.lead_import.csv_file"
+            accept={{ "text/csv": [".csv"] }}
+            onChange={(value) => {
+              setFile(value as File | null);
+              setReport(null);
+            }}
+          >
+            <FileField source="src" title="title" target="_blank" />
+          </FileInput>
+
+          {report && (
+            <Alert>
+              <AlertDescription>
+                {translate("crm.lead_import.summary", {
+                  _: "Created %{created}, duplicates %{duplicates}, invalid %{invalid}",
+                  created: report.created,
+                  duplicates: report.duplicates,
+                  invalid: report.invalid,
+                })}
+                {rejectsHref && report.created < sourceRows.length && (
+                  <div className="mt-3">
+                    <Link
+                      to={rejectsHref}
+                      download="leads_rejects.csv"
+                      target="_blank"
+                      rel="noreferrer"
+                      className={cn(
+                        buttonVariants({ variant: "outline" }),
+                        "w-fit",
+                      )}
+                    >
+                      {translate("crm.lead_import.download_rejects", {
+                        _: "Download rejects",
+                      })}
+                    </Link>
+                  </div>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
+        </Form>
+
+        <div className="flex justify-start">
+          <FormToolbar>
+            <Button onClick={handleStart} disabled={!file || busy}>
+              {busy
+                ? translate("crm.lead_import.in_progress", {
+                    _: "Import in progress…",
+                  })
+                : translate("crm.lead_import.start", { _: "Start import" })}
+            </Button>
+          </FormToolbar>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const parseCsvAsText = (file: File) =>
+  new Promise<Record<string, unknown>[]>((resolve, reject) => {
+    Papa.parse<Record<string, unknown>>(file, {
+      header: true,
+      skipEmptyLines: true,
+      // Keep phone / zip / dates as strings (no dynamic typing).
+      dynamicTyping: false,
+      complete(results) {
+        if (results.errors.length && !results.data.length) {
+          reject(results.errors[0]);
+          return;
+        }
+        resolve(results.data);
+      },
+      error: reject,
+    });
+  });

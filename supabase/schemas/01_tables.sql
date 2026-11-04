@@ -36,6 +36,7 @@ create table public.companies (
     email text,
     whatsapp_number text,
     pitch_point text,
+    business_description text,
     priority text default 'medium'
         check (priority is null or priority in ('high', 'medium', 'low'))
 );

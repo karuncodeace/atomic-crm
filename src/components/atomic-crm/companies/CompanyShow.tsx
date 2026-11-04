@@ -36,6 +36,7 @@ import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Company, Contact, Deal } from "../types";
 import {
   AdditionalInfo,
+  BusinessDescriptionInfo,
   CompanyAside,
   CompanyInfo,
   ContextInfo,
@@ -82,6 +83,7 @@ const CompanyShowContentMobile = () => {
         </div>
         <ContextInfo record={record} />
         <CompanyInfo record={record} />
+        <BusinessDescriptionInfo record={record} />
         <PitchInfo record={record} />
         <AdditionalInfo record={record} />
       </MobileContent>

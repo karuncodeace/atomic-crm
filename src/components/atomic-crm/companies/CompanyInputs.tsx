@@ -25,7 +25,7 @@ export const CompanyInputs = () => (
     <CompanyLeadInputs />
 
     <TextInput
-      source="pitch_point"
+      source="business_description"
       multiline
       helperText={false}
       className="[&_textarea]:min-h-32"
@@ -61,6 +61,8 @@ const CompanyLeadInputs = () => {
         <TextInput source="name" validate={required()} helperText={false} />
         <TextInput source="website" helperText={false} />
         <TextInput source="email" helperText={false} />
+        <TextInput source="phone_number" helperText={false} />
+        <TextInput source="whatsapp_number" helperText={false} />
         <SelectInput
           source="sector"
           choices={verticalChoices}

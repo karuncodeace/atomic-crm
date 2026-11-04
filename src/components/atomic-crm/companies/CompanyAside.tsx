@@ -42,6 +42,8 @@ export const CompanyAside = ({ link = "edit" }: CompanyAsideProps) => {
 
       <CompanyInfo record={record} />
 
+      <BusinessDescriptionInfo record={record} />
+
       <PitchInfo record={record} />
 
       <AdditionalInfo record={record} />
@@ -207,6 +209,23 @@ export const ContextInfo = ({ record }: { record: Company }) => {
           {translate("resources.companies.fields.priority")}: {priorityLabel}
         </span>
       )}
+    </AsideSection>
+  );
+};
+
+export const BusinessDescriptionInfo = ({ record }: { record: Company }) => {
+  const translate = useTranslate();
+  if (!record.business_description) {
+    return null;
+  }
+
+  return (
+    <AsideSection
+      title={translate("resources.companies.fields.business_description")}
+    >
+      <p className="text-sm whitespace-pre-line">
+        {record.business_description}
+      </p>
     </AsideSection>
   );
 };

@@ -6,6 +6,7 @@ export const englishCrmMessages = {
       fields: {
         existing_contact_ids: "Add an existing contact",
         pitch_point: "Pitch point",
+        business_description: "Business description",
         whatsapp_number: "WhatsApp number",
         email: "Email",
         lead_date: "Date",
@@ -532,6 +533,23 @@ export const englishCrmMessages = {
       stopped:
         "Import stopped. Imported %{importCount} records, with %{errorCount} errors",
       title: "Import data",
+    },
+    lead_import: {
+      button: "Import leads",
+      complete:
+        "Lead import complete. Created %{created}, duplicates %{duplicates}, invalid %{invalid}",
+      csv_file: "CSV File",
+      download_rejects: "Download rejects",
+      error:
+        "Failed to import this file. Please make sure you provided a valid CSV.",
+      in_progress: "Import in progress…",
+      sample_download: "Download CSV sample",
+      sample_hint:
+        "Use a CSV with Business Name, Mobile / WhatsApp, Gmail, Vertical, Business Description, Calling Date, City, Address, Priority. Pitch is optional — another app can fill it later.",
+      start: "Start import",
+      summary:
+        "Created %{created}, duplicates %{duplicates}, invalid %{invalid}",
+      title: "Import leads",
     },
     sidebar: {
       admin: "Administration",

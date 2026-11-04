@@ -8,6 +8,7 @@ export const frenchCrmMessages = {
       fields: {
         existing_contact_ids: "Ajouter un contact existant",
         pitch_point: "Argumentaire",
+        business_description: "Description de l'activité",
         whatsapp_number: "Numéro WhatsApp",
         email: "E-mail",
         lead_date: "Date",
@@ -540,6 +541,21 @@ export const frenchCrmMessages = {
       stopped:
         "Import arrêté. %{importCount} enregistrements importés, %{errorCount} erreurs",
       title: "Importer des données",
+    },
+    lead_import: {
+      button: "Importer des prospects",
+      complete:
+        "Import terminé. Créés %{created}, doublons %{duplicates}, invalides %{invalid}",
+      csv_file: "Fichier CSV",
+      download_rejects: "Télécharger les rejets",
+      error: "Échec de l'importation. Veuillez fournir un fichier CSV valide.",
+      in_progress: "Import en cours…",
+      sample_download: "Télécharger un exemple CSV",
+      sample_hint:
+        "Utilisez un CSV avec Nom commercial, Mobile / WhatsApp, Gmail, Verticale, Description de l'activité, Date d'appel, Ville, Adresse, Priorité. L'argumentaire est optionnel — une autre application peut le remplir plus tard.",
+      start: "Démarrer l'import",
+      summary: "Créés %{created}, doublons %{duplicates}, invalides %{invalid}",
+      title: "Importer des prospects",
     },
     sidebar: {
       admin: "Administration",

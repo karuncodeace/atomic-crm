@@ -505,8 +505,8 @@ begin
 
     if v_company_id is null then
         insert into public.companies (
-            name, sector, city, lead_date, pitch_point, sales_id,
-            website, phone_number, email, whatsapp_number, priority
+            name, sector, city, lead_date, pitch_point, business_description, sales_id,
+            website, phone_number, email, whatsapp_number, priority, address
         )
         values (
             trim(p_company->>'name'),
@@ -514,12 +514,14 @@ begin
             nullif(p_company->>'city', ''),
             coalesce(nullif(p_company->>'lead_date', '')::date, current_date),
             nullif(p_company->>'pitch_point', ''),
+            nullif(p_company->>'business_description', ''),
             (p_company->>'sales_id')::bigint,
             nullif(trim(p_company->>'website'), ''),
             nullif(trim(p_company->>'phone_number'), ''),
             nullif(trim(p_company->>'email'), ''),
             nullif(trim(p_company->>'whatsapp_number'), ''),
-            coalesce(nullif(p_company->>'priority', ''), 'medium')
+            coalesce(nullif(p_company->>'priority', ''), 'medium'),
+            nullif(trim(p_company->>'address'), '')
         )
         returning id into v_company_id;
     else
@@ -529,11 +531,13 @@ begin
             city = case when p_company ? 'city' then nullif(p_company->>'city', '') else c.city end,
             lead_date = case when p_company ? 'lead_date' then nullif(p_company->>'lead_date', '')::date else c.lead_date end,
             pitch_point = case when p_company ? 'pitch_point' then nullif(p_company->>'pitch_point', '') else c.pitch_point end,
+            business_description = case when p_company ? 'business_description' then nullif(p_company->>'business_description', '') else c.business_description end,
             website = case when p_company ? 'website' then nullif(trim(p_company->>'website'), '') else c.website end,
             phone_number = case when p_company ? 'phone_number' then nullif(trim(p_company->>'phone_number'), '') else c.phone_number end,
             email = case when p_company ? 'email' then nullif(trim(p_company->>'email'), '') else c.email end,
             whatsapp_number = case when p_company ? 'whatsapp_number' then nullif(trim(p_company->>'whatsapp_number'), '') else c.whatsapp_number end,
             priority = case when p_company ? 'priority' then coalesce(nullif(p_company->>'priority', ''), 'medium') else c.priority end,
+            address = case when p_company ? 'address' then nullif(trim(p_company->>'address'), '') else c.address end,
             sales_id = case when p_company ? 'sales_id' then (p_company->>'sales_id')::bigint else c.sales_id end
         where c.id = v_company_id;
 
@@ -859,8 +863,12 @@ begin
             v_reason := 'invalid email';
         elsif v_company_name is null then
             v_reason := 'missing company name';
-        elsif nullif(trim(coalesce(v_row->>'first_name', '') || coalesce(v_row->>'last_name', '')), '') is null then
-            v_reason := 'missing contact name';
+        end if;
+
+        -- No contact person in the file: use the company name on the contact.
+        if v_reason is null
+            and nullif(trim(coalesce(v_row->>'first_name', '') || coalesce(v_row->>'last_name', '')), '') is null then
+            v_row := jsonb_set(v_row, '{first_name}', to_jsonb(v_company_name));
         end if;
 
         if v_reason is not null then
@@ -908,20 +916,38 @@ begin
         limit 1;
 
         if v_company_id is null then
-            insert into public.companies (name, sector, pitch_point, website, lead_date, created_at)
+            insert into public.companies (
+                name, sector, pitch_point, business_description, website,
+                phone_number, email, whatsapp_number, city, address,
+                lead_date, priority, created_at
+            )
             values (
                 v_company_name,
                 v_sector,
                 nullif(trim(v_row->>'pitch'), ''),
+                nullif(trim(v_row->>'business_description'), ''),
                 case when v_domain is not null then 'https://' || v_domain end,
-                current_date,
+                nullif(trim(v_row->>'phone'), ''),
+                v_email,
+                coalesce(nullif(trim(v_row->>'whatsapp_number'), ''), v_phone),
+                nullif(trim(v_row->>'city'), ''),
+                nullif(trim(v_row->>'address'), ''),
+                coalesce(nullif(trim(v_row->>'lead_date'), '')::date, current_date),
+                coalesce(nullif(trim(v_row->>'priority'), ''), 'medium'),
                 now()
             )
             returning id into v_company_id;
         else
             update public.companies c set
                 pitch_point = coalesce(c.pitch_point, nullif(trim(v_row->>'pitch'), '')),
-                sector = coalesce(c.sector, v_sector)
+                business_description = coalesce(c.business_description, nullif(trim(v_row->>'business_description'), '')),
+                sector = coalesce(c.sector, v_sector),
+                phone_number = coalesce(c.phone_number, nullif(trim(v_row->>'phone'), '')),
+                email = coalesce(c.email, v_email),
+                whatsapp_number = coalesce(c.whatsapp_number, nullif(trim(v_row->>'whatsapp_number'), ''), v_phone),
+                city = coalesce(c.city, nullif(trim(v_row->>'city'), '')),
+                address = coalesce(c.address, nullif(trim(v_row->>'address'), '')),
+                priority = coalesce(c.priority, nullif(trim(v_row->>'priority'), ''), 'medium')
             where c.id = v_company_id;
         end if;
 
@@ -935,7 +961,7 @@ begin
             nullif(trim(v_row->>'last_name'), ''),
             nullif(trim(v_row->>'title'), ''),
             v_company_id,
-            v_phone,
+            coalesce(nullif(trim(v_row->>'whatsapp_number'), ''), v_phone),
             not exists (
                 select 1 from public.contacts existing
                 where existing.company_id = v_company_id and existing.is_primary

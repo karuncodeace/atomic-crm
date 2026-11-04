@@ -72,6 +72,7 @@ const saveCompanyWithContacts = async (
         city: company.city,
         lead_date: company.lead_date,
         pitch_point: company.pitch_point,
+        business_description: company.business_description,
         website: company.website,
         phone_number: company.phone_number,
         email: company.email,

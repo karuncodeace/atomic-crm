@@ -98,6 +98,7 @@ select
     c.email,
     c.whatsapp_number,
     c.pitch_point,
+    c.business_description,
     c.priority
 from public.companies c
     left join public.deals d on c.id = d.company_id
