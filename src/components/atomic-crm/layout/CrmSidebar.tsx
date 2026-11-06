@@ -8,7 +8,7 @@ import {
   Settings,
   Users,
 } from "lucide-react";
-import { useGetList, useTranslate } from "ra-core";
+import { useCanAccess, useGetList, useTranslate } from "ra-core";
 import { Link, matchPath, useLocation } from "react-router";
 import {
   Sidebar,
@@ -30,6 +30,10 @@ import type { Brochure } from "../types";
 export const CrmSidebar = () => {
   const { darkModeLogo, lightModeLogo, title } = useConfigurationContext();
   const translate = useTranslate();
+  const { canAccess: canSeeBrochures } = useCanAccess({
+    resource: "brochures",
+    action: "list",
+  });
 
   return (
     <Sidebar collapsible="icon" variant="floating">
@@ -78,15 +82,17 @@ export const CrmSidebar = () => {
                   _: "Tasks",
                 })}
               />
-              <NavItem
-                to="/brochures"
-                pattern="/brochures/*"
-                icon={FileText}
-                label={translate("resources.brochures.name", {
-                  smart_count: 2,
-                })}
-                badge={<PendingBrochuresBadge />}
-              />
+              {canSeeBrochures ? (
+                <NavItem
+                  to="/brochures"
+                  pattern="/brochures/*"
+                  icon={FileText}
+                  label={translate("resources.brochures.name", {
+                    smart_count: 2,
+                  })}
+                  badge={<PendingBrochuresBadge />}
+                />
+              ) : null}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

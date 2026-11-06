@@ -27,13 +27,13 @@ export const resolveRole = (sale: {
 };
 
 /**
- * Shared product: BDE and admin (and manager) use the same menus and see the
- * same data. Disabled users never get a role from the auth provider, so they
- * never reach canAccess.
+ * Every role uses the same menus, except brochures, which BDEs never see.
+ * Which rows each role sees is enforced by RLS, not here. Disabled users never
+ * get a role from the auth provider, so they never reach canAccess.
  */
 export const canAccess = <
   RecordType extends Record<string, any> = Record<string, any>,
 >(
-  _role: SalesRole,
-  _params: CanAccessParams<RecordType>,
-) => true;
+  role: SalesRole,
+  params: CanAccessParams<RecordType>,
+) => !(role === "bde" && params.resource === "brochures");

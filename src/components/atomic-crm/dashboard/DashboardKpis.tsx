@@ -1,4 +1,9 @@
-import { useGetList, useTranslate } from "ra-core";
+import {
+  useCanAccess,
+  useGetIdentity,
+  useGetList,
+  useTranslate,
+} from "ra-core";
 import { Link } from "react-router";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -6,11 +11,12 @@ import {
   ArrowUpRight,
   FileClock,
   Handshake,
+  PhoneCall,
   Users,
   type LucideIcon,
 } from "lucide-react";
 
-import type { Brochure } from "../types";
+import type { Brochure, CallAssignment } from "../types";
 
 type KpiTone = "yellow" | "blue" | "lavender";
 
@@ -78,6 +84,39 @@ const PendingBrochuresKpi = () => {
   );
 };
 
+/** BDEs see their open calls instead of brochures. */
+const OpenCallsKpi = () => {
+  const translate = useTranslate();
+  const { identity } = useGetIdentity();
+  const { total } = useGetList<CallAssignment>(
+    "call_assignments",
+    {
+      pagination: { page: 1, perPage: 1 },
+      sort: { field: "assignment_date", order: "ASC" },
+      filter: { status: "open", sales_id: identity?.id },
+    },
+    { enabled: identity?.id != null },
+  );
+  return (
+    <KpiCard
+      label={translate("crm.dashboard.kpi.open_calls", { _: "Open calls" })}
+      value={total}
+      icon={PhoneCall}
+      tone="lavender"
+      to="/call_assignments"
+    />
+  );
+};
+
+const ThirdKpi = () => {
+  const { canAccess, isPending } = useCanAccess({
+    resource: "brochures",
+    action: "list",
+  });
+  if (isPending) return null;
+  return canAccess ? <PendingBrochuresKpi /> : <OpenCallsKpi />;
+};
+
 export const DashboardKpis = ({
   totalContacts,
   totalDeals,
@@ -102,7 +141,7 @@ export const DashboardKpis = ({
         tone="blue"
         to="/deals"
       />
-      <PendingBrochuresKpi />
+      <ThirdKpi />
     </div>
   );
 };

@@ -3,13 +3,12 @@ import { describe, expect, it } from "vitest";
 import { canAccess, resolveRole } from "./canAccess";
 
 describe("canAccess", () => {
-  it("lets every active role reach every resource (shared menus)", () => {
+  it("lets every active role reach the shared resources", () => {
     for (const role of ["admin", "manager", "bde"] as const) {
       for (const resource of [
         "sales",
         "configuration",
         "lead_import",
-        "brochures",
         "call_assignments",
         "contacts",
         "deals",
@@ -17,6 +16,18 @@ describe("canAccess", () => {
         expect(canAccess(role, { action: "list", resource })).toBe(true);
       }
     }
+  });
+
+  it("hides brochures from BDEs only", () => {
+    expect(canAccess("bde", { action: "list", resource: "brochures" })).toBe(
+      false,
+    );
+    expect(
+      canAccess("manager", { action: "list", resource: "brochures" }),
+    ).toBe(true);
+    expect(canAccess("admin", { action: "list", resource: "brochures" })).toBe(
+      true,
+    );
   });
 });
 

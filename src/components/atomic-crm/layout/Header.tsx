@@ -1,5 +1,5 @@
 import { Bell, FileText, Import, Settings, User, Users } from "lucide-react";
-import { useGetList, useTranslate, useUserMenu } from "ra-core";
+import { useCanAccess, useGetList, useTranslate, useUserMenu } from "ra-core";
 import { Link } from "react-router";
 import { RefreshButton } from "@/components/admin/refresh-button";
 import { ThemeModeToggle } from "@/components/admin/theme-mode-toggle";
@@ -23,7 +23,7 @@ const Header = () => (
     <div className="ml-auto flex items-center gap-1">
       <NewRecordButton />
       <Separator orientation="vertical" className="mx-2 h-5" />
-      <NotificationsButton />
+      <BrochureNotifications />
       <ThemeModeToggle />
       <RefreshButton />
       <UserMenu>
@@ -36,6 +36,12 @@ const Header = () => (
     </div>
   </header>
 );
+
+/** Bell only for roles that handle brochures (not BDEs). */
+const BrochureNotifications = () => {
+  const { canAccess } = useCanAccess({ resource: "brochures", action: "list" });
+  return canAccess ? <NotificationsButton /> : null;
+};
 
 /** Round bell with a red dot while brochures are waiting for review. */
 const NotificationsButton = () => {

@@ -569,6 +569,7 @@ export const frenchCrmMessages = {
       welcome_back: "Bon retour, %{name}",
       kpi: {
         pending_brochures: "Brochures en attente",
+        open_calls: "Appels ouverts",
       },
       panel: {
         title: "Ma journée",
