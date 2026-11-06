@@ -1191,7 +1191,7 @@ end;
 $$;
 
 CREATE OR REPLACE FUNCTION "public"."import_leads"("p_file_name" "text", "p_rows" "jsonb") RETURNS "jsonb"
-    LANGUAGE "plpgsql"
+    LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
     AS $_$
 declare
