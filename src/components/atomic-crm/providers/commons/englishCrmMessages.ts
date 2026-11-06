@@ -510,6 +510,7 @@ export const englishCrmMessages = {
     },
     common: {
       account_manager: "Account manager",
+      not_assigned: "Not assigned",
       activity: "Activity",
       added: "added",
       details: "Details",

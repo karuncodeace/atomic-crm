@@ -517,6 +517,7 @@ export const frenchCrmMessages = {
     },
     common: {
       account_manager: "Responsable de compte",
+      not_assigned: "Non assigné",
       activity: "Activité",
       added: "ajoutée",
       details: "Détails",

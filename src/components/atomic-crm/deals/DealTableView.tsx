@@ -99,7 +99,12 @@ export const DealTableView = () => {
           className="hidden xl:table-cell"
           cellClassName="max-w-36"
         >
-          <ReferenceField source="sales_id" reference="sales">
+          <ReferenceField
+            source="sales_id"
+            reference="sales"
+            link={false}
+            empty={<NotAssigned />}
+          >
             <SaleNameField />
           </ReferenceField>
         </DataTable.Col>
@@ -288,9 +293,22 @@ const DealStageSelector = () => {
   );
 };
 
+const NotAssigned = () => {
+  const translate = useTranslate();
+  return (
+    <span className="block truncate text-sm text-muted-foreground/60 italic whitespace-nowrap">
+      {translate("crm.common.not_assigned", { _: "Not assigned" })}
+    </span>
+  );
+};
+
+/** Only an active BDE or manager owns a lead; anyone else (e.g. the admin who imported it) shows "Not assigned". */
 const SaleNameField = () => {
   const record = useRecordContext<Sale>();
   if (!record) return null;
+  if (record.disabled || (record.role !== "bde" && record.role !== "manager")) {
+    return <NotAssigned />;
+  }
   return (
     <span
       title={`${record.first_name} ${record.last_name}`}
