@@ -154,6 +154,7 @@ export const assignDailyCallsInMemory = async (
           id: contact.id,
           data: {
             assigned_to: sale.id,
+            sales_id: sale.id,
             assigned_at: new Date().toISOString(),
             lead_stage:
               contact.lead_stage === "new" ? "queued" : contact.lead_stage,

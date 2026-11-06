@@ -392,8 +392,7 @@ export const frenchCrmMessages = {
         },
         error:
           "Une erreur s'est produite lors de la création de l'utilisateur.",
-        success:
-          "Utilisateur créé. Ils recevront prochainement un email pour définir leur mot de passe.",
+        success: "Utilisateur créé. Mot de passe par défaut : crmuser1234.",
         title: "Créer un nouvel utilisateur",
       },
       edit: {

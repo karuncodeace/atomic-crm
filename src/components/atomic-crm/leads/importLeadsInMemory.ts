@@ -157,8 +157,9 @@ export const importLeadsInMemory = async (
         last_seen: now,
         tags: [],
         sales_id: salesId,
-        assigned_to: salesId,
-        assigned_at: now,
+        // Shared pool: assignDailyCalls hands it out within the daily caps.
+        assigned_to: null,
+        assigned_at: null,
       },
     });
     if (isPrimary) companiesWithPrimary.add(String(company.id));

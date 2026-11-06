@@ -30,7 +30,7 @@ export function SalesCreate() {
     onSuccess: () => {
       notify("resources.sales.create.success", {
         messageArgs: {
-          _: "User created. They will soon receive an email to set their password.",
+          _: "User created. They can log in with the default password crmuser1234.",
         },
       });
       redirect("/sales");

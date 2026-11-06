@@ -55,10 +55,11 @@ describe("importLeadsInMemory", () => {
     const { data: contacts } = await dataProvider.getList("contacts", {
       pagination: { page: 1, perPage: 10 },
       sort: { field: "id", order: "ASC" },
-      filter: { lead_stage: "new" },
+      filter: { lead_stage: "queued" },
     });
     expect(contacts).toHaveLength(2);
     expect(contacts[0]).toMatchObject({
+      assigned_to: null,
       phone_e164: "+919876543201",
       whatsapp_number: "+919876543201",
       is_primary: true,

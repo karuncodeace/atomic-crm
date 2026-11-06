@@ -11,6 +11,11 @@ import {
 } from "./secondaryEmails.ts";
 import { resolveRoleUpdate, type SalesRole } from "./roles.ts";
 
+// New users log in with this password (no invite email is sent).
+// Override per deployment with the DEFAULT_USER_PASSWORD secret.
+const DEFAULT_USER_PASSWORD =
+  Deno.env.get("DEFAULT_USER_PASSWORD") ?? "crmuser1234";
+
 async function updateSaleDisabled(user_id: string, disabled: boolean) {
   return await supabaseAdmin
     .from("sales")
@@ -39,7 +44,6 @@ async function createSale(
   user_id: string,
   data: {
     email: string;
-    password: string;
     first_name: string;
     last_name: string;
     disabled: boolean;
@@ -129,15 +133,8 @@ async function updateSaleAvatar(user_id: string, avatar: string) {
 }
 
 async function inviteUser(req: Request, currentUserSale: any) {
-  const {
-    email,
-    password,
-    first_name,
-    last_name,
-    disabled,
-    administrator,
-    role,
-  } = await req.json();
+  const { email, first_name, last_name, disabled, administrator, role } =
+    await req.json();
 
   if (!currentUserSale.administrator || currentUserSale.disabled) {
     return createErrorResponse(401, "Not Authorized");
@@ -173,7 +170,8 @@ async function inviteUser(req: Request, currentUserSale: any) {
   const { data, error: userError } = await supabaseAdmin.auth.admin.createUser({
     id,
     email,
-    password,
+    password: DEFAULT_USER_PASSWORD,
+    email_confirm: true,
     user_metadata: { first_name, last_name },
   });
 
@@ -211,9 +209,18 @@ async function inviteUser(req: Request, currentUserSale: any) {
         );
       }
 
+      const { error: passwordError } =
+        await supabaseAdmin.auth.admin.updateUserById(user.id, {
+          password: DEFAULT_USER_PASSWORD,
+          email_confirm: true,
+        });
+      if (passwordError) {
+        console.error(`Error resetting password: error=${passwordError}`);
+        return createErrorResponse(500, "Internal Server Error");
+      }
+
       const sale = await createSale(user.id, {
         email,
-        password,
         first_name,
         last_name,
         disabled,
@@ -247,27 +254,6 @@ async function inviteUser(req: Request, currentUserSale: any) {
     if (!data?.user) {
       console.error("Error inviting user: undefined user");
       return createErrorResponse(500, "Internal Server Error");
-    }
-    // Land on auth-callback.html first so invite tokens in the hash are
-    // copied into query params before the SPA Supabase client strips them.
-    // handleCallback then routes to /set-password with those tokens.
-    const crmBaseUrl = (
-      Deno.env.get("CRM_BASE_URL") ??
-      Deno.env.get("SITE_URL") ??
-      ""
-    ).replace(/\/$/, "");
-    const redirectTo = crmBaseUrl
-      ? `${crmBaseUrl}/auth-callback.html`
-      : undefined;
-    const { error: emailError } =
-      await supabaseAdmin.auth.admin.inviteUserByEmail(
-        email,
-        redirectTo ? { redirectTo } : undefined,
-      );
-
-    if (emailError) {
-      console.error(`Error inviting user, email_error=${emailError}`);
-      return createErrorResponse(500, "Failed to send invitation mail");
     }
   }
 

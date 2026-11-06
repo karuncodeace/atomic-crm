@@ -386,7 +386,7 @@ export const englishCrmMessages = {
         },
         error: "An error occurred while creating the user.",
         success:
-          "User created. They will soon receive an email to set their password.",
+          "User created. They can log in with the default password crmuser1234.",
         title: "Create a new user",
       },
       edit: {

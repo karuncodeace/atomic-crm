@@ -645,34 +645,36 @@ begin
             );
             v_dialer bigint;
         begin
-            -- Leads always belong to a BDE. Admin only oversees.
+            -- A BDE / manager who creates (or is picked for) the lead keeps
+            -- it. Otherwise it joins the shared pool and assign_daily_calls
+            -- hands it out within each dialer's daily cap.
             select s.id into v_dialer
             from public.sales s
-            where not s.disabled
-              and s.role = 'bde'
-            order by
-                case when s.id = v_owner then 0 else 1 end,
-                s.id
-            limit 1;
+            where s.id = v_owner
+              and not s.disabled
+              and s.role in ('bde', 'manager');
 
-            v_dialer := coalesce(v_dialer, v_owner);
-
-            update public.companies
-            set sales_id = v_dialer
-            where id = v_company_id;
+            if v_dialer is not null then
+                update public.companies
+                set sales_id = v_dialer
+                where id = v_company_id;
+            end if;
 
             update public.contacts
             set
                 lead_stage = coalesce(lead_stage, 'queued'),
-                sales_id = v_dialer,
-                assigned_to = v_dialer,
-                assigned_at = coalesce(assigned_at, now())
+                sales_id = coalesce(v_dialer, sales_id),
+                assigned_to = coalesce(assigned_to, v_dialer),
+                assigned_at = case
+                    when coalesce(assigned_to, v_dialer) is null then assigned_at
+                    else coalesce(assigned_at, now())
+                end
             where id = any (v_kept_ids);
 
             perform public.open_cold_deal(
                 v_company_id,
                 v_kept_ids,
-                v_dialer,
+                coalesce(v_dialer, v_owner),
                 trim(p_company->>'name')
             );
         end;
@@ -921,14 +923,41 @@ begin
             limit v_slots
             for update skip locked
         loop
+            -- Claim the lead: the dialer now owns it, so its callbacks come
+            -- back to the same person and no one else is handed it.
             update public.contacts
             set assigned_to = v_sales.id,
+                sales_id = v_sales.id,
                 assigned_at = coalesce(assigned_at, now()),
                 lead_stage = case
                     when lead_stage = 'new' then 'queued'
                     else lead_stage
                 end
             where id = v_contact.id;
+
+            -- The company / deal follow the first dialer to claim one of its
+            -- leads, unless another active dialer already owns them.
+            update public.companies co
+            set sales_id = v_sales.id
+            where co.id = v_contact.company_id
+              and not exists (
+                  select 1 from public.sales s
+                  where s.id = co.sales_id
+                    and not s.disabled
+                    and s.role in ('bde', 'manager')
+              );
+
+            update public.deals d
+            set sales_id = v_sales.id
+            where d.company_id = v_contact.company_id
+              and d.archived_at is null
+              and v_contact.id = any (d.contact_ids)
+              and not exists (
+                  select 1 from public.sales s
+                  where s.id = d.sales_id
+                    and not s.disabled
+                    and s.role in ('bde', 'manager')
+              );
 
             select d.id into v_deal_id
             from public.deals d
@@ -1205,9 +1234,6 @@ declare
     v_sector text;
     v_company_id bigint;
     v_contact_id bigint;
-    v_assignee bigint;
-    v_dialers bigint[];
-    v_dialer_count int;
     v_seen_phones text[] := '{}';
     v_seen_emails text[] := '{}';
     v_created int := 0;
@@ -1225,16 +1251,8 @@ begin
     -- Never wait on favicon / gravatar HTTP calls during a bulk import.
     perform set_config('crm.skip_enrichment', 'on', true);
 
-    -- Round-robin across active BDEs only (admin oversees, does not own leads).
-    select coalesce(array_agg(s.id order by s.id), '{}'::bigint[])
-      into v_dialers
-    from public.sales s
-    where not s.disabled
-      and s.role = 'bde';
-    v_dialer_count := coalesce(array_length(v_dialers, 1), 0);
-    if v_dialer_count = 0 then
-        raise exception 'No active BDE to assign leads to' using errcode = 'P0001';
-    end if;
+    -- Imported leads join the shared pool unassigned. assign_daily_calls
+    -- hands them out within each dialer's cap (BDE 25, manager 10).
 
     insert into public.import_batches (created_by, file_name, total_rows)
     values (public.current_sales_id(), p_file_name, jsonb_array_length(p_rows))
@@ -1308,8 +1326,6 @@ begin
         order by c.id
         limit 1;
 
-        v_assignee := v_dialers[1 + (v_created % v_dialer_count)];
-
         if v_company_id is null then
             insert into public.companies (
                 name, sector, pitch_point, business_description, website,
@@ -1335,7 +1351,7 @@ begin
                 end,
                 coalesce(nullif(trim(v_row->>'lead_date'), '')::date, current_date),
                 coalesce(nullif(trim(v_row->>'priority'), ''), 'medium'),
-                v_assignee,
+                null,
                 now()
             )
             returning id into v_company_id;
@@ -1359,8 +1375,7 @@ begin
                         else null::json
                     end
                 ),
-                priority = coalesce(c.priority, nullif(trim(v_row->>'priority'), ''), 'medium'),
-                sales_id = coalesce(c.sales_id, v_assignee)
+                priority = coalesce(c.priority, nullif(trim(v_row->>'priority'), ''), 'medium')
             where c.id = v_company_id;
         end if;
 
@@ -1384,9 +1399,9 @@ begin
             case when v_phone is not null then jsonb_build_array(jsonb_build_object('number', v_phone, 'type', 'Work')) end,
             v_phone,
             'queued',
-            v_assignee,
-            v_assignee,
-            now(),
+            null,
+            null,
+            null,
             v_batch_id,
             now(),
             now(),
@@ -1397,28 +1412,9 @@ begin
         perform public.open_cold_deal(
             v_company_id,
             array[v_contact_id],
-            v_assignee,
+            null,
             v_company_name
         );
-
-        -- Put imported leads straight into today's BDE call queue.
-        insert into public.call_assignments (
-            assignment_date, sales_id, contact_id, company_id, deal_id, status
-        )
-        select
-            (timezone(coalesce((public.call_engine_settings()->>'timezone'), 'Asia/Kolkata'), now()))::date,
-            v_assignee,
-            v_contact_id,
-            v_company_id,
-            d.id,
-            'open'
-        from public.deals d
-        where d.company_id = v_company_id
-          and d.archived_at is null
-          and v_contact_id = any (d.contact_ids)
-        order by d.id
-        limit 1
-        on conflict (sales_id, contact_id, assignment_date) do nothing;
 
         if v_phone is not null then v_seen_phones := v_seen_phones || v_phone; end if;
         if v_email is not null then v_seen_emails := v_seen_emails || v_email; end if;
