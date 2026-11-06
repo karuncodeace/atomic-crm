@@ -10,17 +10,22 @@ import type {
 import { planDailySlots, todayInCallTimezone } from "./callEngine";
 
 const ALL = { page: 1, perPage: 100_000 };
-const DEFAULT_QUOTA = 25;
+const BDE_QUOTA = 25;
+const MANAGER_QUOTA = 10;
 
 /**
- * FakeRest twin of `assign_daily_calls()`: hard-cap quota, leftovers first,
- * then due callbacks, then new leads from the unassigned pool.
+ * FakeRest twin of `assign_daily_calls()`: BDE cap 25, manager cap 10.
+ * Same order for both: leftovers, then due callbacks, then new leads.
+ * `quota` overrides both caps (tests).
  */
 export const assignDailyCallsInMemory = async (
   dataProvider: DataProvider,
-  options?: { quota?: number; today?: string },
+  options?: { quota?: number; managerQuota?: number; today?: string },
 ): Promise<AssignDailyCallsResult> => {
-  const quota = options?.quota ?? DEFAULT_QUOTA;
+  const bdeQuota = options?.quota ?? BDE_QUOTA;
+  const managerQuota = options?.quota ?? options?.managerQuota ?? MANAGER_QUOTA;
+  const quotaFor = (sale: Sale) =>
+    sale.role === "manager" ? managerQuota : bdeQuota;
   const today = options?.today ?? todayInCallTimezone();
   const dow = new Date(`${today}T12:00:00Z`).getUTCDay(); // 0 Sun
   const isoDow = dow === 0 ? 7 : dow;
@@ -61,7 +66,15 @@ export const assignDailyCallsInMemory = async (
     }),
   ]);
 
-  const dialers = sales.filter((sale) => !sale.disabled && sale.role === "bde");
+  const dialers = sales
+    .filter(
+      (sale) =>
+        !sale.disabled && (sale.role === "bde" || sale.role === "manager"),
+    )
+    .sort((left, right) => {
+      const rank = (sale: Sale) => (sale.role === "bde" ? 0 : 1);
+      return rank(left) - rank(right) || Number(left.id) - Number(right.id);
+    });
   let assigned = 0;
   const openBySales = new Map<string, CallAssignment[]>();
   for (const row of assignments) {
@@ -121,7 +134,7 @@ export const assignDailyCallsInMemory = async (
       });
 
     const plan = planDailySlots({
-      quota,
+      quota: quotaFor(sale),
       openLeftover: open.length,
       dueCallbacks: dueCallbacks.length,
       newLeads: newLeads.length,
@@ -178,6 +191,6 @@ export const assignDailyCallsInMemory = async (
     skipped: false,
     sales_processed: dialers.length,
     assigned,
-    quota,
+    quota: bdeQuota,
   };
 };

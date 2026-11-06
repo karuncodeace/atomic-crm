@@ -754,6 +754,7 @@ CREATE OR REPLACE FUNCTION "public"."call_engine_settings"() RETURNS "jsonb"
     AS $$
   select jsonb_build_object(
       'dailyCallQuota', 25,
+      'managerDailyCallQuota', 10,
       'retryWindowWorkingDays', 3,
       'timezone', 'Asia/Kolkata',
       'workingDays', jsonb_build_array(1, 2, 3, 4, 5),
@@ -793,16 +794,18 @@ begin
 end;
 $$;
 
--- Fill each active dialer's queue up to dailyCallQuota for today (IST).
--- Dialers = role bde or manager (admins are excluded). Priority: open leftovers
--- → due callbacks → new leads. Never exceeds quota.
+-- Fill each dialer's queue for today (IST). BDE cap is 25, manager cap is 10.
+-- Admins are excluded. Same order for both roles: open leftovers, then due
+-- callbacks / no-answers, then new or queued leads. Never exceeds the cap.
 CREATE OR REPLACE FUNCTION "public"."assign_daily_calls"() RETURNS "jsonb"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO ''
     AS $$
 declare
     v_settings jsonb := public.call_engine_settings();
-    v_quota integer := greatest(coalesce((v_settings->>'dailyCallQuota')::integer, 25), 0);
+    v_bde_quota integer := greatest(coalesce((v_settings->>'dailyCallQuota')::integer, 25), 0);
+    v_manager_quota integer := greatest(coalesce((v_settings->>'managerDailyCallQuota')::integer, 10), 0);
+    v_quota integer;
     v_tz text := coalesce(v_settings->>'timezone', 'Asia/Kolkata');
     v_today date := (timezone(v_tz, now()))::date;
     v_dow integer := extract(isodow from v_today)::integer;
@@ -830,13 +833,17 @@ begin
     end if;
 
     for v_sales in
-        select s.id
+        select s.id, s.role
         from public.sales s
         where not s.disabled
-          and s.role = 'bde'
-        order by s.id
+          and s.role in ('bde', 'manager')
+        order by case when s.role = 'bde' then 0 else 1 end, s.id
     loop
         v_sales_count := v_sales_count + 1;
+        v_quota := case
+            when v_sales.role = 'manager' then v_manager_quota
+            else v_bde_quota
+        end;
 
         -- Carry leftover open assignments into today's cap (do not re-insert).
         select count(*)::integer into v_open_count
@@ -849,7 +856,7 @@ begin
             continue;
         end if;
 
-        -- Due callbacks / no-answers already owned by this BDE.
+        -- Due callbacks / no-answers already owned by this dialer.
         for v_contact in
             select c.id, c.company_id
             from public.contacts c
@@ -953,7 +960,8 @@ begin
         'skipped', false,
         'sales_processed', v_sales_count,
         'assigned', v_assigned_total,
-        'quota', v_quota
+        'quota', v_bde_quota,
+        'manager_quota', v_manager_quota
     );
 end;
 $$;

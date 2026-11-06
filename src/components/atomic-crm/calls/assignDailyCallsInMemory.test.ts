@@ -87,10 +87,10 @@ describe("assignDailyCallsInMemory", () => {
     expect(result).toMatchObject({
       date: today,
       skipped: false,
-      // BDE only: leftover 1 + callback + 1 new (quota 3 → 2 new slots)
-      assigned: 2,
+      // Shared cap of 3: BDE leftover + callback + 1 new; manager takes the rest
+      assigned: 3,
       quota: 3,
-      sales_processed: 1,
+      sales_processed: 2,
     });
 
     const { data: assignments } = await dataProvider.getList(
@@ -101,13 +101,19 @@ describe("assignDailyCallsInMemory", () => {
         filter: { status: "open" },
       },
     );
-    expect(assignments).toHaveLength(3);
+    expect(assignments).toHaveLength(4);
     const { data: bdeContacts } = await dataProvider.getList("contacts", {
       pagination: { page: 1, perPage: 20 },
       sort: { field: "id", order: "ASC" },
       filter: { assigned_to: 1 },
     });
     expect(bdeContacts.map((contact) => contact.id).sort()).toEqual([10, 12]);
+    const { data: managerContacts } = await dataProvider.getList("contacts", {
+      pagination: { page: 1, perPage: 20 },
+      sort: { field: "id", order: "ASC" },
+      filter: { assigned_to: 2 },
+    });
+    expect(managerContacts.map((contact) => contact.id)).toEqual([11]);
   });
 
   it("skips non-working days", async () => {
@@ -175,5 +181,73 @@ describe("assignDailyCallsInMemory", () => {
       company_id: 1,
       deal_id: 3,
     });
+  });
+
+  it("caps BDE at 25 and manager at 10, follow-ups before new leads", async () => {
+    const contacts = [
+      {
+        id: 1,
+        first_name: "Due",
+        last_name: "Callback",
+        company_id: 1,
+        lead_stage: "in_progress",
+        assigned_to: 2,
+        last_outcome: "callback",
+        next_attempt_at: "2026-03-15T10:00:00.000Z",
+        do_not_contact: false,
+      },
+      ...Array.from({ length: 40 }, (_, index) => ({
+        id: index + 2,
+        first_name: "New",
+        last_name: String(index + 2),
+        company_id: 1,
+        lead_stage: "new",
+        assigned_to: null,
+        do_not_contact: false,
+      })),
+    ];
+    const dataProvider = fakeRestDataProvider({
+      sales: [
+        {
+          id: 1,
+          first_name: "Ada",
+          last_name: "BDE",
+          role: "bde",
+          disabled: false,
+          administrator: false,
+          email: "ada@example.com",
+          user_id: "u1",
+        },
+        {
+          id: 2,
+          first_name: "Mo",
+          last_name: "Mgr",
+          role: "manager",
+          disabled: false,
+          administrator: false,
+          email: "mo@example.com",
+          user_id: "u2",
+        },
+      ],
+      contacts,
+      call_assignments: [],
+      call_logs: [],
+      deals: [],
+      companies: [],
+    });
+
+    const result = await assignDailyCallsInMemory(dataProvider, { today });
+    expect(result.assigned).toBe(35);
+
+    const { data: open } = await dataProvider.getList("call_assignments", {
+      pagination: { page: 1, perPage: 100 },
+      sort: { field: "id", order: "ASC" },
+      filter: { status: "open" },
+    });
+    const bdeRows = open.filter((row) => row.sales_id === 1);
+    const managerRows = open.filter((row) => row.sales_id === 2);
+    expect(bdeRows).toHaveLength(25);
+    expect(managerRows).toHaveLength(10);
+    expect(managerRows[0]).toMatchObject({ contact_id: 1 });
   });
 });

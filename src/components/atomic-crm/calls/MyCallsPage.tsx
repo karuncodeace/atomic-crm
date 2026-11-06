@@ -26,10 +26,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 import type { CrmDataProvider } from "../providers/types";
-import type { CallAssignment, CallOutcome, Contact } from "../types";
+import type { CallAssignment, CallOutcome, Contact, SalesRole } from "../types";
 import { CALL_OUTCOMES, todayInCallTimezone } from "./callEngine";
 
-const QUOTA = 25;
+const quotaForRole = (role?: string) => (role === "manager" ? 10 : 25);
 
 export const MyCallsPage = () => {
   const translate = useTranslate();
@@ -40,19 +40,26 @@ export const MyCallsPage = () => {
   const refresh = useRefresh();
   const today = todayInCallTimezone();
   const [assigning, setAssigning] = useState(false);
+  const role = (identity as { role?: SalesRole } | undefined)?.role;
+  const ownQueue = role === "bde" || role === "manager";
+  const quota = quotaForRole(role);
 
   const { data: openRows = [], isPending: openPending } =
     useGetList<CallAssignment>("call_assignments", {
       pagination: { page: 1, perPage: 100 },
       sort: { field: "assignment_date", order: "ASC" },
-      filter: { status: "open" },
+      filter: ownQueue
+        ? { status: "open", sales_id: identity?.id }
+        : { status: "open" },
     });
 
   const { data: doneToday = [], isPending: donePending } =
     useGetList<CallAssignment>("call_assignments", {
       pagination: { page: 1, perPage: 100 },
       sort: { field: "done_at", order: "DESC" },
-      filter: { status: "done", assignment_date: today },
+      filter: ownQueue
+        ? { status: "done", assignment_date: today, sales_id: identity?.id }
+        : { status: "done", assignment_date: today },
     });
 
   const isPending = openPending || donePending;
@@ -99,7 +106,7 @@ export const MyCallsPage = () => {
             {translate("resources.call_assignments.progress", {
               done: doneCount,
               open: openCount,
-              quota: QUOTA,
+              quota,
             })}
           </p>
         </div>

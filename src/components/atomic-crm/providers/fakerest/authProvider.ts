@@ -78,6 +78,7 @@ export const authProvider: AuthProvider = {
       id: user?.id ?? 0,
       fullName: user ? `${user.first_name} ${user.last_name}` : "Jane Doe",
       avatar: user?.avatar?.src,
+      role: user ? resolveRole(user) : "admin",
     });
   },
   async getAuthorizationDetails() {
