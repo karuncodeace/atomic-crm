@@ -37,7 +37,7 @@ export const Layout = ({ children }: { children: ReactNode }) => {
         className="bg-canvas"
       >
         <CrmSidebar />
-        <SidebarInset className="min-w-0 bg-background md:my-2 md:mr-2 md:rounded-[2rem]">
+        <SidebarInset className="min-w-0 bg-background">
           <Header />
           <div
             className="mx-auto w-full max-w-screen-2xl p-4 lg:px-8 lg:py-6"

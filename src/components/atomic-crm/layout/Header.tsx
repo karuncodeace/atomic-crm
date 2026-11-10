@@ -16,7 +16,7 @@ import type { Brochure } from "../types";
 import { NewRecordButton } from "./NewRecordButton";
 
 const Header = () => (
-  <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:rounded-t-[2rem] lg:px-6">
+  <header className="sticky top-0 z-20 flex h-16 shrink-0 items-center gap-3 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/80 lg:px-6">
     <SidebarTrigger className="-ml-1" />
     <Separator orientation="vertical" className="h-5" />
     <GlobalSearchButton />

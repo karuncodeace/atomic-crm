@@ -39,7 +39,7 @@ export const CrmSidebar = () => {
   });
 
   return (
-    <Sidebar collapsible="icon" variant="floating">
+    <Sidebar collapsible="icon" variant="sidebar">
       <SidebarHeader className="h-16 justify-center px-3">
         <Link
           to="/"
