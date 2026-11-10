@@ -1,4 +1,5 @@
 import type { SalesRole } from "../../types";
+import { canUseAxiCore } from "../../axicore/axicore";
 
 // FIXME: This should be exported from the ra-core package
 type CanAccessParams<
@@ -36,4 +37,7 @@ export const canAccess = <
 >(
   role: SalesRole,
   params: CanAccessParams<RecordType>,
-) => !(role === "bde" && params.resource === "brochures");
+) =>
+  params.resource === "axicore"
+    ? canUseAxiCore(role) // AxiCore 2.0: admins only
+    : !(role === "bde" && params.resource === "brochures");

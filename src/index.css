@@ -223,3 +223,48 @@ body {
     overscroll-behavior-y: none;
   }
 }
+
+/* AxiCore 2.0 tile at the bottom of the CRM sidebar. Flat: the sidebar surface with a hairline top edge; the mark, 2.0 chip and arrow are flat fills
+   with a hairline border; hover changes the fill only. Light and dark themes via the sidebar tokens. */
+.axc-tile {
+  background: var(--sidebar);
+  border-top: 1px solid var(--sidebar-border);
+  transition: background-color 0.15s ease;
+}
+.axc-tile:hover {
+  background: var(--sidebar-accent);
+}
+.axc-mark {
+  color: var(--sidebar-foreground);
+  background: var(--sidebar-accent);
+  border: 1px solid var(--sidebar-border);
+  transition: background-color 0.15s ease;
+}
+.axc-tile:hover .axc-mark,
+.axc-tile:focus-visible .axc-mark {
+  background: var(--sidebar);
+}
+.axc-chip {
+  color: var(--muted-foreground);
+  background: var(--sidebar-accent);
+  border: 1px solid var(--sidebar-border);
+}
+.axc-go {
+  background: transparent;
+  border: 1px solid var(--sidebar-border);
+  transition: background-color 0.15s ease;
+}
+.axc-tile:hover .axc-go {
+  background: var(--sidebar);
+}
+.axc-tile:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .axc-tile,
+  .axc-mark,
+  .axc-go {
+    transition: none;
+  }
+}

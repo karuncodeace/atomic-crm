@@ -27,6 +27,7 @@ import { SignupPage } from "../login/SignupPage";
 import { ConfirmationRequired } from "../login/ConfirmationRequired";
 import { ImportPage } from "../misc/ImportPage";
 import { ChangelogPage } from "../misc/ChangelogPage";
+import { AxiCorePage } from "../axicore/AxiCorePage";
 import {
   getAuthProvider as defaultAuthProviderBuilder,
   getDataProvider as defaultDataProviderBuilder,
@@ -262,6 +263,7 @@ const DesktopAdmin = (
         <Route path={SettingsPage.path} element={<SettingsPage />} />
         <Route path={ImportPage.path} element={<ImportPage />} />
         <Route path={ChangelogPage.path} element={<ChangelogPage />} />
+        <Route path={AxiCorePage.path} element={<AxiCorePage />} />
       </CustomRoutes>
       <Resource name="deals" {...deals} />
       <Resource name="brochures" {...brochures} />
@@ -340,6 +342,7 @@ const MobileAdmin = (
             element={<SettingsPageMobile />}
           />
           <Route path={ChangelogPage.path} element={<ChangelogPage />} />
+          <Route path={AxiCorePage.path} element={<AxiCorePage />} />
         </CustomRoutes>
         <Resource
           name="contacts"

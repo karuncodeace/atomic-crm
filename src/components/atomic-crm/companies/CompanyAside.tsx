@@ -18,6 +18,7 @@ import { AsideSection } from "../misc/AsideSection";
 import type { Company, Contact } from "../types";
 import { useCompanySectors } from "./useCompanySectors";
 import { useGetSalesName } from "../sales/useGetSalesName";
+import { CompanyDocuments } from "../axicore/CompanyDocuments";
 
 interface CompanyAsideProps {
   link?: string;
@@ -45,6 +46,8 @@ export const CompanyAside = ({ link = "edit" }: CompanyAsideProps) => {
       <BusinessDescriptionInfo record={record} />
 
       <PitchInfo record={record} />
+
+      <CompanyDocuments companyId={record.id} />
 
       <AdditionalInfo record={record} />
 

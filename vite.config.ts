@@ -32,6 +32,11 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MiB
+        // AxiCore 2.0 paths are proxied to the AxiFlow engine (vercel.json), never served by the cached app shell
+        navigateFallbackDenylist: [
+          /^\/(api|axicore-app|pdf|d|fonts|brand)(\/|$)/,
+          /^\/fonts\.css$/,
+        ],
       },
       manifest: false, // Use existing manifest.json from public/
     }),

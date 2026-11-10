@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
+  ArrowUpRight,
   FileText,
   Handshake,
   LayoutDashboard,
@@ -13,6 +14,7 @@ import { Link, matchPath, useLocation } from "react-router";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -25,6 +27,7 @@ import {
 } from "@/components/ui/sidebar";
 
 import { useConfigurationContext } from "../root/ConfigurationContext";
+import { AXICORE_APP } from "../axicore/axicore";
 import type { Brochure } from "../types";
 
 export const CrmSidebar = () => {
@@ -98,8 +101,53 @@ export const CrmSidebar = () => {
         </SidebarGroup>
         <AdminGroup />
       </SidebarContent>
+      <AxiCoreFooter />
       <SidebarRail />
     </Sidebar>
+  );
+};
+
+/**
+ * AxiCore 2.0: Codeace's tools (SWOT pitch, brochure, proposal) and their settings, for admins.
+ * At the very bottom of the sidebar; it opens the tools as their own full page (a plain link).
+ */
+const AxiCoreFooter = () => {
+  const translate = useTranslate();
+  const { canAccess } = useCanAccess({ resource: "axicore", action: "access" });
+  if (!canAccess) return null;
+  const label = translate("crm.sidebar.axicore", { _: "AxiCore 2.0" });
+  return (
+    <SidebarFooter className="p-0 gap-0">
+      <a
+        href={AXICORE_APP}
+        title={label}
+        className="axc-tile group/axc relative flex items-center gap-3 px-4 py-4 text-sidebar-foreground no-underline group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+      >
+        <span className="axc-mark relative grid size-11 shrink-0 place-items-center rounded-2xl">
+          <svg
+            viewBox="0 0 24 32"
+            className="h-[19px] w-[15px] fill-current"
+            aria-hidden="true"
+          >
+            <path d="M15.4 0 2 18.2h8.1L7.6 32 22 12.6h-8.2L17.7 0Z" />
+          </svg>
+        </span>
+        <span className="grow min-w-0 group-data-[collapsible=icon]:hidden">
+          <span className="flex items-center gap-1.5 text-sm font-semibold leading-tight tracking-tight">
+            AxiCore
+            <span className="axc-chip rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none">
+              2.0
+            </span>
+          </span>
+          <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+            AI sales studio
+          </span>
+        </span>
+        <span className="axc-go grid size-8 shrink-0 place-items-center rounded-full group-data-[collapsible=icon]:hidden">
+          <ArrowUpRight className="size-3.5 text-muted-foreground transition-transform duration-200 group-hover/axc:-translate-y-px group-hover/axc:translate-x-px group-hover/axc:text-sidebar-foreground" />
+        </span>
+      </a>
+    </SidebarFooter>
   );
 };
 

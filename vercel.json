@@ -1,0 +1,41 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://axiflow-v1.vercel.app/api/:path*"
+    },
+    {
+      "source": "/axicore-app",
+      "destination": "https://axiflow-v1.vercel.app/axicore-app/"
+    },
+    {
+      "source": "/axicore-app/",
+      "destination": "https://axiflow-v1.vercel.app/axicore-app/"
+    },
+    {
+      "source": "/axicore-app/:path+",
+      "destination": "https://axiflow-v1.vercel.app/axicore-app/:path+"
+    },
+    {
+      "source": "/pdf/:path*",
+      "destination": "https://axiflow-v1.vercel.app/pdf/:path*"
+    },
+    {
+      "source": "/d/:path*",
+      "destination": "https://axiflow-v1.vercel.app/d/:path*"
+    },
+    {
+      "source": "/fonts/:path*",
+      "destination": "https://axiflow-v1.vercel.app/fonts/:path*"
+    },
+    {
+      "source": "/fonts.css",
+      "destination": "https://axiflow-v1.vercel.app/fonts.css"
+    },
+    {
+      "source": "/brand/:path*",
+      "destination": "https://axiflow-v1.vercel.app/brand/:path*"
+    }
+  ]
+}
