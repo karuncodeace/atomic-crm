@@ -1,4 +1,10 @@
-import { Suspense, useEffect, useState, type ReactNode } from "react";
+import {
+  Suspense,
+  useEffect,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { Notification } from "@/components/admin/notification";
 import { Error } from "@/components/admin/error";
@@ -34,10 +40,11 @@ export const Layout = ({ children }: { children: ReactNode }) => {
       <SidebarProvider
         open={isSidebarOpen}
         onOpenChange={setSidebarOpen}
-        className="bg-canvas"
+        className="bg-sidebar"
+        style={{ "--sidebar-width-icon": "4rem" } as CSSProperties}
       >
         <CrmSidebar />
-        <SidebarInset className="min-w-0 bg-background">
+        <SidebarInset className="min-w-0 bg-background md:mt-2 md:rounded-tl-[1.25rem] md:border-t md:border-l md:border-sidebar-border">
           <Header />
           <div
             className="mx-auto w-full max-w-screen-2xl p-4 lg:px-8 lg:py-6"

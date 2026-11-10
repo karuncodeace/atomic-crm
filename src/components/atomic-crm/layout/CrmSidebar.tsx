@@ -1,14 +1,5 @@
 import type { ReactNode } from "react";
-import type { LucideIcon } from "lucide-react";
-import {
-  ArrowUpRight,
-  FileText,
-  Handshake,
-  LayoutDashboard,
-  ListTodo,
-  Settings,
-  Users,
-} from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useCanAccess, useGetList, useTranslate } from "ra-core";
 import { Link, matchPath, useLocation } from "react-router";
 import {
@@ -29,6 +20,15 @@ import {
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { AXICORE_APP } from "../axicore/axicore";
 import type { Brochure } from "../types";
+import {
+  BrochuresIcon,
+  DashboardIcon,
+  LeadsIcon,
+  type NavIcon,
+  SettingsIcon,
+  TasksIcon,
+  UsersIcon,
+} from "./NavIcons";
 
 export const CrmSidebar = () => {
   const { darkModeLogo, lightModeLogo, title } = useConfigurationContext();
@@ -39,11 +39,15 @@ export const CrmSidebar = () => {
   });
 
   return (
-    <Sidebar collapsible="icon" variant="sidebar">
-      <SidebarHeader className="h-16 justify-center px-3">
+    <Sidebar
+      collapsible="icon"
+      variant="sidebar"
+      className="group-data-[side=left]:border-r-0"
+    >
+      <SidebarHeader className="h-16 justify-center px-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
         <Link
           to="/"
-          className="flex items-center gap-2 px-2 text-sidebar-foreground no-underline"
+          className="flex items-center gap-2 px-2 text-sidebar-foreground no-underline group-data-[collapsible=icon]:px-0"
         >
           <img
             className="[.light_&]:hidden h-6 shrink-0"
@@ -60,26 +64,26 @@ export const CrmSidebar = () => {
           </span>
         </Link>
       </SidebarHeader>
-      <SidebarContent className="px-1">
+      <SidebarContent className="px-1 group-data-[collapsible=icon]:px-0">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:rounded-2xl group-data-[collapsible=icon]:border group-data-[collapsible=icon]:border-sidebar-border group-data-[collapsible=icon]:bg-sidebar-accent/40 group-data-[collapsible=icon]:p-1">
               <NavItem
                 to="/"
                 pattern="/"
-                icon={LayoutDashboard}
+                icon={DashboardIcon}
                 label={translate("ra.page.dashboard")}
               />
               <NavItem
                 to="/deals"
                 pattern="/deals/*"
-                icon={Handshake}
+                icon={LeadsIcon}
                 label={translate("resources.deals.name", { smart_count: 2 })}
               />
               <NavItem
                 to="/call_assignments"
                 pattern="/call_assignments/*"
-                icon={ListTodo}
+                icon={TasksIcon}
                 label={translate("resources.call_assignments.name", {
                   smart_count: 2,
                   _: "Tasks",
@@ -89,7 +93,7 @@ export const CrmSidebar = () => {
                 <NavItem
                   to="/brochures"
                   pattern="/brochures/*"
-                  icon={FileText}
+                  icon={BrochuresIcon}
                   label={translate("resources.brochures.name", {
                     smart_count: 2,
                   })}
@@ -121,30 +125,30 @@ const AxiCoreFooter = () => {
       <a
         href={AXICORE_APP}
         title={label}
-        className="axc-tile group/axc relative flex items-center gap-3 px-4 py-4 text-sidebar-foreground no-underline group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+        className="axc-tile group/axc relative flex items-center gap-2.5 px-4 py-2.5 text-sidebar-foreground no-underline group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
       >
-        <span className="axc-mark relative grid size-11 shrink-0 place-items-center rounded-2xl">
+        <span className="axc-mark relative grid size-8 shrink-0 place-items-center rounded-lg group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:rounded-xl">
           <svg
             viewBox="0 0 24 32"
-            className="h-[19px] w-[15px] fill-current"
+            className="h-[14px] w-[11px] fill-current"
             aria-hidden="true"
           >
             <path d="M15.4 0 2 18.2h8.1L7.6 32 22 12.6h-8.2L17.7 0Z" />
           </svg>
         </span>
         <span className="grow min-w-0 group-data-[collapsible=icon]:hidden">
-          <span className="flex items-center gap-1.5 text-sm font-semibold leading-tight tracking-tight">
+          <span className="flex items-center gap-1.5 text-[13px] font-semibold leading-tight tracking-tight">
             AxiCore
-            <span className="axc-chip rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none">
+            <span className="axc-chip rounded-full px-1.5 py-px text-[9px] font-semibold leading-none">
               2.0
             </span>
           </span>
-          <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+          <span className="block truncate text-[11px] leading-tight text-muted-foreground">
             AI sales studio
           </span>
         </span>
-        <span className="axc-go grid size-8 shrink-0 place-items-center rounded-full group-data-[collapsible=icon]:hidden">
-          <ArrowUpRight className="size-3.5 text-muted-foreground transition-transform duration-200 group-hover/axc:-translate-y-px group-hover/axc:translate-x-px group-hover/axc:text-sidebar-foreground" />
+        <span className="axc-go grid size-6 shrink-0 place-items-center rounded-full group-data-[collapsible=icon]:hidden">
+          <ArrowUpRight className="size-3 text-muted-foreground transition-transform duration-200 group-hover/axc:-translate-y-px group-hover/axc:translate-x-px group-hover/axc:text-sidebar-foreground" />
         </span>
       </a>
     </SidebarFooter>
@@ -157,17 +161,17 @@ const AdminGroup = () => {
     <SidebarGroup className="mt-auto">
       <SidebarGroupLabel>{translate("crm.sidebar.admin")}</SidebarGroupLabel>
       <SidebarGroupContent>
-        <SidebarMenu>
+        <SidebarMenu className="group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:rounded-2xl group-data-[collapsible=icon]:border group-data-[collapsible=icon]:border-sidebar-border group-data-[collapsible=icon]:bg-sidebar-accent/40 group-data-[collapsible=icon]:p-1">
           <NavItem
             to="/sales"
             pattern="/sales/*"
-            icon={Users}
+            icon={UsersIcon}
             label={translate("resources.sales.name", { smart_count: 2 })}
           />
           <NavItem
             to="/settings"
             pattern="/settings"
-            icon={Settings}
+            icon={SettingsIcon}
             label={translate("crm.settings.title")}
           />
         </SidebarMenu>
@@ -185,7 +189,7 @@ const NavItem = ({
 }: {
   to: string;
   pattern: string;
-  icon: LucideIcon;
+  icon: NavIcon;
   label: string;
   badge?: ReactNode;
 }) => {
@@ -196,17 +200,17 @@ const NavItem = ({
       {isActive ? (
         <span
           aria-hidden
-          className="absolute top-1/2 -left-3 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-foreground"
+          className="absolute top-1/2 -left-3 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-foreground group-data-[collapsible=icon]:hidden"
         />
       ) : null}
       <SidebarMenuButton
         isActive={isActive}
         tooltip={label}
         render={<Link to={to} aria-current={isActive ? "page" : undefined} />}
-        className="h-9 rounded-full px-3 font-medium data-active:font-semibold"
+        className="nav-btn h-9 rounded-full px-3 font-medium data-active:font-semibold [&_svg]:size-[18px]! group-data-[collapsible=icon]:size-9! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-xl! group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:data-active:bg-sidebar-primary group-data-[collapsible=icon]:data-active:text-sidebar-primary-foreground group-data-[collapsible=icon]:data-active:shadow-sm"
       >
         <Icon />
-        <span>{label}</span>
+        <span className="group-data-[collapsible=icon]:hidden">{label}</span>
       </SidebarMenuButton>
       {badge}
     </SidebarMenuItem>
@@ -222,8 +226,14 @@ const PendingBrochuresBadge = () => {
   });
   if (!total) return null;
   return (
-    <SidebarMenuBadge className="top-2! right-2 rounded-full bg-foreground px-1.5 text-background! peer-hover/menu-button:text-background">
-      {total > 99 ? "99+" : total}
-    </SidebarMenuBadge>
+    <>
+      <span
+        aria-hidden
+        className="pointer-events-none absolute top-1 right-1 hidden size-2 rounded-full bg-red-500 ring-2 ring-sidebar group-data-[collapsible=icon]:block"
+      />
+      <SidebarMenuBadge className="top-2! right-2 rounded-full bg-foreground px-1.5 text-background! peer-hover/menu-button:text-background">
+        {total > 99 ? "99+" : total}
+      </SidebarMenuBadge>
+    </>
   );
 };

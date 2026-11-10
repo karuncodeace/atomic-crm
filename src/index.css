@@ -86,11 +86,11 @@
   --chart-3: #e8883a;
   --chart-4: #8e7aa6;
   --chart-5: #d9453f;
-  --sidebar: #ffffff;
+  --sidebar: #f3f3f4;
   --sidebar-foreground: #6b6b6f;
   --sidebar-primary: #1f1f1f;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f2f2f3;
+  --sidebar-accent: #e8e8ea;
   --sidebar-accent-foreground: #1f1f1f;
   --sidebar-border: #e6e6e8;
   --sidebar-ring: #1f1f1f;
@@ -138,11 +138,11 @@
   --chart-3: #f09a52;
   --chart-4: #b49fcc;
   --chart-5: #ef6a64;
-  --sidebar: #161618;
+  --sidebar: #0b0b0c;
   --sidebar-foreground: #a1a1a6;
   --sidebar-primary: #f2f2f3;
   --sidebar-primary-foreground: #1f1f1f;
-  --sidebar-accent: #26262a;
+  --sidebar-accent: #1c1c1f;
   --sidebar-accent-foreground: #f2f2f3;
   --sidebar-border: #ffffff14;
   --sidebar-ring: #f2f2f3;
@@ -266,5 +266,35 @@ body {
   .axc-mark,
   .axc-go {
     transition: none;
+  }
+}
+
+/* Sidebar icons (src/components/atomic-crm/layout/NavIcons.tsx): the duotone fill is faint, and stronger on the
+   active page; the rail tiles lift slightly on hover. */
+.nav-duo {
+  opacity: 0.14;
+  transition: opacity 0.15s ease;
+}
+.nav-btn:hover .nav-duo {
+  opacity: 0.24;
+}
+.nav-btn[data-active] .nav-duo {
+  opacity: 0.32;
+}
+[data-collapsible="icon"] .nav-btn {
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
+}
+[data-collapsible="icon"] .nav-btn:hover {
+  transform: translateY(-1px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-duo,
+  [data-collapsible="icon"] .nav-btn {
+    transition: none;
+  }
+  [data-collapsible="icon"] .nav-btn:hover {
+    transform: none;
   }
 }
