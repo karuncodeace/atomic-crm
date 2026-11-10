@@ -41,7 +41,7 @@ export const Layout = ({ children }: { children: ReactNode }) => {
         open={isSidebarOpen}
         onOpenChange={setSidebarOpen}
         className="bg-sidebar"
-        style={{ "--sidebar-width-icon": "4rem" } as CSSProperties}
+        style={{ "--sidebar-width-icon": "4.5rem" } as CSSProperties}
       >
         <CrmSidebar />
         <SidebarInset className="min-w-0 bg-background md:mt-2 md:rounded-tl-[1.25rem] md:border-t md:border-l md:border-sidebar-border">

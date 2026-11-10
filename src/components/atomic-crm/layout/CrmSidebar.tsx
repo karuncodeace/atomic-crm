@@ -67,7 +67,7 @@ export const CrmSidebar = () => {
       <SidebarContent className="px-1 group-data-[collapsible=icon]:px-0">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:rounded-2xl group-data-[collapsible=icon]:border group-data-[collapsible=icon]:border-sidebar-border group-data-[collapsible=icon]:bg-sidebar-accent/40 group-data-[collapsible=icon]:p-1">
+            <SidebarMenu className="group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:rounded-2xl group-data-[collapsible=icon]:border group-data-[collapsible=icon]:border-sidebar-border group-data-[collapsible=icon]:bg-sidebar-accent/60 group-data-[collapsible=icon]:p-1.5">
               <NavItem
                 to="/"
                 pattern="/"
@@ -127,7 +127,7 @@ const AxiCoreFooter = () => {
         title={label}
         className="axc-tile group/axc relative flex items-center gap-2.5 px-4 py-2.5 text-sidebar-foreground no-underline group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
       >
-        <span className="axc-mark relative grid size-8 shrink-0 place-items-center rounded-lg group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:rounded-xl">
+        <span className="axc-mark relative grid size-8 shrink-0 place-items-center rounded-lg group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:rounded-xl">
           <svg
             viewBox="0 0 24 32"
             className="h-[14px] w-[11px] fill-current"
@@ -161,7 +161,7 @@ const AdminGroup = () => {
     <SidebarGroup className="mt-auto">
       <SidebarGroupLabel>{translate("crm.sidebar.admin")}</SidebarGroupLabel>
       <SidebarGroupContent>
-        <SidebarMenu className="group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:rounded-2xl group-data-[collapsible=icon]:border group-data-[collapsible=icon]:border-sidebar-border group-data-[collapsible=icon]:bg-sidebar-accent/40 group-data-[collapsible=icon]:p-1">
+        <SidebarMenu className="group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:rounded-2xl group-data-[collapsible=icon]:border group-data-[collapsible=icon]:border-sidebar-border group-data-[collapsible=icon]:bg-sidebar-accent/60 group-data-[collapsible=icon]:p-1.5">
           <NavItem
             to="/sales"
             pattern="/sales/*"
@@ -207,7 +207,7 @@ const NavItem = ({
         isActive={isActive}
         tooltip={label}
         render={<Link to={to} aria-current={isActive ? "page" : undefined} />}
-        className="nav-btn h-9 rounded-full px-3 font-medium data-active:font-semibold [&_svg]:size-[18px]! group-data-[collapsible=icon]:size-9! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:rounded-xl! group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:data-active:bg-sidebar-primary group-data-[collapsible=icon]:data-active:text-sidebar-primary-foreground group-data-[collapsible=icon]:data-active:shadow-sm"
+        className="nav-btn h-9 rounded-full px-3 font-medium data-active:font-semibold [&_svg]:size-[18px]! group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:text-sidebar-accent-foreground/85 group-data-[collapsible=icon]:[&_svg]:size-[21px]! group-data-[collapsible=icon]:[&_svg]:stroke-[1.8] group-data-[collapsible=icon]:rounded-xl! group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:data-active:bg-sidebar-primary group-data-[collapsible=icon]:data-active:text-sidebar-primary-foreground group-data-[collapsible=icon]:data-active:shadow-sm"
       >
         <Icon />
         <span className="group-data-[collapsible=icon]:hidden">{label}</span>
@@ -229,7 +229,7 @@ const PendingBrochuresBadge = () => {
     <>
       <span
         aria-hidden
-        className="pointer-events-none absolute top-1 right-1 hidden size-2 rounded-full bg-red-500 ring-2 ring-sidebar group-data-[collapsible=icon]:block"
+        className="pointer-events-none absolute top-1 right-1 hidden size-2.5 rounded-full bg-red-500 ring-2 ring-sidebar group-data-[collapsible=icon]:block"
       />
       <SidebarMenuBadge className="top-2! right-2 rounded-full bg-foreground px-1.5 text-background! peer-hover/menu-button:text-background">
         {total > 99 ? "99+" : total}

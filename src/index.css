@@ -281,6 +281,12 @@ body {
 .nav-btn[data-active] .nav-duo {
   opacity: 0.32;
 }
+[data-collapsible="icon"] .nav-duo {
+  opacity: 0.22;
+}
+[data-collapsible="icon"] .nav-btn[data-active] .nav-duo {
+  opacity: 0.4;
+}
 [data-collapsible="icon"] .nav-btn {
   transition:
     background-color 0.15s ease,
