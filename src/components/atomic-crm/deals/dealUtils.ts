@@ -80,6 +80,8 @@ export const updateDealStage = async (
     index?: number;
   },
   dataProvider: DataProvider,
+  /** Extra fields saved on the moved deal with its new stage (e.g. the website package). */
+  extra: Partial<Deal> = {},
 ) => {
   if (source.stage === destination.stage) {
     // moving deal inside the same column
@@ -187,6 +189,7 @@ export const updateDealStage = async (
       dataProvider.update("deals", {
         id: source.id,
         data: {
+          ...extra,
           index: destinationIndex,
           stage: destination.stage,
         },

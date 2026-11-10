@@ -28,6 +28,13 @@ import { cn } from "@/lib/utils";
 import type { CrmDataProvider } from "../providers/types";
 import type { CallAssignment, CallOutcome, Contact, SalesRole } from "../types";
 import { CALL_OUTCOMES, todayInCallTimezone } from "./callEngine";
+import { PackageChoices } from "../axicore/PackagePicker";
+import {
+  INTERESTED_STAGE,
+  savePackage,
+  sendPackageToAxiCore,
+  type WebsitePackage,
+} from "../axicore/packages";
 
 const quotaForRole = (role?: string) => (role === "manager" ? 10 : 25);
 
@@ -220,13 +227,33 @@ const CompleteCallDialog = ({
   const [notes, setNotes] = useState("");
   const [callbackAt, setCallbackAt] = useState("");
   const [saving, setSaving] = useState(false);
+  const [pkg, setPkg] = useState<WebsitePackage | null>(null);
 
   const needsDate = outcome === "callback";
+  const needsPackage = outcome === INTERESTED_STAGE;
 
   const submit = async () => {
     if (!outcome || !dataProvider.recordCallOutcome) return;
+    if (needsPackage && !pkg) return;
     setSaving(true);
     try {
+      // the package goes first, so AxiCore has it when the deal turns Interested
+      if (needsPackage && pkg) {
+        if (assignment.deal_id) {
+          const dealId = assignment.deal_id;
+          const deal = await dataProvider
+            .getOne("deals", { id: dealId })
+            .then((r) => r.data)
+            .catch(() => ({
+              id: dealId,
+              company_id: assignment.company_id,
+              categories: [],
+            }));
+          await savePackage(dataProvider, deal, pkg);
+        } else {
+          await sendPackageToAxiCore({ companyId: assignment.company_id, pkg });
+        }
+      }
       await dataProvider.recordCallOutcome({
         assignmentId: assignment.id,
         outcome,
@@ -275,6 +302,12 @@ const CompleteCallDialog = ({
               </Button>
             ))}
           </div>
+          {needsPackage && (
+            <div className="space-y-1">
+              <Label>Which website does the client want?</Label>
+              <PackageChoices value={pkg} onChange={setPkg} />
+            </div>
+          )}
           {needsDate && (
             <div className="space-y-1">
               <Label htmlFor="callback-at">
@@ -309,7 +342,11 @@ const CompleteCallDialog = ({
           >
             {translate("ra.action.cancel")}
           </Button>
-          <Button type="button" disabled={!outcome || saving} onClick={submit}>
+          <Button
+            type="button"
+            disabled={!outcome || saving || (needsPackage && !pkg)}
+            onClick={submit}
+          >
             {saving
               ? translate("ra.message.loading", { _: "Saving…" })
               : translate("resources.call_assignments.action.save_outcome")}

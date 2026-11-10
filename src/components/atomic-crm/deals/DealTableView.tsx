@@ -29,6 +29,13 @@ import { Avatar } from "../contacts/Avatar";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Contact, Deal, Sale } from "../types";
 import { findDealLabel, updateDealStage } from "./dealUtils";
+import { usePackagePicker } from "../axicore/PackagePicker";
+import {
+  dealPackage,
+  INTERESTED_STAGE,
+  sendPackageToAxiCore,
+  withPackage,
+} from "../axicore/packages";
 
 /**
  * List (table) view of deals, exposing the very same filtered records as the
@@ -233,16 +240,29 @@ const DealStageSelector = () => {
   const notify = useNotify();
   const translate = useTranslate();
   const [isUpdating, setIsUpdating] = useState(false);
+  const { ask, dialog } = usePackagePicker();
 
   if (!record) return null;
 
   const handleStageChange = async (stage: string | null) => {
     if (!stage || stage === record.stage) return;
+    let extra: Partial<Deal> = {};
+    if (stage === INTERESTED_STAGE) {
+      // website package first: AxiCore picks the brochure design from it
+      const pkg = await ask(dealPackage(record.categories));
+      if (!pkg) return;
+      extra = { categories: withPackage(record.categories, pkg) };
+      await sendPackageToAxiCore({
+        dealId: record.id,
+        companyId: record.company_id,
+        pkg,
+      });
+    }
     setIsUpdating(true);
     try {
       // undefined destination index: append at the end of the column,
       // like a drop below the last card of that stage
-      await updateDealStage(record, { stage }, dataProvider);
+      await updateDealStage(record, { stage }, dataProvider, extra);
       await refetch();
     } catch (error) {
       console.error(error);
@@ -259,6 +279,7 @@ const DealStageSelector = () => {
 
   return (
     <div onClick={(event) => event.stopPropagation()}>
+      {dialog}
       <Select value={record.stage} onValueChange={handleStageChange}>
         <SelectTrigger
           size="sm"

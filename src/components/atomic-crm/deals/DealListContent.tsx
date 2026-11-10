@@ -9,11 +9,19 @@ import { updateDealStage } from "./dealUtils";
 import { DealColumn } from "./DealColumn";
 import type { DealsByStage } from "./stages";
 import { getDealsByStage } from "./stages";
+import { usePackagePicker } from "../axicore/PackagePicker";
+import {
+  dealPackage,
+  INTERESTED_STAGE,
+  sendPackageToAxiCore,
+  withPackage,
+} from "../axicore/packages";
 
 export const DealListContent = () => {
   const { dealStages } = useConfigurationContext();
   const { data: unorderedDeals, isPending, refetch } = useListContext<Deal>();
   const dataProvider = useDataProvider();
+  const { ask, dialog } = usePackagePicker();
 
   const [dealsByStage, setDealsByStage] = useState<DealsByStage>(
     getDealsByStage([], dealStages),
@@ -55,6 +63,35 @@ export const DealListContent = () => {
       index: undefined, // undefined if dropped after the last item
     };
 
+    if (
+      destinationStage === INTERESTED_STAGE &&
+      sourceStage !== INTERESTED_STAGE
+    ) {
+      // Website package first (owner, 2026-11-10): AxiCore picks the brochure design from it
+      void (async () => {
+        const pkg = await ask(dealPackage(sourceDeal.categories));
+        if (!pkg) return;
+        setDealsByStage(
+          updateDealStageLocal(
+            sourceDeal,
+            { stage: sourceStage, index: source.index },
+            { stage: destinationStage, index: destination.index },
+            dealsByStage,
+          ),
+        );
+        await sendPackageToAxiCore({
+          dealId: sourceDeal.id,
+          companyId: sourceDeal.company_id,
+          pkg,
+        });
+        await updateDealStage(sourceDeal, destinationDeal, dataProvider, {
+          categories: withPackage(sourceDeal.categories, pkg),
+        });
+        refetch();
+      })();
+      return;
+    }
+
     // compute local state change synchronously
     setDealsByStage(
       updateDealStageLocal(
@@ -75,6 +112,7 @@ export const DealListContent = () => {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
+      {dialog}
       <div className="flex gap-4">
         {stages.map((stage) => (
           <DealColumn

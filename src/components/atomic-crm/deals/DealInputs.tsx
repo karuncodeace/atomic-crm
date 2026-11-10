@@ -1,4 +1,7 @@
 import { required, useTranslate } from "ra-core";
+import { useEffect, useRef } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
+import { Button } from "@/components/ui/button";
 import { ReferenceArrayInput } from "@/components/admin/reference-array-input";
 import { ReferenceInput } from "@/components/admin/reference-input";
 import { TextInput } from "@/components/admin/text-input";
@@ -10,6 +13,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { AutocompleteCompanyInput } from "../companies/AutocompleteCompanyInput.tsx";
 import { AutocompleteContactInput } from "../contacts/AutocompleteContactInput.tsx";
+import { usePackagePicker } from "../axicore/PackagePicker";
+import {
+  dealPackage,
+  INTERESTED_STAGE,
+  packageLabel,
+  withPackage,
+} from "../axicore/packages";
 
 export const DealInputs = () => {
   const isMobile = useIsMobile();
@@ -81,6 +91,61 @@ const DealMiscInputs = () => {
         helperText={false}
         validate={required()}
       />
+      <WebsitePackageInput />
+    </div>
+  );
+};
+
+/**
+ * Website package (owner, 2026-11-10): when the stage becomes Interested the form asks which website the client
+ * wants and keeps it in the deal's categories. AxiCore picks the brochure design from it.
+ */
+const WebsitePackageInput = () => {
+  const { setValue } = useFormContext();
+  const stage = useWatch({ name: "stage" }) as string | undefined;
+  const categories = useWatch({ name: "categories" }) as string[] | undefined;
+  const { ask, dialog } = usePackagePicker();
+  const previous = useRef(stage);
+  const pkg = dealPackage(categories);
+
+  const choose = async (fallbackStage?: string) => {
+    const picked = await ask(pkg);
+    if (picked) {
+      setValue("categories", withPackage(categories, picked), {
+        shouldDirty: true,
+      });
+    } else if (fallbackStage !== undefined) {
+      setValue("stage", fallbackStage, { shouldDirty: true });
+    }
+  };
+
+  useEffect(() => {
+    const was = previous.current;
+    previous.current = stage;
+    if (stage === INTERESTED_STAGE && was !== INTERESTED_STAGE && !pkg) {
+      void choose(was ?? "new");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage]);
+
+  if (stage !== INTERESTED_STAGE && !pkg) return dialog;
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2">
+      {dialog}
+      <div className="min-w-0">
+        <div className="text-xs text-muted-foreground">Website package</div>
+        <div className="truncate text-sm font-medium">
+          {pkg ? packageLabel(pkg) : "Not chosen yet"}
+        </div>
+      </div>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => choose()}
+      >
+        {pkg ? "Change" : "Choose"}
+      </Button>
     </div>
   );
 };
