@@ -18,11 +18,8 @@ import { AsideSection } from "../misc/AsideSection";
 import type { Company, Contact } from "../types";
 import { useCompanySectors } from "./useCompanySectors";
 import { useGetSalesName } from "../sales/useGetSalesName";
-<<<<<<< HEAD
 import { CompanyDocuments } from "../axicore/CompanyDocuments";
-=======
 import { getCompanyCategoryLabel } from "./companyCategory";
->>>>>>> fbb9d413 (Add company category with dropdown in leads table)
 
 interface CompanyAsideProps {
   link?: string;
