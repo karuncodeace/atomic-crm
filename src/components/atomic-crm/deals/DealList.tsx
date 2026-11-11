@@ -15,7 +15,6 @@ import { SearchInput } from "@/components/admin/search-input";
 
 import { DataImportButton } from "../dataImport/DataImportButton";
 import { TopToolbar } from "../layout/TopToolbar";
-import { AccountManagerInput } from "../sales/AccountManagerInput";
 import { DealArchivedList } from "./DealArchivedList";
 import { DealCreate } from "./DealCreate";
 import { DealEdit } from "./DealEdit";
@@ -43,11 +42,14 @@ const DealList = () => {
         placeholder={translate("resources.deals.fields.company_id")}
       />
     </ReferenceInput>,
-    <AccountManagerInput source="sales_id" alwaysOn key="sales" />,
   ];
 
   return (
     <List
+      // New store key: drops an account manager filter saved by a previous
+      // version of this page, which would otherwise stay applied with no
+      // input left to clear it.
+      storeKey="deals.listParams.v2"
       perPage={100}
       filter={{ "archived_at@is": null }}
       sort={{ field: "index", order: "DESC" }}

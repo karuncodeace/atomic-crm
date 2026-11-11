@@ -920,6 +920,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/companies/companyCategory.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/companies/GridList.tsx",
           "type": "registry:component"
         },
