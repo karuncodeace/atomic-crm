@@ -576,6 +576,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/layout/NavIcons.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/layout/MobileRefreshButton.tsx",
           "type": "registry:component"
         },
@@ -1013,6 +1017,26 @@
         },
         {
           "path": "src/components/atomic-crm/brochures/BrochureList.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/axicore/packages.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/axicore/axicore.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/axicore/PackagePicker.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/axicore/CompanyDocuments.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/axicore/AxiCorePage.tsx",
           "type": "registry:component"
         },
         {

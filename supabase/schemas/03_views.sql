@@ -71,6 +71,9 @@ select
 from public.deal_notes dn
     left join public.deals d on d.id = dn.deal_id;
 
+-- Counts are per-row subqueries, not a GROUP BY: with RLS on, a GROUP BY
+-- made every search aggregate the whole table before filtering. This way
+-- filters, sort and pagination apply first and counts only run on the page.
 create or replace view public.companies_summary with (security_invoker = on) as
 select
     c.id,
@@ -92,8 +95,8 @@ select
     c.revenue,
     c.tax_identifier,
     c.logo,
-    count(distinct d.id) as nb_deals,
-    count(distinct co.id) as nb_contacts,
+    (select count(*) from public.deals d where d.company_id = c.id) as nb_deals,
+    (select count(*) from public.contacts co where co.company_id = c.id) as nb_contacts,
     c.lead_date,
     c.email,
     c.whatsapp_number,
@@ -102,10 +105,7 @@ select
     c.priority,
     c.decision_makers,
     c.category
-from public.companies c
-    left join public.deals d on c.id = d.company_id
-    left join public.contacts co on c.id = co.company_id
-group by c.id;
+from public.companies c;
 
 create or replace view public.contacts_summary with (security_invoker = on) as
 select
@@ -129,7 +129,7 @@ select
     (jsonb_path_query_array(co.email_jsonb, '$[*]."email"'))::text as email_fts,
     (jsonb_path_query_array(co.phone_jsonb, '$[*]."number"'))::text as phone_fts,
     c.name as company_name,
-    count(distinct t.id) filter (where t.done_date is null) as nb_tasks,
+    (select count(*) from public.tasks t where t.contact_id = co.id and t.done_date is null) as nb_tasks,
     co.whatsapp_number,
     co.is_primary,
     co.lead_stage,
@@ -146,9 +146,7 @@ select
     co.do_not_contact,
     c.sector as company_sector
 from public.contacts co
-    left join public.tasks t on co.id = t.contact_id
-    left join public.companies c on co.company_id = c.id
-group by co.id, c.name, c.sector;
+    left join public.companies c on co.company_id = c.id;
 
 create or replace view public.init_state with (security_invoker = off) as
 select count(sub.id) as is_initialized

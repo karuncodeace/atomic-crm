@@ -44,6 +44,21 @@ describe("searchDealCategories", () => {
     expect(result.filter["@or"]["categories@ov"]).toBe('{"copywriting"}');
   });
 
+  it("loads the configuration once for consecutive searches", async () => {
+    let configurationReads = 0;
+    const dataProvider = {
+      getOne: async () => {
+        configurationReads += 1;
+        return { data: { id: 1, config: {} } };
+      },
+    } as unknown as DataProvider;
+
+    await searchDealCategories(searchParams, "copy", dataProvider);
+    await searchDealCategories(searchParams, "copywriting", dataProvider);
+
+    expect(configurationReads).toBe(1);
+  });
+
   it("leaves the search unchanged when no category matches", async () => {
     const result = await searchDealCategories(
       searchParams,

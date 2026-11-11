@@ -322,6 +322,7 @@ create index contacts_assigned_to_idx on public.contacts using btree (assigned_t
 create index contacts_phone_e164_idx on public.contacts using btree (phone_e164);
 create index contacts_import_batch_id_idx on public.contacts using btree (import_batch_id);
 create unique index contacts_one_primary_per_company on public.contacts using btree (company_id) where is_primary;
+create index tasks_contact_id_idx on public.tasks using btree (contact_id);
 create index deal_notes_deal_id_idx on public.deal_notes using btree (deal_id);
 create index deals_company_id_idx on public.deals using btree (company_id);
 create index brochures_company_id_idx on public.brochures using btree (company_id);
