@@ -99,7 +99,9 @@ select
     c.whatsapp_number,
     c.pitch_point,
     c.business_description,
-    c.priority
+    c.priority,
+    c.decision_makers,
+    c.category
 from public.companies c
     left join public.deals d on c.id = d.company_id
     left join public.contacts co on c.id = co.company_id

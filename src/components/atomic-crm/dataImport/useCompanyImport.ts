@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { useDataProvider, useGetIdentity } from "ra-core";
 
+import { normalizeCompanyCategory } from "../companies/companyCategory";
 import { mapSizeToCategory } from "../companies/sizes";
 import { normalizeLeadDate, parseSocialMediaUrls } from "../leads/leadImport";
 import { useConfigurationContext } from "../root/ConfigurationContext";
@@ -94,6 +95,8 @@ export function useCompanyImport(): ProcessImportBatch {
                 "about",
                 "about_business",
               ),
+              decision_makers: cell(row, "decision_makers", "decision_maker"),
+              category: normalizeCompanyCategory(cell(row, "category")),
               revenue: cell(row, "revenue"),
               tax_identifier: cell(row, "tax_identifier"),
               lead_date: leadDate,

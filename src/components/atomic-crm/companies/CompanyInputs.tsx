@@ -13,6 +13,7 @@ import { TextInput } from "@/components/admin/text-input";
 import { SelectInput } from "@/components/admin/select-input";
 
 import { defaultCompanyPriorities } from "../root/defaultConfiguration";
+import { companyCategories, DEFAULT_COMPANY_CATEGORY } from "./companyCategory";
 import {
   findSectorByLabel,
   nextAvailableSectorValue,
@@ -48,6 +49,10 @@ const CompanyLeadInputs = () => {
   const priorityChoices = defaultCompanyPriorities.map((priority) => ({
     id: priority.value,
     name: priority.label,
+  }));
+  const categoryChoices = companyCategories.map((category) => ({
+    id: category.value,
+    name: category.label,
   }));
 
   return (
@@ -88,6 +93,14 @@ const CompanyLeadInputs = () => {
         <TextInput source="address" helperText={false} />
         <TextInput source="city" helperText={false} />
         <SelectInput
+          source="category"
+          choices={categoryChoices}
+          optionText="name"
+          optionValue="id"
+          defaultValue={DEFAULT_COMPANY_CATEGORY}
+          helperText={false}
+        />
+        <SelectInput
           source="priority"
           choices={priorityChoices}
           optionText="name"
@@ -102,6 +115,13 @@ const CompanyLeadInputs = () => {
         multiline
         helperText={false}
         className="[&_textarea]:min-h-32"
+      />
+
+      <TextInput
+        source="decision_makers"
+        multiline
+        helperText={false}
+        className="[&_textarea]:min-h-24"
       />
     </div>
   );

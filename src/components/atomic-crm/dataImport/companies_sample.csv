@@ -1,3 +1,3 @@
-lead date,company,website,vertical,phone,whatsApp_number,email,Social Media URLs,address,place,priority,business_description
-2026-03-15,Acme Foods,https://acmefoods.in,FMCG,9876543210,9876543210,ravi@acmefoods.in,"https://instagram.com/acmefoods, https://facebook.com/acmefoods",MG Road,Kochi,high,Wholesale spices and oils
-2026-03-16,Beta Traders,https://beta.in,Electronics,9988776655,9988776655,sales@beta.in,https://instagram.com/beta,Industrial Estate,Kochi,medium,Retail electronics
+lead date,company,website,vertical,phone,whatsApp_number,email,Social Media URLs,address,place,priority,business_description,Decision Makers,Category
+2026-03-15,Acme Foods,https://acmefoods.in,FMCG,9876543210,9876543210,ravi@acmefoods.in,"https://instagram.com/acmefoods, https://facebook.com/acmefoods",MG Road,Kochi,high,Wholesale spices and oils,"1. Ravi Kumar — Owner — +91 98765 43210",E-commerce
+2026-03-16,Beta Traders,https://beta.in,Electronics,9988776655,9988776655,sales@beta.in,https://instagram.com/beta,Industrial Estate,Kochi,medium,Retail electronics,,Branding

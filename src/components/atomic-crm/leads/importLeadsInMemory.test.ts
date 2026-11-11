@@ -16,6 +16,8 @@ const lead = (row: number, overrides: Partial<LeadImportRow> = {}) => ({
   industry: "FMCG",
   pitch: "Ask about distribution",
   business_description: "Wholesale spices",
+  decision_makers: "",
+  category: "not_categorized" as const,
   lead_date: "2026-03-15",
   city: "Kochi",
   address: "",
@@ -47,7 +49,13 @@ describe("importLeadsInMemory", () => {
     const result = await importLeadsInMemory(
       dataProvider,
       "leads.csv",
-      [lead(1), lead(2)],
+      [
+        lead(1, {
+          decision_makers: "1. Ravi Kumar — Owner — +91 98765 43210",
+          category: "branding",
+        }),
+        lead(2),
+      ],
       3,
     );
 
@@ -66,6 +74,14 @@ describe("importLeadsInMemory", () => {
       import_batch_id: result.batch_id,
     });
     expect(contacts[1]).toMatchObject({ is_primary: false });
+    const { data: company } = await dataProvider.getOne("companies", {
+      id: contacts[0].company_id,
+    });
+    expect(company).toMatchObject({
+      business_description: "Wholesale spices",
+      decision_makers: "1. Ravi Kumar — Owner — +91 98765 43210",
+      category: "branding",
+    });
     const { data: deals } = await dataProvider.getList("deals", {
       pagination: { page: 1, perPage: 10 },
       sort: { field: "id", order: "ASC" },

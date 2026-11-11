@@ -118,6 +118,8 @@ export type Sale = {
   password?: string;
 } & Pick<RaRecord, "id">;
 
+export type CompanyCategory = "not_categorized" | "ecommerce" | "branding";
+
 export type Company = {
   name: string;
   logo: RAFile;
@@ -144,6 +146,10 @@ export type Company = {
   whatsapp_number?: string | null;
   pitch_point?: string | null;
   business_description?: string | null;
+  /** Free-text list of people to reach (name, role, phone), one per line. */
+  decision_makers?: string | null;
+  /** Lead category (distinct from the sector / vertical). */
+  category?: CompanyCategory;
   priority?: "high" | "medium" | "low" | null;
 } & Pick<RaRecord, "id">;
 

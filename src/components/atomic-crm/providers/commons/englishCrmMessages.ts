@@ -7,6 +7,8 @@ export const englishCrmMessages = {
         existing_contact_ids: "Add an existing contact",
         pitch_point: "Pitch point",
         business_description: "Business description",
+        decision_makers: "Decision makers",
+        category: "Category",
         whatsapp_number: "WhatsApp number",
         email: "Email",
         lead_date: "Lead date",
@@ -613,7 +615,7 @@ export const englishCrmMessages = {
       in_progress: "Import in progress…",
       sample_download: "Download CSV sample",
       sample_hint:
-        "CSV columns: lead date, company, website, vertical, phone, whatsApp_number, email, Social Media URLs, address, place, priority, business_description.",
+        "CSV columns: lead date, company, website, vertical, phone, whatsApp_number, email, Social Media URLs, address, place, priority, business_description, Decision Makers, Category.",
       start: "Start import",
       summary:
         "Created %{created}, duplicates %{duplicates}, invalid %{invalid}",

@@ -9,6 +9,8 @@ export const frenchCrmMessages = {
         existing_contact_ids: "Ajouter un contact existant",
         pitch_point: "Argumentaire",
         business_description: "Description de l'activité",
+        decision_makers: "Décideurs",
+        category: "Catégorie",
         whatsapp_number: "Numéro WhatsApp",
         email: "E-mail",
         lead_date: "Date du prospect",
@@ -621,7 +623,7 @@ export const frenchCrmMessages = {
       in_progress: "Import en cours…",
       sample_download: "Télécharger un exemple CSV",
       sample_hint:
-        "Colonnes CSV : lead date, company, website, vertical, phone, whatsApp_number, email, Social Media URLs, address, place, priority, business_description.",
+        "Colonnes CSV : lead date, company, website, vertical, phone, whatsApp_number, email, Social Media URLs, address, place, priority, business_description, Decision Makers, Category.",
       start: "Démarrer l'import",
       summary: "Créés %{created}, doublons %{duplicates}, invalides %{invalid}",
       title: "Importer des prospects",

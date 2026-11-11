@@ -116,6 +116,8 @@ export const importLeadsInMemory = async (
           sector,
           pitch_point: lead.pitch || null,
           business_description: lead.business_description || null,
+          decision_makers: lead.decision_makers || null,
+          category: lead.category,
           website: lead.domain ? `https://${lead.domain}` : "",
           phone_number: lead.phone || null,
           email: lead.email || null,

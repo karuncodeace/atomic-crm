@@ -73,6 +73,8 @@ const saveCompanyWithContacts = async (
         lead_date: company.lead_date,
         pitch_point: company.pitch_point,
         business_description: company.business_description,
+        decision_makers: company.decision_makers,
+        category: company.category,
         website: company.website,
         phone_number: company.phone_number,
         email: company.email,

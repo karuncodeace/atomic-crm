@@ -505,7 +505,7 @@ begin
 
     if v_company_id is null then
         insert into public.companies (
-            name, sector, city, lead_date, pitch_point, business_description, sales_id,
+            name, sector, city, lead_date, pitch_point, business_description, decision_makers, category, sales_id,
             website, phone_number, email, whatsapp_number, priority, address, context_links
         )
         values (
@@ -515,6 +515,8 @@ begin
             coalesce(nullif(p_company->>'lead_date', '')::date, current_date),
             nullif(p_company->>'pitch_point', ''),
             nullif(p_company->>'business_description', ''),
+            nullif(trim(p_company->>'decision_makers'), ''),
+            coalesce(nullif(trim(p_company->>'category'), ''), 'not_categorized'),
             (p_company->>'sales_id')::bigint,
             nullif(trim(p_company->>'website'), ''),
             nullif(trim(p_company->>'phone_number'), ''),
@@ -538,6 +540,8 @@ begin
             lead_date = case when p_company ? 'lead_date' then nullif(p_company->>'lead_date', '')::date else c.lead_date end,
             pitch_point = case when p_company ? 'pitch_point' then nullif(p_company->>'pitch_point', '') else c.pitch_point end,
             business_description = case when p_company ? 'business_description' then nullif(p_company->>'business_description', '') else c.business_description end,
+            decision_makers = case when p_company ? 'decision_makers' then nullif(trim(p_company->>'decision_makers'), '') else c.decision_makers end,
+            category = case when p_company ? 'category' then coalesce(nullif(trim(p_company->>'category'), ''), 'not_categorized') else c.category end,
             website = case when p_company ? 'website' then nullif(trim(p_company->>'website'), '') else c.website end,
             phone_number = case when p_company ? 'phone_number' then nullif(trim(p_company->>'phone_number'), '') else c.phone_number end,
             email = case when p_company ? 'email' then nullif(trim(p_company->>'email'), '') else c.email end,
@@ -1232,6 +1236,7 @@ declare
     v_company_name text;
     v_domain text;
     v_sector text;
+    v_category text;
     v_company_id bigint;
     v_contact_id bigint;
     v_seen_phones text[] := '{}';
@@ -1319,6 +1324,14 @@ begin
             end if;
         end if;
 
+        -- Category: "E-commerce" / "ecommerce" / "Branding" in any spelling,
+        -- anything else falls back to not_categorized.
+        v_category := case lower(regexp_replace(coalesce(v_row->>'category', ''), '[^a-zA-Z]', '', 'g'))
+            when 'ecommerce' then 'ecommerce'
+            when 'branding' then 'branding'
+            else 'not_categorized'
+        end;
+
         -- Company: same domain or same name is the same company.
         select c.id into v_company_id from public.companies c
         where (v_domain is not null and lower(regexp_replace(c.website::text, '^(https?://)?(www\.)?([^/:]+).*$', '\3')) = v_domain)
@@ -1328,7 +1341,7 @@ begin
 
         if v_company_id is null then
             insert into public.companies (
-                name, sector, pitch_point, business_description, website,
+                name, sector, pitch_point, business_description, decision_makers, category, website,
                 phone_number, email, whatsapp_number, city, address,
                 context_links, lead_date, priority, sales_id, created_at
             )
@@ -1337,6 +1350,8 @@ begin
                 v_sector,
                 nullif(trim(v_row->>'pitch'), ''),
                 nullif(trim(v_row->>'business_description'), ''),
+                nullif(trim(v_row->>'decision_makers'), ''),
+                v_category,
                 case when v_domain is not null then 'https://' || v_domain end,
                 nullif(trim(v_row->>'phone'), ''),
                 v_email,
@@ -1359,6 +1374,8 @@ begin
             update public.companies c set
                 pitch_point = coalesce(c.pitch_point, nullif(trim(v_row->>'pitch'), '')),
                 business_description = coalesce(c.business_description, nullif(trim(v_row->>'business_description'), '')),
+                decision_makers = coalesce(c.decision_makers, nullif(trim(v_row->>'decision_makers'), '')),
+                category = case when c.category = 'not_categorized' then v_category else c.category end,
                 sector = coalesce(c.sector, v_sector),
                 phone_number = coalesce(c.phone_number, nullif(trim(v_row->>'phone'), '')),
                 email = coalesce(c.email, v_email),

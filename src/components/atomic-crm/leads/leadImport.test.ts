@@ -70,6 +70,8 @@ describe("mapLeadRecord", () => {
         industry: "FMCG",
         pitch: "Ask about distribution",
         business_description: "",
+        decision_makers: "",
+        category: "not_categorized",
         lead_date: "",
         city: "",
         address: "",
@@ -96,6 +98,9 @@ describe("mapLeadRecord", () => {
         place: "Kochi",
         priority: "high",
         business_description: "Retail electronics",
+        "Decision Makers":
+          "1. Vijay Nair — Branch Manager — +91 88489 22249\n2. Prasanth K — Project Manager",
+        Category: "E-commerce",
       },
       1,
     );
@@ -113,6 +118,9 @@ describe("mapLeadRecord", () => {
         industry: "Electronics",
         pitch: "",
         business_description: "Retail electronics",
+        decision_makers:
+          "1. Vijay Nair — Branch Manager — +91 88489 22249\n2. Prasanth K — Project Manager",
+        category: "ecommerce",
         lead_date: "2026-03-15",
         city: "Kochi",
         address: "MG Road",

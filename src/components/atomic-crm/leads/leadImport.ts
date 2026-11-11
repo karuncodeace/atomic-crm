@@ -5,6 +5,9 @@
  * leads; these run first so a user sees invalid rows before anything is sent.
  */
 
+import { normalizeCompanyCategory } from "../companies/companyCategory";
+import type { CompanyCategory } from "../types";
+
 export interface LeadImportRow {
   /** 1-based data row number in the file (the header is row 0). */
   row: number;
@@ -21,6 +24,9 @@ export interface LeadImportRow {
   /** Optional — usually filled later by another app. */
   pitch: string;
   business_description: string;
+  /** "Decision Makers" cell as-is: one person (name, role, phone) per line. */
+  decision_makers: string;
+  category: CompanyCategory;
   lead_date: string;
   city: string;
   address: string;
@@ -71,7 +77,7 @@ const COLUMN_ALIASES: Record<keyof Omit<LeadImportRow, "row">, string[]> = {
   ],
   whatsapp_number: ["whatsapp_number", "whatsapp", "wa", "whatsapp_no"],
   email: ["email", "email_address", "e_mail", "mail", "gmail"],
-  industry: ["industry", "sector", "vertical", "category"],
+  industry: ["industry", "sector", "vertical"],
   pitch: ["pitch", "pitch_script", "pitch_point", "script"],
   business_description: [
     "business_description",
@@ -79,6 +85,13 @@ const COLUMN_ALIASES: Record<keyof Omit<LeadImportRow, "row">, string[]> = {
     "about",
     "about_business",
   ],
+  decision_makers: [
+    "decision_makers",
+    "decision_maker",
+    "key_contacts",
+    "key_people",
+  ],
+  category: ["category", "lead_category"],
   lead_date: [
     "lead_date",
     "calling_date",
@@ -333,6 +346,8 @@ export const mapLeadRecord = (
       industry: pick(record, COLUMN_ALIASES.industry),
       pitch: pick(record, COLUMN_ALIASES.pitch),
       business_description: pick(record, COLUMN_ALIASES.business_description),
+      decision_makers: pick(record, COLUMN_ALIASES.decision_makers),
+      category: normalizeCompanyCategory(pick(record, COLUMN_ALIASES.category)),
       lead_date: normalizeLeadDate(pick(record, COLUMN_ALIASES.lead_date)),
       city: pick(record, COLUMN_ALIASES.city),
       address: pick(record, COLUMN_ALIASES.address),

@@ -18,7 +18,11 @@ import { AsideSection } from "../misc/AsideSection";
 import type { Company, Contact } from "../types";
 import { useCompanySectors } from "./useCompanySectors";
 import { useGetSalesName } from "../sales/useGetSalesName";
+<<<<<<< HEAD
 import { CompanyDocuments } from "../axicore/CompanyDocuments";
+=======
+import { getCompanyCategoryLabel } from "./companyCategory";
+>>>>>>> fbb9d413 (Add company category with dropdown in leads table)
 
 interface CompanyAsideProps {
   link?: string;
@@ -43,7 +47,9 @@ export const CompanyAside = ({ link = "edit" }: CompanyAsideProps) => {
 
       <CompanyInfo record={record} />
 
+      <CategoryInfo record={record} />
       <BusinessDescriptionInfo record={record} />
+      <DecisionMakersInfo record={record} />
 
       <PitchInfo record={record} />
 
@@ -242,6 +248,30 @@ export const BusinessDescriptionInfo = ({ record }: { record: Company }) => {
       <p className="text-sm whitespace-pre-line">
         {record.business_description}
       </p>
+    </AsideSection>
+  );
+};
+
+export const CategoryInfo = ({ record }: { record: Company }) => {
+  const translate = useTranslate();
+  return (
+    <AsideSection title={translate("resources.companies.fields.category")}>
+      <p className="text-sm">{getCompanyCategoryLabel(record.category)}</p>
+    </AsideSection>
+  );
+};
+
+export const DecisionMakersInfo = ({ record }: { record: Company }) => {
+  const translate = useTranslate();
+  if (!record.decision_makers) {
+    return null;
+  }
+
+  return (
+    <AsideSection
+      title={translate("resources.companies.fields.decision_makers")}
+    >
+      <p className="text-sm whitespace-pre-line">{record.decision_makers}</p>
     </AsideSection>
   );
 };

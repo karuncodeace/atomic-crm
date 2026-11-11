@@ -37,6 +37,9 @@ create table public.companies (
     whatsapp_number text,
     pitch_point text,
     business_description text,
+    decision_makers text,
+    category text default 'not_categorized' not null
+        check (category in ('not_categorized', 'ecommerce', 'branding')),
     priority text default 'medium'
         check (priority is null or priority in ('high', 'medium', 'low'))
 );

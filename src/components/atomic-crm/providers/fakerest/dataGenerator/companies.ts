@@ -53,6 +53,12 @@ export const generateCompanies = (db: Db, size = 55): Required<Company>[] => {
       whatsapp_number: phone.phoneNumber(),
       pitch_point: lorem.paragraph(),
       business_description: lorem.sentence(),
+      decision_makers: null,
+      category: random.arrayElement([
+        "not_categorized",
+        "ecommerce",
+        "branding",
+      ] as const),
       priority: random.arrayElement(["high", "medium", "low"]),
     };
   });

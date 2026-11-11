@@ -4,6 +4,7 @@ import {
   useNotify,
   useRecordContext,
   useTranslate,
+  useUpdate,
   type RaRecord,
 } from "ra-core";
 import { useState } from "react";
@@ -27,7 +28,13 @@ import type { ComponentProps } from "react";
 
 import { Avatar } from "../contacts/Avatar";
 import { useConfigurationContext } from "../root/ConfigurationContext";
-import type { Contact, Deal, Sale } from "../types";
+import {
+  COMPANY_CATEGORY_BADGE_CLASSES,
+  companyCategories,
+  getCompanyCategoryLabel,
+  normalizeCompanyCategory,
+} from "../companies/companyCategory";
+import type { Company, CompanyCategory, Contact, Deal, Sale } from "../types";
 import { findDealLabel, updateDealStage } from "./dealUtils";
 import { usePackagePicker } from "../axicore/PackagePicker";
 import {
@@ -97,6 +104,20 @@ export const DealTableView = () => {
           label={translate("resources.deals.fields.stage", { _: "Stage" })}
         >
           <DealStageSelector />
+        </DataTable.Col>
+        <DataTable.Col
+          label={translate("resources.companies.fields.category", {
+            _: "Category",
+          })}
+          disableSort
+        >
+          <ReferenceField
+            source="company_id"
+            reference="companies"
+            link={false}
+          >
+            <CompanyCategorySelector />
+          </ReferenceField>
         </DataTable.Col>
         <DataTable.Col
           source="sales_id"
@@ -305,6 +326,71 @@ const DealStageSelector = () => {
                 )}
               >
                 {item.label}
+              </Badge>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};
+
+/**
+ * Inline category selector, styled like the stage one. Category lives on the
+ * lead's company, so the change is a plain update of that company.
+ */
+const CompanyCategorySelector = () => {
+  const record = useRecordContext<Company>();
+  const [update, { isPending }] = useUpdate<Company>();
+  const notify = useNotify();
+  const translate = useTranslate();
+
+  if (!record) return null;
+
+  const current = normalizeCompanyCategory(record.category);
+
+  const handleCategoryChange = (value: string | null) => {
+    if (!value || value === current) return;
+    update(
+      "companies",
+      {
+        id: record.id,
+        data: { category: value as CompanyCategory },
+        previousData: record,
+      },
+      {
+        onError: () => notify("ra.notification.http_error", { type: "error" }),
+      },
+    );
+  };
+
+  return (
+    <div onClick={(event) => event.stopPropagation()}>
+      <Select value={current} onValueChange={handleCategoryChange}>
+        <SelectTrigger
+          size="sm"
+          disabled={isPending}
+          title={translate("resources.companies.fields.category", {
+            _: "Category",
+          })}
+          className={cn(
+            "w-auto min-w-28 gap-1 rounded-full px-2.5 text-xs font-medium",
+            COMPANY_CATEGORY_BADGE_CLASSES[current],
+          )}
+        >
+          <SelectValue>{getCompanyCategoryLabel(current)}</SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {companyCategories.map((category) => (
+            <SelectItem key={category.value} value={category.value}>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "pointer-events-none",
+                  COMPANY_CATEGORY_BADGE_CLASSES[category.value],
+                )}
+              >
+                {category.label}
               </Badge>
             </SelectItem>
           ))}
