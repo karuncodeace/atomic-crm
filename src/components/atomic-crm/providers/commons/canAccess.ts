@@ -39,5 +39,5 @@ export const canAccess = <
   params: CanAccessParams<RecordType>,
 ) =>
   params.resource === "axicore"
-    ? canUseAxiCore(role) // AxiCore 2.0: admins only
+    ? canUseAxiCore(role) // AxiCore 2.0: admins and managers
     : !(role === "bde" && params.resource === "brochures");

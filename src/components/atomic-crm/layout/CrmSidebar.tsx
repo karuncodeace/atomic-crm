@@ -112,7 +112,7 @@ export const CrmSidebar = () => {
 };
 
 /**
- * AxiCore 2.0: Codeace's tools (SWOT pitch, brochure, proposal) and their settings, for admins.
+ * AxiCore 2.0: Codeace's tools (SWOT pitch, brochure, proposal) and their settings, for admins and managers.
  * At the very bottom of the sidebar; it opens the tools as their own full page (a plain link).
  */
 const AxiCoreFooter = () => {

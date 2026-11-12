@@ -21,7 +21,8 @@ export const AxiCorePage = () => {
   if (isPending || canAccess) return null;
   return (
     <div className="p-8 text-sm text-muted-foreground">
-      AxiCore 2.0 is only for admins. Ask an admin to change your role in Users.
+      AxiCore 2.0 is for admins and managers. Ask an admin to change your role
+      in Users.
     </div>
   );
 };

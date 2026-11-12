@@ -5,13 +5,13 @@
  *   /api/*          engine API (the CRM user's Supabase token goes as Authorization: Bearer)
  *   /axicore-app/   the tools screens, as their own full page
  *   /pdf/*          document PDFs
- * Who may open AxiCore 2.0: the roles in VITE_AXICORE_ROLES (default "admin"); the engine checks the same list
+ * Who may open AxiCore 2.0: the roles in VITE_AXICORE_ROLES (default "admin,manager"); the engine checks the same list
  * (AXICORE_ROLES) on every call, so hiding the menu is not the only guard.
  */
 import { getSupabaseClient } from "../providers/supabase/supabase";
 
 export const AXICORE_ROLES: string[] = String(
-  import.meta.env.VITE_AXICORE_ROLES || "admin",
+  import.meta.env.VITE_AXICORE_ROLES || "admin,manager",
 )
   .split(",")
   .map((r) => r.trim())

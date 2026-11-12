@@ -23,7 +23,7 @@ const KIND: Record<Doc["kind"], string> = {
 
 /**
  * The documents AxiCore made for this company (call script, brochure, proposal), for every CRM user.
- * Admins also get a link to open each one in AxiCore 2.0.
+ * Admins and managers also get a link to open each one in AxiCore 2.0.
  */
 export const CompanyDocuments = ({
   companyId,
