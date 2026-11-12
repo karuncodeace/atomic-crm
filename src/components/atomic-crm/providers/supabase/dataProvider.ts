@@ -24,6 +24,7 @@ import {
   hasContactList,
   type CompanyWithContacts,
 } from "../commons/companyContacts";
+import { withAxiCoreNotify } from "../../axicore/notify";
 import { getIsInitialized } from "./authProvider";
 import type { LeadImportResult, LeadImportRow } from "../../leads/leadImport";
 import { searchDealCategories } from "./searchDealCategories";
@@ -521,10 +522,13 @@ export const getDataProvider = () => {
       "Please set the VITE_SB_PUBLISHABLE_KEY environment variable",
     );
   }
-  return withLifecycleCallbacks(
-    getDataProviderWithCustomMethods(),
-    lifeCycleCallbacks,
-  ) as CrmDataProvider;
+  // every save of a lead, deal, call or brochure/proposal row also tells AxiCore (axicore/notify.ts)
+  return withAxiCoreNotify(
+    withLifecycleCallbacks(
+      getDataProviderWithCustomMethods(),
+      lifeCycleCallbacks,
+    ) as CrmDataProvider,
+  );
 };
 
 const applyFullTextSearch = (columns: string[]) => (params: GetListParams) => {
