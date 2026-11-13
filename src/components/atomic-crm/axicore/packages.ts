@@ -5,43 +5,52 @@
  */
 import type { DataProvider, Identifier } from "ra-core";
 
+import type { CompanyCategory } from "../types";
 import { engineFetch } from "./axicore";
 
 export const INTERESTED_STAGE = "interested";
 
+/*
+ * owner, 2026-11-13: only two packages, matching the company category.
+ * "ecommerce-store" keeps the value AxiCore already knows; "branding" is new
+ * to AxiCore. The package, the company category and the leads table Category
+ * column are kept equal by the database (sync_company_category_* triggers).
+ */
 export const WEBSITE_PACKAGES = [
   {
-    value: "business-website",
-    label: "Business website",
-    hint: "Company or service site that brings enquiries",
-  },
-  {
-    // owner, 2026-11-13: AxiCore sends the Website & SEO brochure for this one
-    value: "website-seo",
-    label: "Website + SEO",
-    hint: "Website with Google, Maps and AI search work",
-  },
-  {
     value: "ecommerce-store",
-    label: "E-commerce store",
-    hint: "Custom online store with catalogue, cart and payments",
+    label: "E-commerce",
+    hint: "Online store with catalogue, cart and payments",
+    category: "ecommerce",
   },
   {
-    value: "shopify-store",
-    label: "Shopify store",
-    hint: "Store built on Shopify: theme, products, apps",
+    value: "branding",
+    label: "Branding",
+    hint: "Brand identity, logo and brand materials",
+    category: "branding",
   },
-  {
-    value: "landing-page",
-    label: "Landing page",
-    hint: "One focused page for a campaign or offer",
-  },
-] as const;
+] as const satisfies readonly {
+  value: string;
+  label: string;
+  hint: string;
+  category: CompanyCategory;
+}[];
 
 export type WebsitePackage = (typeof WEBSITE_PACKAGES)[number]["value"];
 
+/** Packages offered before 2026-11-13: still stripped when a package is swapped in. */
+const LEGACY_PACKAGES = [
+  "business-website",
+  "website-seo",
+  "shopify-store",
+  "landing-page",
+];
+
 export const isWebsitePackage = (value: unknown): value is WebsitePackage =>
   WEBSITE_PACKAGES.some((p) => p.value === value);
+
+const isAnyPackage = (value: string): boolean =>
+  isWebsitePackage(value) || LEGACY_PACKAGES.includes(value);
 
 /** The package already chosen for a deal, if any. */
 export const dealPackage = (
@@ -51,11 +60,17 @@ export const dealPackage = (
 export const packageLabel = (value: string | null | undefined): string =>
   WEBSITE_PACKAGES.find((p) => p.value === value)?.label ?? "";
 
+/** The package matching a company category, or null for "not_categorized". */
+export const packageForCategory = (
+  category: string | null | undefined,
+): WebsitePackage | null =>
+  WEBSITE_PACKAGES.find((p) => p.category === category)?.value ?? null;
+
 /** The deal's categories with the package swapped in (other categories are kept). */
 export const withPackage = (
   categories: string[] | null | undefined,
   pkg: WebsitePackage,
-): string[] => [...(categories ?? []).filter((c) => !isWebsitePackage(c)), pkg];
+): string[] => [...(categories ?? []).filter((c) => !isAnyPackage(c)), pkg];
 
 /**
  * Tells AxiCore the package straight away (also covers users whose role may not update the deal row).

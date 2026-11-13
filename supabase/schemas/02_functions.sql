@@ -838,6 +838,18 @@ begin
         );
     end if;
 
+    -- Leftover calls for leads already closed elsewhere (marked Interested or
+    -- Not interested from the leads table, a note, or recycled) leave the queue
+    -- before leftovers are counted against the cap.
+    update public.call_assignments a
+    set status = 'done', done_at = now()
+    from public.contacts c
+    where a.status = 'open'
+      and c.id = a.contact_id
+      and (coalesce(c.do_not_contact, false)
+          or c.lead_stage in ('interested', 'not_interested', 'recycled')
+          or c.status in ('interested', 'not_interested'));
+
     for v_sales in
         select s.id, s.role
         from public.sales s
@@ -862,25 +874,36 @@ begin
             continue;
         end if;
 
-        -- Due callbacks / no-answers already owned by this dialer.
+        -- Due callbacks / not-answered leads: the stage shown in the CRM
+        -- (contact status = lead stage) decides, so a Callback set from the
+        -- leads table is queued too. This dialer's own first, then the pool.
         for v_contact in
             select c.id, c.company_id
             from public.contacts c
-            where c.assigned_to = v_sales.id
+            where (c.assigned_to = v_sales.id or c.assigned_to is null)
               and coalesce(c.do_not_contact, false) = false
               and c.lead_stage is not null
               and c.lead_stage not in ('interested', 'not_interested', 'recycled')
-              and c.last_outcome in ('callback', 'no_answer')
+              and (c.status in ('callback', 'not_answered')
+                  or (c.status is null and c.last_outcome in ('callback', 'no_answer')))
               and (c.next_attempt_at is null or (timezone(v_tz, c.next_attempt_at))::date <= v_today)
               and not exists (
                   select 1 from public.call_assignments a
-                  where a.sales_id = v_sales.id
-                    and a.contact_id = c.id
+                  where a.contact_id = c.id
                     and a.status = 'open'
               )
-            order by c.next_attempt_at nulls first, c.id
+            order by case when c.assigned_to = v_sales.id then 0 else 1 end,
+                     c.next_attempt_at nulls first, c.id
             limit v_slots
+            for update skip locked
         loop
+            update public.contacts
+            set assigned_to = v_sales.id,
+                sales_id = v_sales.id,
+                assigned_at = coalesce(assigned_at, now())
+            where id = v_contact.id
+              and assigned_to is null;
+
             select d.id into v_deal_id
             from public.deals d
             where d.company_id = v_contact.company_id
@@ -917,6 +940,7 @@ begin
             where (c.assigned_to is null or c.assigned_to = v_sales.id)
               and coalesce(c.do_not_contact, false) = false
               and c.lead_stage in ('new', 'queued')
+              and coalesce(c.status, 'new') not in ('callback', 'interested', 'not_interested', 'not_answered')
               and not exists (
                   select 1 from public.call_assignments a
                   where a.contact_id = c.id
@@ -1580,6 +1604,121 @@ begin
     set status = new.stage
     where c.id = any (new.contact_ids)
       and c.status is distinct from new.stage;
+
+    return new;
+end;
+$$;
+
+-- The Interested popup package (stored in deals.categories) and the company
+-- category are the same choice: ecommerce-store <-> ecommerce,
+-- branding <-> branding. These two triggers keep them equal both ways; the
+-- "is distinct from" guards stop them from looping.
+CREATE OR REPLACE FUNCTION "public"."sync_deal_package_to_company"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+declare
+    v_category text;
+begin
+    if new.archived_at is not null or new.company_id is null then
+        return new;
+    end if;
+    if tg_op = 'UPDATE' and new.categories is not distinct from old.categories then
+        return new;
+    end if;
+
+    v_category := case
+        when 'ecommerce-store' = any (new.categories) then 'ecommerce'
+        when 'branding' = any (new.categories) then 'branding'
+    end;
+    if v_category is null then
+        return new;
+    end if;
+
+    update public.companies c
+    set category = v_category
+    where c.id = new.company_id
+      and c.category is distinct from v_category;
+
+    return new;
+end;
+$$;
+
+CREATE OR REPLACE FUNCTION "public"."sync_company_category_to_deals"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+declare
+    v_package text;
+begin
+    if new.category is not distinct from old.category then
+        return new;
+    end if;
+
+    v_package := case new.category
+        when 'ecommerce' then 'ecommerce-store'
+        when 'branding' then 'branding'
+    end;
+
+    update public.deals d
+    set categories = s.categories, updated_at = now()
+    from (
+        select d2.id,
+            array(
+                select c from unnest(coalesce(d2.categories, '{}'::text[])) as c
+                where c not in ('ecommerce-store', 'branding', 'business-website',
+                    'website-seo', 'shopify-store', 'landing-page')
+            ) || case when v_package is null then '{}'::text[] else array[v_package] end as categories
+        from public.deals d2
+        where d2.company_id = new.id
+          and d2.archived_at is null
+    ) s
+    where d.id = s.id
+      and d.categories is distinct from s.categories;
+
+    return new;
+end;
+$$;
+
+-- The call engine's lead_stage follows the stage shown in the CRM (contact
+-- status = lead stage), whichever screen changed it, so the daily call queue
+-- picks leads by what users see. A lead closed as Interested / Not interested
+-- also leaves every open call queue at once.
+CREATE OR REPLACE FUNCTION "public"."sync_contact_status_to_call_queue"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+declare
+    v_lead_stage text;
+begin
+    if new.lead_stage is null or new.status is not distinct from old.status then
+        return new;
+    end if;
+
+    v_lead_stage := case new.status
+        when 'interested' then 'interested'
+        when 'not_interested' then 'not_interested'
+        when 'callback' then 'in_progress'
+        when 'not_answered' then
+            case when new.lead_stage = 'recycled' then 'recycled' else 'in_progress' end
+        when 'new' then
+            case when new.lead_stage in ('new', 'queued') then new.lead_stage else 'queued' end
+    end;
+    if v_lead_stage is null then
+        return new;
+    end if;
+
+    update public.contacts
+    set lead_stage = v_lead_stage
+    where id = new.id
+      and lead_stage is distinct from v_lead_stage;
+
+    if new.status in ('interested', 'not_interested') then
+        update public.call_assignments
+        set status = 'done', done_at = now()
+        where contact_id = new.id
+          and status = 'open';
+    end if;
 
     return new;
 end;

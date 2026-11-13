@@ -7,6 +7,7 @@ import {
   type ResourceCallbacks,
 } from "ra-core";
 import type {
+  Company,
   ContactNote,
   Deal,
   DealNote,
@@ -25,6 +26,10 @@ import {
   type CompanyWithContacts,
 } from "../commons/companyContacts";
 import { withAxiCoreNotify } from "../../axicore/notify";
+import {
+  packageForCategory,
+  sendPackageToAxiCore,
+} from "../../axicore/packages";
 import { getIsInitialized } from "./authProvider";
 import type { LeadImportResult, LeadImportRow } from "../../leads/leadImport";
 import { searchDealCategories } from "./searchDealCategories";
@@ -492,6 +497,7 @@ const lifeCycleCallbacks: ResourceCallbacks[] = [
       };
     },
     beforeUpdate: async (params) => {
+      sendCategoryPackageToAxiCore(params);
       return await processCompanyLogo(params);
     },
   },
@@ -529,6 +535,27 @@ export const getDataProvider = () => {
       lifeCycleCallbacks,
     ) as CrmDataProvider,
   );
+};
+
+/**
+ * A company category change (leads table or company form) also sends the
+ * matching package to AxiCore, like the Interested popup does. The database
+ * copies it onto the company's open deals. Fire-and-forget: never blocks the
+ * save, and sendPackageToAxiCore only logs failures.
+ */
+const sendCategoryPackageToAxiCore = (params: {
+  id: Identifier;
+  data: Partial<Company>;
+  previousData?: Partial<Company>;
+}) => {
+  const category = params.data?.category;
+  if (category === undefined || category === params.previousData?.category) {
+    return;
+  }
+  const pkg = packageForCategory(category);
+  if (pkg) {
+    void sendPackageToAxiCore({ companyId: params.id, pkg });
+  }
 };
 
 const applyFullTextSearch = (columns: string[]) => (params: GetListParams) => {
