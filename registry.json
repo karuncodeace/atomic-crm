@@ -1024,6 +1024,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/axicore/notify.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/axicore/axicore.ts",
           "type": "registry:component"
         },
