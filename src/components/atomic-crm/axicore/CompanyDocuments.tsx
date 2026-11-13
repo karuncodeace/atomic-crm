@@ -18,7 +18,25 @@ type Doc = {
   error?: string | null;
   detail?: string | null;
   can_retry?: boolean;
+  // SWOT only: the Approve SWOT step and what the critic did (SWOT guide 5.5-5.6)
+  approved_at?: string | null;
+  approved_by?: string | null;
+  can_approve?: boolean;
+  check?: {
+    status: "checked" | "not_checked";
+    removed: number;
+    changed: number;
+    reason: string | null;
+  } | null;
+  to_confirm?: number;
 };
+type Research = {
+  researched_at: string | null;
+  evidence: number;
+  kept?: number;
+  usable: boolean;
+};
+type Lead = { id: number; research?: Research; researching?: boolean };
 const KIND: Record<Doc["kind"], string> = {
   script: "SWOT",
   brochure: "Brochure",
@@ -42,11 +60,16 @@ export const CompanyDocuments = ({
   const [docs, setDocs] = useState<Doc[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState<number | null>(null);
+  const [lead, setLead] = useState<Lead | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(
     () =>
       engineFetch(`/api/axicore/company/${companyId}/docs`).then(
-        (r) => setDocs(r?.docs || []),
+        (r) => {
+          setDocs(r?.docs || []);
+          setLead(r?.lead || null);
+        },
         (e) => setError(e.message),
       ),
     [companyId],
@@ -61,7 +84,8 @@ export const CompanyDocuments = ({
         .map((k) => docs.find((d) => d.kind === k))
         .filter(Boolean) as Doc[])
     : [];
-  const working = latest.some((d) => d.status === "working");
+  const working =
+    latest.some((d) => d.status === "working") || !!lead?.researching;
   // while something is being made, look again every 15 s
   useEffect(() => {
     if (!working) return;
@@ -82,6 +106,39 @@ export const CompanyDocuments = ({
     }
   };
 
+  // "Refresh research": the business is researched again now (SWOT guide 5.2)
+  const refreshResearch = async () => {
+    setBusy("research");
+    try {
+      await engineFetch(`/api/axicore/company/${companyId}/research`, {
+        method: "POST",
+      });
+      notify("Research started: it takes a minute or two", { type: "info" });
+      await load();
+    } catch (e) {
+      notify(`Research: ${(e as Error).message}`, { type: "error" });
+    } finally {
+      setBusy(null);
+    }
+  };
+  // "Approve SWOT": only an approved SWOT is used for the brochure and proposal
+  const approve = async (d: Doc) => {
+    setBusy(`approve-${d.id}`);
+    try {
+      await engineFetch(`/api/axicore/docs/${d.id}/approve`, {
+        method: "POST",
+      });
+      notify("SWOT approved: the brochure and proposal will use it", {
+        type: "info",
+      });
+      await load();
+    } catch (e) {
+      notify(`SWOT: ${(e as Error).message}`, { type: "error" });
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const title = translate("crm.axicore.documents", {
     _: "Documents (AxiCore)",
   });
@@ -98,6 +155,13 @@ export const CompanyDocuments = ({
 
   return (
     <AsideSection title={title}>
+      {lead ? (
+        <ResearchLine
+          research={lead.research}
+          researching={!!lead.researching || busy === "research"}
+          onRefresh={refreshResearch}
+        />
+      ) : null}
       {latest.length === 0 ? (
         <p className="text-muted-foreground">
           Nothing made for this company yet.
@@ -155,6 +219,13 @@ export const CompanyDocuments = ({
                   </Link>
                 ) : null}
               </div>
+              {d.kind === "script" && d.status === "ready" ? (
+                <SwotReview
+                  doc={d}
+                  approving={busy === `approve-${d.id}`}
+                  onApprove={() => approve(d)}
+                />
+              ) : null}
               {d.status === "error" ? (
                 <div className="mt-1 flex items-start gap-2">
                   <p
@@ -181,5 +252,84 @@ export const CompanyDocuments = ({
         })
       )}
     </AsideSection>
+  );
+};
+
+const ResearchLine = ({
+  research,
+  researching,
+  onRefresh,
+}: {
+  research?: Research;
+  researching: boolean;
+  onRefresh: () => void;
+}) => (
+  <div className="mb-2 flex items-center gap-2">
+    <p className="grow text-xs text-muted-foreground">
+      {researching
+        ? "Researching the business…"
+        : !research?.researched_at
+          ? "Not researched yet"
+          : research.usable
+            ? `Research: ${formatLocalizedDate(research.researched_at)} · ${research.kept ?? research.evidence} sourced facts`
+            : `Research: ${formatLocalizedDate(research.researched_at)} · too thin to write from`}
+    </p>
+    <Button
+      size="sm"
+      variant="outline"
+      className="h-7 shrink-0 text-xs"
+      disabled={researching}
+      onClick={onRefresh}
+    >
+      Refresh research
+    </Button>
+  </div>
+);
+
+/** The SWOT's review: what the source check did, and the Approve SWOT step. */
+const SwotReview = ({
+  doc,
+  approving,
+  onApprove,
+}: {
+  doc: Doc;
+  approving: boolean;
+  onApprove: () => void;
+}) => {
+  const c = doc.check;
+  const checked =
+    c?.status === "checked"
+      ? `Checked against sources: ${c.removed} removed, ${c.changed} reworded`
+      : c?.status === "not_checked"
+        ? "Not checked against sources: read it carefully"
+        : null;
+  return (
+    <div className="mt-1 flex items-start gap-2">
+      <p
+        className="grow text-xs text-muted-foreground"
+        title={c?.reason || undefined}
+      >
+        {[
+          checked,
+          doc.to_confirm ? `${doc.to_confirm} to confirm` : null,
+          doc.approved_at
+            ? `Approved${doc.approved_by ? ` by ${doc.approved_by}` : ""}`
+            : "Not approved: brochures and proposals do not use it yet",
+        ]
+          .filter(Boolean)
+          .join(" · ")}
+      </p>
+      {doc.can_approve ? (
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 shrink-0 text-xs"
+          disabled={approving}
+          onClick={onApprove}
+        >
+          {approving ? "Approving…" : "Approve SWOT"}
+        </Button>
+      ) : null}
+    </div>
   );
 };
