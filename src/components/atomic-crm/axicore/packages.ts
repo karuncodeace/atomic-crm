@@ -16,6 +16,12 @@ export const WEBSITE_PACKAGES = [
     hint: "Company or service site that brings enquiries",
   },
   {
+    // owner, 2026-11-13: AxiCore sends the Website & SEO brochure for this one
+    value: "website-seo",
+    label: "Website + SEO",
+    hint: "Website with Google, Maps and AI search work",
+  },
+  {
     value: "ecommerce-store",
     label: "E-commerce store",
     hint: "Custom online store with catalogue, cart and payments",
