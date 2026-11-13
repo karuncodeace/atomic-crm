@@ -309,12 +309,22 @@ export const frenchCrmMessages = {
         open: "Ouvrir la brochure",
         approve: "Approuver",
         not_approve: "Refuser",
+        edit: "Modifier dans AxiCore",
+        delete: "Supprimer",
+      },
+      confirm_delete: {
+        title: "Supprimer cette brochure ?",
+        content:
+          "%{title} et son PDF sont retirés du CRM. AxiCore garde sa copie ; la modifier là-bas en envoie une nouvelle.",
       },
       notification: {
         pending: "Brochure remise en attente",
         approved: "Brochure approuvée",
         not_approved: "Brochure refusée",
         error: "Impossible de mettre à jour la brochure. Veuillez réessayer.",
+        deleted: "Brochure supprimée",
+        no_doc:
+          "AxiCore n'a pas de brochure terminée pour cette entreprise : rien à modifier.",
       },
       empty: {
         title: "Aucune brochure ici",

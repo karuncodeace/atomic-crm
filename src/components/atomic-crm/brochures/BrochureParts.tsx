@@ -1,5 +1,14 @@
+import { useState } from "react";
+import { useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNotify, useRecordContext, useTranslate, useUpdate } from "ra-core";
+import {
+  useCanAccess,
+  useNotify,
+  useRecordContext,
+  useTranslate,
+  useUpdate,
+} from "ra-core";
+import { Confirm } from "@/components/admin/confirm";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,14 +16,24 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
-import { Check, ExternalLink, FileText, MoreHorizontal, X } from "lucide-react";
+import {
+  Check,
+  ExternalLink,
+  FileText,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  X,
+} from "lucide-react";
 
 import type { Brochure, BrochureStatus } from "../types";
 import { formatBrochureUrl } from "./brochureUrl";
+import { engineFetch } from "../axicore/axicore";
 
 const STATUS_STYLES: Record<BrochureStatus, { badge: string; dot: string }> = {
   pending: {
@@ -167,17 +186,77 @@ const useBrochureDecision = (record: Brochure | undefined) => {
   return { decide, isPending };
 };
 
+type EngineDoc = { id: number; kind: string; status: string };
+
+/**
+ * Edit and Delete (owner, 2026-11-13: "add option in crm to delete brochure", "edit option also"), for admins and
+ * managers (the AxiCore roles). Edit opens AxiCore's newest finished brochure of the company in its editor; a saved
+ * edit sends the new PDF to the same CRM row. Delete asks AxiCore to remove the row and its PDF: the CRM's own rules
+ * give signed-in users no delete on brochures.
+ */
+const useBrochureEditDelete = (record: Brochure | undefined) => {
+  const { canAccess } = useCanAccess({ resource: "axicore", action: "access" });
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const notify = useNotify();
+  const [working, setWorking] = useState(false);
+
+  const edit = async () => {
+    if (!record?.company_id) {
+      notify("resources.brochures.notification.no_doc", { type: "warning" });
+      return;
+    }
+    setWorking(true);
+    try {
+      const r = (await engineFetch(
+        `/api/axicore/company/${record.company_id}/docs`,
+      )) as { docs?: EngineDoc[] } | null;
+      const doc = r?.docs?.find(
+        (d) => d.kind === "brochure" && d.status === "ready",
+      );
+      if (doc) navigate(`/axicore/brochure/${doc.id}`);
+      else
+        notify("resources.brochures.notification.no_doc", { type: "warning" });
+    } catch {
+      notify("resources.brochures.notification.error", { type: "error" });
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const remove = async () => {
+    if (!record) return;
+    setWorking(true);
+    try {
+      await engineFetch(`/api/axicore/brochures/${record.id}/delete`, {
+        method: "POST",
+      });
+      queryClient.invalidateQueries({ queryKey: ["brochures"] });
+      notify("resources.brochures.notification.deleted", { type: "success" });
+    } catch (e) {
+      notify((e as Error).message, { type: "error" });
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  return { canAccess: !!canAccess, edit, remove, working };
+};
+
 export const BrochureActions = () => {
   const record = useRecordContext<Brochure>();
   const translate = useTranslate();
   const { decide, isPending } = useBrochureDecision(record);
+  const { canAccess, edit, remove, working } = useBrochureEditDelete(record);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   if (!record) return null;
+  const busy = isPending || working;
 
   return (
     <div className="flex justify-end">
       <DropdownMenu>
         <DropdownMenuTrigger
-          disabled={isPending}
+          disabled={busy}
           render={
             <Button
               type="button"
@@ -188,7 +267,7 @@ export const BrochureActions = () => {
             />
           }
         >
-          {isPending ? (
+          {busy ? (
             <Spinner className="size-4" />
           ) : (
             <MoreHorizontal className="size-4" aria-hidden />
@@ -212,8 +291,40 @@ export const BrochureActions = () => {
               {translate("resources.brochures.action.not_approve")}
             </DropdownMenuItem>
           </DropdownMenuGroup>
+          {canAccess ? (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuGroup>
+                <DropdownMenuItem onClick={edit}>
+                  <Pencil aria-hidden />
+                  {translate("resources.brochures.action.edit")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => setConfirmOpen(true)}
+                >
+                  <Trash2 aria-hidden />
+                  {translate("resources.brochures.action.delete")}
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </>
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
+      <Confirm
+        isOpen={confirmOpen}
+        title="resources.brochures.confirm_delete.title"
+        content="resources.brochures.confirm_delete.content"
+        translateOptions={{ title: record.title || "" }}
+        confirm="resources.brochures.action.delete"
+        confirmColor="warning"
+        loading={working}
+        onConfirm={async () => {
+          await remove();
+          setConfirmOpen(false);
+        }}
+        onClose={() => setConfirmOpen(false)}
+      />
     </div>
   );
 };
