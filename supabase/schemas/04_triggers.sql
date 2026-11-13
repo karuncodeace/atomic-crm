@@ -103,3 +103,12 @@ create or replace trigger create_callback_task
 create or replace trigger copy_call_log_note
     after insert on public.call_logs
     for each row execute function public.copy_call_log_note();
+
+-- Keep contact status and lead stage equal (see sync_* functions)
+create or replace trigger sync_contact_status_to_deals
+    after update of status on public.contacts
+    for each row execute function public.sync_contact_status_to_deals();
+
+create or replace trigger sync_deal_stage_to_contacts
+    after insert or update of stage on public.deals
+    for each row execute function public.sync_deal_stage_to_contacts();

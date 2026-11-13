@@ -1099,6 +1099,7 @@ begin
     where id = v_assignment.id;
 
     update public.contacts set
+        status = v_deal_stage,
         last_outcome = v_outcome,
         last_attempt_at = now(),
         next_attempt_at = v_next,
@@ -1531,6 +1532,54 @@ begin
         new.sales_id,
         case new.outcome when 'no_answer' then 'not_answered' else new.outcome end
     );
+
+    return new;
+end;
+$$;
+
+-- Contact status and lead (deal) stage share the same values (new, callback,
+-- interested, not_interested, not_answered) and are kept equal both ways, so
+-- a status set from a note, the contact page or a call outcome shows in the
+-- leads table, and a stage set in the leads table shows on the contact.
+-- The "is distinct from" guards stop the two triggers from looping.
+CREATE OR REPLACE FUNCTION "public"."sync_contact_status_to_deals"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+begin
+    if new.status is null
+        or new.status is not distinct from old.status
+        or new.status not in ('new', 'callback', 'interested', 'not_interested', 'not_answered') then
+        return new;
+    end if;
+
+    update public.deals d
+    set stage = new.status, updated_at = now()
+    where d.archived_at is null
+      and new.id = any (d.contact_ids)
+      and d.stage is distinct from new.status;
+
+    return new;
+end;
+$$;
+
+CREATE OR REPLACE FUNCTION "public"."sync_deal_stage_to_contacts"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+begin
+    if new.archived_at is not null
+        or new.stage not in ('new', 'callback', 'interested', 'not_interested', 'not_answered') then
+        return new;
+    end if;
+    if tg_op = 'UPDATE' and new.stage is not distinct from old.stage then
+        return new;
+    end if;
+
+    update public.contacts c
+    set status = new.stage
+    where c.id = any (new.contact_ids)
+      and c.status is distinct from new.stage;
 
     return new;
 end;
