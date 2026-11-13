@@ -93,3 +93,13 @@ create or replace trigger on_auth_user_updated
 create or replace trigger sync_sales_role
     before insert or update on public.sales
     for each row execute function public.sync_sales_role();
+
+-- A lead entering the callback stage gets a "Call back" task
+create or replace trigger create_callback_task
+    after insert or update of stage on public.deals
+    for each row execute function public.create_callback_task();
+
+-- Call outcome notes also land in the contact's notes
+create or replace trigger copy_call_log_note
+    after insert on public.call_logs
+    for each row execute function public.copy_call_log_note();

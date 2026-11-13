@@ -44,5 +44,11 @@ export const isDueThisWeek = (dateString: string) => {
 
 export const isDueLater = (dateString: string) => {
   const dueDate = new Date(dateString);
-  return dueDate >= endOfWeek(new Date(), { weekStartsOn: 0 });
+  // On Saturday the week ends before tomorrow does: start "later" after
+  // tomorrow, or a task due Sunday shows under both Tomorrow and Later.
+  const laterStart = Math.max(
+    endOfWeek(new Date(), { weekStartsOn: 0 }).getTime(),
+    endOfTomorrow().getTime(),
+  );
+  return dueDate.getTime() >= laterStart;
 };

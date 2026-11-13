@@ -104,18 +104,21 @@ export const TasksListByDueDate = ({
         title={translate("resources.tasks.filters.overdue")}
         showContact={showContact}
         isMobile={isMobile}
+        showAll={!showContact}
       />
       <TaskListFilter
         tasks={dueTodayTasks}
         title={translate("resources.tasks.filters.today")}
         showContact={showContact}
         isMobile={isMobile}
+        showAll={!showContact}
       />
       <TaskListFilter
         tasks={dueTomorrowTasks}
         title={translate("resources.tasks.filters.tomorrow")}
         showContact={showContact}
         isMobile={isMobile}
+        showAll={!showContact}
       />
       {(!filterByContact || (filterByContact && isBeforeFriday())) && (
         <TaskListFilter
@@ -123,6 +126,7 @@ export const TasksListByDueDate = ({
           title={translate("resources.tasks.filters.this_week")}
           showContact={showContact}
           isMobile={isMobile}
+          showAll={!showContact}
         />
       )}
       <TaskListFilter
@@ -130,6 +134,7 @@ export const TasksListByDueDate = ({
         title={translate("resources.tasks.filters.later")}
         showContact={showContact}
         isMobile={isMobile}
+        showAll={!showContact}
       />
     </div>
   );

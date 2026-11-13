@@ -7,11 +7,16 @@ import {
 
 import { TasksIterator } from "./TasksIterator";
 
+/** Same cap as the tasks fetch in TasksListByDueDate. */
+const SHOW_ALL_PER_PAGE = 1000;
+
 type TaskListProps = {
   tasks: any[];
   title: string;
   showContact?: boolean;
   isMobile: boolean;
+  /** Show every task at once instead of a first page and "Load more". */
+  showAll?: boolean;
 };
 
 export const TaskListFilter = ({
@@ -19,12 +24,13 @@ export const TaskListFilter = ({
   title,
   showContact,
   isMobile,
+  showAll = false,
 }: TaskListProps) => {
   const translate = useTranslate();
   const listContext = useList({
     data: tasks,
     resource: "tasks",
-    perPage: isMobile ? 10 : 5,
+    perPage: showAll ? SHOW_ALL_PER_PAGE : isMobile ? 10 : 5,
   });
 
   const { total } = listContext;
