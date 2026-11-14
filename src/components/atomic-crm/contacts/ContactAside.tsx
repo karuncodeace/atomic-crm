@@ -13,6 +13,7 @@ import { AsideSection } from "../misc/AsideSection";
 import type { Contact } from "../types";
 import { ContactMergeButton } from "./ContactMergeButton";
 import { ExportVCardButton } from "./ExportVCardButton";
+import { CompanyDocuments } from "../axicore/CompanyDocuments";
 
 export const ContactAside = ({ link = "edit" }: { link?: "edit" | "show" }) => {
   const record = useRecordContext<Contact>();
@@ -41,6 +42,11 @@ export const ContactAside = ({ link = "edit" }: { link?: "edit" | "show" }) => {
       >
         <ContactBackgroundInfo />
       </AsideSection>
+
+      {/* AxiCore documents of the contact's company, with Make proposal (owner, 2026-11-14: "where?" on a contact page) */}
+      {record.company_id ? (
+        <CompanyDocuments companyId={record.company_id} />
+      ) : null}
 
       <AsideSection
         title={translate("resources.tags.name", { smart_count: 2 })}
