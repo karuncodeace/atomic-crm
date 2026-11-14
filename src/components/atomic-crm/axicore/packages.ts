@@ -11,17 +11,40 @@ import { engineFetch } from "./axicore";
 export const INTERESTED_STAGE = "interested";
 
 /*
- * owner, 2026-11-13: only two packages, matching the company category.
- * "ecommerce-store" keeps the value AxiCore already knows; "branding" is new
- * to AxiCore. The package, the company category and the leads table Category
- * column are kept equal by the database (sync_company_category_* triggers).
+ * owner, 2026-11-13: two packages matching the company category (E-commerce,
+ * Branding); owner, 2026-11-14: "add other options too - business website,
+ * shopify, ecommerce, seo + business website, seo + ecommerce store".
+ * Only "ecommerce-store" and "branding" have a company category: those two are
+ * kept equal with it by the database (sync_company_category_* triggers). The
+ * others are stored on the deal and sent to AxiCore only; note that a later
+ * company category change replaces them with that category's package.
  */
 export const WEBSITE_PACKAGES = [
   {
+    value: "business-website",
+    label: "Business website",
+    hint: "Company or service website that brings enquiries",
+  },
+  {
     value: "ecommerce-store",
-    label: "E-commerce",
+    label: "E-commerce store",
     hint: "Online store with catalogue, cart and payments",
     category: "ecommerce",
+  },
+  {
+    value: "shopify-store",
+    label: "Shopify store",
+    hint: "Online store built on Shopify",
+  },
+  {
+    value: "website-seo",
+    label: "SEO + Business website",
+    hint: "Business website built to rank on Google and AI search",
+  },
+  {
+    value: "ecommerce-seo",
+    label: "SEO + E-commerce store",
+    hint: "Online store plus search work that brings buyers",
   },
   {
     value: "branding",
@@ -33,18 +56,13 @@ export const WEBSITE_PACKAGES = [
   value: string;
   label: string;
   hint: string;
-  category: CompanyCategory;
+  category?: CompanyCategory;
 }[];
 
 export type WebsitePackage = (typeof WEBSITE_PACKAGES)[number]["value"];
 
-/** Packages offered before 2026-11-13: still stripped when a package is swapped in. */
-const LEGACY_PACKAGES = [
-  "business-website",
-  "website-seo",
-  "shopify-store",
-  "landing-page",
-];
+/** Packages no longer offered: still stripped when a package is swapped in. */
+const LEGACY_PACKAGES = ["landing-page"];
 
 export const isWebsitePackage = (value: unknown): value is WebsitePackage =>
   WEBSITE_PACKAGES.some((p) => p.value === value);
@@ -64,7 +82,8 @@ export const packageLabel = (value: string | null | undefined): string =>
 export const packageForCategory = (
   category: string | null | undefined,
 ): WebsitePackage | null =>
-  WEBSITE_PACKAGES.find((p) => p.category === category)?.value ?? null;
+  WEBSITE_PACKAGES.find((p) => "category" in p && p.category === category)
+    ?.value ?? null;
 
 /** The deal's categories with the package swapped in (other categories are kept). */
 export const withPackage = (

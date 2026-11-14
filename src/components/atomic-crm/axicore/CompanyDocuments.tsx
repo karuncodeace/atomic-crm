@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { AsideSection } from "../misc/AsideSection";
 import { formatLocalizedDate } from "../misc/RelativeDate";
 import { engineFetch } from "./axicore";
+import { DocProgress, type Progress } from "./DocProgress";
+import { MakeProposal } from "./MakeProposal";
 
 type Doc = {
   id: number;
@@ -29,6 +31,8 @@ type Doc = {
     reason: string | null;
   } | null;
   to_confirm?: number;
+  // while it is being made: where it is (AxiCore: docProgress in src/web/api.js)
+  progress?: Progress | null;
 };
 type Research = {
   researched_at: string | null;
@@ -36,7 +40,12 @@ type Research = {
   kept?: number;
   usable: boolean;
 };
-type Lead = { id: number; research?: Research; researching?: boolean };
+type Lead = {
+  id: number;
+  research?: Research;
+  researching?: boolean;
+  can_propose?: boolean;
+};
 const KIND: Record<Doc["kind"], string> = {
   script: "SWOT",
   brochure: "Brochure",
@@ -117,6 +126,28 @@ export const CompanyDocuments = ({
       await load();
     } catch (e) {
       notify(`Research: ${(e as Error).message}`, { type: "error" });
+    } finally {
+      setBusy(null);
+    }
+  };
+  // "Make proposal" (owner, 2026-11-14): the deal stages are call results now, so no stage starts a proposal; an admin
+  // or manager starts it here. AxiCore answers at once and writes it in the background; the row appears in a few
+  // seconds with its progress bar.
+  const makeProposal = async () => {
+    setBusy("proposal");
+    try {
+      await engineFetch(`/api/axicore/company/${companyId}/proposal`, {
+        method: "POST",
+      });
+      notify("Proposal started: it shows here with its progress", {
+        type: "info",
+      });
+      for (const wait of [2500, 5000]) {
+        await new Promise((r) => setTimeout(r, wait));
+        await load();
+      }
+    } catch (e) {
+      notify(`Proposal: ${(e as Error).message}`, { type: "error" });
     } finally {
       setBusy(null);
     }
@@ -219,6 +250,9 @@ export const CompanyDocuments = ({
                   </Link>
                 ) : null}
               </div>
+              {d.status === "working" && d.progress ? (
+                <DocProgress progress={d.progress} />
+              ) : null}
               {d.kind === "script" && d.status === "ready" ? (
                 <SwotReview
                   doc={d}
@@ -251,6 +285,16 @@ export const CompanyDocuments = ({
           );
         })
       )}
+      {lead?.can_propose ? (
+        <MakeProposal
+          hasProposal={docs.some((d) => d.kind === "proposal")}
+          working={docs.some(
+            (d) => d.kind === "proposal" && d.status === "working",
+          )}
+          starting={busy === "proposal"}
+          onMake={makeProposal}
+        />
+      ) : null}
     </AsideSection>
   );
 };
