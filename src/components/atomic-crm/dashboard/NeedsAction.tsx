@@ -4,7 +4,6 @@ import { ArrowUpRight } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import type { DashboardStats } from "./dashboardStats";
-import { leadsLink } from "./dashboardLinks";
 
 interface QuickStat {
   key: string;
@@ -47,8 +46,12 @@ const StatCard = ({ label, value, to }: Omit<QuickStat, "key">) => {
   );
 };
 
-/** Five small counters under the charts; each links to the matching list. */
-export const QuickStats = ({
+/**
+ * What needs doing next, each card linking to where it gets done: callbacks
+ * that are due, unanswered leads to try again, overdue tasks and (for admins
+ * and managers) brochures waiting for review.
+ */
+export const NeedsAction = ({
   stats,
 }: {
   stats: DashboardStats | undefined;
@@ -57,67 +60,66 @@ export const QuickStats = ({
 
   if (!stats) {
     return (
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
-        {Array.from({ length: 5 }, (_, i) => (
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => (
           <Skeleton key={i} className="h-[92px] rounded-[10px]" />
         ))}
       </div>
     );
   }
 
-  const thisMonth = stats.months[stats.months.length - 1];
   const cards: QuickStat[] = [
-    {
-      key: "new",
-      label: translate("crm.dashboard.home.quick_new", { _: "New leads" }),
-      value: stats.stages.new ?? 0,
-      to: leadsLink({ stage: ["new"] }),
-    },
     {
       key: "callbacks",
       label: translate("crm.dashboard.home.quick_callbacks", {
         _: "Callbacks due",
       }),
       value: stats.callbacks_due,
-      to: "/call_assignments",
+      to: "/follow-ups",
     },
     {
       key: "not_answered",
-      label: translate("crm.dashboard.home.quick_not_answered", {
-        _: "Not answered",
+      label: translate("crm.dashboard.home.quick_not_connected", {
+        _: "Not connected",
       }),
       value: stats.stages.not_answered ?? 0,
-      to: leadsLink({ stage: ["not_answered"] }),
+      to: "/follow-ups",
     },
     {
-      key: "interested_month",
-      label: translate("crm.dashboard.home.quick_interested_month", {
-        _: "Interested this month",
+      key: "overdue_tasks",
+      label: translate("crm.dashboard.home.quick_overdue_tasks", {
+        _: "Overdue tasks",
       }),
-      value: thisMonth?.interested ?? 0,
-      to: leadsLink({ stage: ["interested"] }),
+      value: stats.overdue_tasks,
     },
-    stats.pending_brochures != null
-      ? {
-          key: "brochures",
-          label: translate("crm.dashboard.kpi.pending_brochures"),
-          value: stats.pending_brochures,
-          to: "/brochures",
-        }
-      : {
-          key: "overdue_tasks",
-          label: translate("crm.dashboard.home.quick_overdue_tasks", {
-            _: "Overdue tasks",
-          }),
-          value: stats.overdue_tasks,
-        },
+    ...(stats.pending_brochures != null
+      ? [
+          {
+            key: "brochures",
+            label: translate("crm.dashboard.kpi.pending_brochures"),
+            value: stats.pending_brochures,
+            to: "/brochures",
+          },
+        ]
+      : []),
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
-      {cards.map(({ key, ...card }) => (
-        <StatCard key={key} {...card} />
-      ))}
-    </div>
+    <section className="flex flex-col gap-2">
+      <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+        {translate("crm.dashboard.home.needs_action", { _: "Needs action" })}
+      </h2>
+      <div
+        className={
+          cards.length === 4
+            ? "grid grid-cols-2 gap-3 lg:grid-cols-4"
+            : "grid grid-cols-2 gap-3 lg:grid-cols-3"
+        }
+      >
+        {cards.map(({ key, ...card }) => (
+          <StatCard key={key} {...card} />
+        ))}
+      </div>
+    </section>
   );
 };

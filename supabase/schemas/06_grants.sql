@@ -242,3 +242,7 @@ revoke all on sequence public.sales_id_seq from anon;
 revoke all on sequence public.tags_id_seq from anon;
 revoke all on sequence public.tasks_id_seq from anon;
 revoke all on sequence public.import_batches_id_seq from anon;
+
+revoke all on function public.dashboard_stats() from public, anon;
+grant all on function public.dashboard_stats() to authenticated;
+grant all on function public.dashboard_stats() to service_role;

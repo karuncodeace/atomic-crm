@@ -41,6 +41,15 @@ export interface MonthStats {
   interested: number;
 }
 
+/** One day of calls (activity chart). */
+export interface DayStats {
+  /** YYYY-MM-DD in the call-engine timezone. */
+  day: string;
+  calls: number;
+  connected: number;
+  interested: number;
+}
+
 /**
  * Shape returned by the `dashboard_stats()` Postgres function (and by its
  * FakeRest twin below). "team" = admins and managers (everyone who calls),
@@ -62,6 +71,8 @@ export interface DashboardStats {
   };
   /** Last 6 months, oldest first. */
   months: MonthStats[];
+  /** Last 14 days, oldest first. */
+  days: DayStats[];
   /** Open leads per stage value. */
   stages: Record<string, number>;
   leads_total: number;
@@ -75,6 +86,7 @@ export interface DashboardStats {
 const BDE_TARGET = 25;
 const MANAGER_TARGET = 10;
 const MONTHS = 6;
+const DAYS = 14;
 
 const monthKey = (day: string) => `${day.slice(0, 7)}-01`;
 
@@ -84,6 +96,15 @@ const lastMonths = (today: string): string[] => {
     const date = new Date(Date.UTC(year, month - 1 - (MONTHS - 1 - index), 1));
     return date.toISOString().slice(0, 10);
   });
+};
+
+const lastDays = (today: string): string[] => {
+  const [year, month, day] = today.split("-").map(Number);
+  return Array.from({ length: DAYS }, (_, index) =>
+    new Date(Date.UTC(year, month - 1, day - (DAYS - 1 - index)))
+      .toISOString()
+      .slice(0, 10),
+  );
 };
 
 const getAll = async <T extends { id: Identifier }>(
@@ -198,6 +219,15 @@ export const computeDashboardStatsInMemory = async (
         connected: inMonth.filter(isConnected).length,
         interested: inMonth.filter((log) => log.outcome === "interested")
           .length,
+      };
+    }),
+    days: lastDays(today).map((day) => {
+      const onDay = scopedLogs.filter((log) => log.day === day);
+      return {
+        day,
+        calls: onDay.length,
+        connected: onDay.filter(isConnected).length,
+        interested: onDay.filter((log) => log.outcome === "interested").length,
       };
     }),
     stages: scopedDeals.reduce<Record<string, number>>((acc, deal) => {

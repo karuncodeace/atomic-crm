@@ -5,18 +5,22 @@ import { Button } from "@/components/ui/button";
 
 import { DashboardCard } from "./DashboardCard";
 import { DashboardHero } from "./DashboardHero";
-import { PerformancePanel } from "./PerformancePanel";
-import { QuickStats } from "./QuickStats";
+import { ActivityPanel } from "./ActivityPanel";
+import { NeedsAction } from "./NeedsAction";
+import { PipelinePanel } from "./PipelinePanel";
 import { SchedulePanel } from "./SchedulePanel";
-import { StatusPanel } from "./StatusPanel";
 import { TeamTable } from "./TeamTable";
 import { useDashboardStats } from "./useDashboardStats";
 
 /**
- * Five sections: hero (greeting, today's KPIs, target gauge); schedule on the
- * left running alongside performance + status charts and the five quick
- * stats; then the full-width team table. Every number comes from
- * dashboard_stats() (team scope for admins / managers, own scope for BDEs).
+ * Read top to bottom, one question per section:
+ * 1. Today (hero): calls made vs target, connected, interested, calls left.
+ * 2. Lead pipeline: where every open lead stands, by stage.
+ * 3. Schedule (callbacks / recently connected) beside the last 14 days of
+ *    call activity and what needs action next.
+ * 4. Team table: per-person numbers.
+ * Every number comes from dashboard_stats() (team scope for admins /
+ * managers, own scope for BDEs).
  */
 export const DashboardContent = () => {
   const translate = useTranslate();
@@ -50,18 +54,15 @@ export const DashboardContent = () => {
 
       <DashboardHero stats={stats} />
 
+      <PipelinePanel stats={stats} />
+
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-[21rem_minmax(0,1fr)]">
         <div className="relative">
           <SchedulePanel />
         </div>
         <div className="flex min-w-0 flex-col gap-5">
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-            <PerformancePanel stats={stats} />
-            <StatusPanel stats={stats} />
-          </div>
-          <div id="dashboard-metrics" className="scroll-mt-20">
-            <QuickStats stats={stats} />
-          </div>
+          <ActivityPanel stats={stats} />
+          <NeedsAction stats={stats} />
         </div>
       </div>
 
