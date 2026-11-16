@@ -33,6 +33,7 @@ import {
 import { getIsInitialized } from "./authProvider";
 import type { LeadImportResult, LeadImportRow } from "../../leads/leadImport";
 import { searchDealCategories } from "./searchDealCategories";
+import type { DashboardStats } from "../../dashboard/dashboardStats";
 import { getSupabaseClient } from "./supabase";
 
 const getBaseDataProvider = () =>
@@ -342,6 +343,14 @@ const getDataProviderWithCustomMethods = () => {
         throw new Error(error.message);
       }
       return data;
+    },
+    async getDashboardStats(): Promise<DashboardStats> {
+      const { data, error } = await getSupabaseClient().rpc("dashboard_stats");
+      if (error) {
+        console.error("dashboard_stats.error", error);
+        throw new Error(error.message);
+      }
+      return data as DashboardStats;
     },
     async recordCallOutcome(params: {
       assignmentId: Identifier;

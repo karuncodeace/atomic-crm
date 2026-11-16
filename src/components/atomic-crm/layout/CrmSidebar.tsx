@@ -1,42 +1,70 @@
 import type { ReactNode } from "react";
-import { ArrowUpRight } from "lucide-react";
-import { useCanAccess, useGetList, useTranslate } from "ra-core";
+import {
+  ArrowUpRight,
+  BarChart3,
+  Building2,
+  ChevronDown,
+  ChevronsUpDown,
+  Columns3,
+  Contact,
+  FileText,
+  Import,
+  LayoutGrid,
+  LogOut,
+  PhoneCall,
+  Settings,
+  User,
+  Users,
+  UsersRound,
+  type LucideIcon,
+} from "lucide-react";
+import {
+  useCanAccess,
+  useGetIdentity,
+  useGetList,
+  useLogout,
+  useStore,
+  useTranslate,
+} from "ra-core";
 import { Link, matchPath, useLocation } from "react-router";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 
-import { useConfigurationContext } from "../root/ConfigurationContext";
 import { AXICORE_APP } from "../axicore/axicore";
-import type { Brochure } from "../types";
+import { PersonAvatar } from "../dashboard/PersonAvatar";
 import {
-  BrochuresIcon,
-  DashboardIcon,
-  LeadsIcon,
-  type NavIcon,
-  SettingsIcon,
-  TasksIcon,
-  UsersIcon,
-} from "./NavIcons";
+  DEAL_VIEW_STORE_KEY,
+  type DealViewMode,
+} from "../deals/DealViewToggle";
+import { useConfigurationContext } from "../root/ConfigurationContext";
+import { GlobalSearchButton } from "../search/GlobalSearchButton";
+import type { Brochure } from "../types";
+
+/** Dashboard sections the Favorites links scroll to (ids set in the dashboard). */
+const DASHBOARD_SECTIONS = {
+  overview: "dashboard-overview",
+  metrics: "dashboard-metrics",
+  team: "dashboard-team",
+} as const;
 
 export const CrmSidebar = () => {
   const { darkModeLogo, lightModeLogo, title } = useConfigurationContext();
-  const translate = useTranslate();
-  const { canAccess: canSeeBrochures } = useCanAccess({
-    resource: "brochures",
-    action: "list",
-  });
 
   return (
     <Sidebar
@@ -44,10 +72,10 @@ export const CrmSidebar = () => {
       variant="sidebar"
       className="group-data-[side=left]:border-r-0"
     >
-      <SidebarHeader className="h-16 justify-center px-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
+      <SidebarHeader className="gap-3 px-4 pt-4 pb-2 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
         <Link
           to="/"
-          className="flex items-center gap-2 px-2 text-sidebar-foreground no-underline group-data-[collapsible=icon]:px-0"
+          className="flex h-8 items-center gap-2 text-sidebar-foreground no-underline"
         >
           <img
             className="[.light_&]:hidden h-6 shrink-0"
@@ -59,61 +87,325 @@ export const CrmSidebar = () => {
             src={lightModeLogo}
             alt={title}
           />
-          <span className="truncate text-lg font-semibold tracking-tight text-foreground group-data-[collapsible=icon]:hidden">
+          <span className="truncate text-base font-semibold tracking-tight text-foreground group-data-[collapsible=icon]:hidden">
             {title}
           </span>
         </Link>
+        <GlobalSearchButton variant="sidebar" />
       </SidebarHeader>
-      <SidebarContent className="px-1 group-data-[collapsible=icon]:px-0">
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu className="group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:rounded-2xl group-data-[collapsible=icon]:border group-data-[collapsible=icon]:border-sidebar-border group-data-[collapsible=icon]:bg-sidebar-accent/60 group-data-[collapsible=icon]:p-1.5">
-              <NavItem
-                to="/"
-                pattern="/"
-                icon={DashboardIcon}
-                label={translate("ra.page.dashboard")}
-              />
-              <NavItem
-                to="/deals"
-                pattern="/deals/*"
-                icon={LeadsIcon}
-                label={translate("resources.deals.name", { smart_count: 2 })}
-              />
-              <NavItem
-                to="/call_assignments"
-                pattern="/call_assignments/*"
-                icon={TasksIcon}
-                label={translate("resources.call_assignments.name", {
-                  smart_count: 2,
-                  _: "Tasks",
-                })}
-              />
-              {canSeeBrochures ? (
-                <NavItem
-                  to="/brochures"
-                  pattern="/brochures/*"
-                  icon={BrochuresIcon}
-                  label={translate("resources.brochures.name", {
-                    smart_count: 2,
-                  })}
-                  badge={<PendingBrochuresBadge />}
-                />
-              ) : null}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <AdminGroup />
+      <SidebarContent className="gap-5 px-4 py-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
+        <NavigationGrid />
+        <FavoritesSection />
+        <WorkspaceSection />
       </SidebarContent>
       <AxiCoreFooter />
+      <UserProfile />
       <SidebarRail />
     </Sidebar>
   );
 };
 
+// ---------------------------------------------------------------------------
+// Navigation grid: two columns of large rounded tiles (one column, icons only,
+// when the sidebar is collapsed).
+
+const NavigationGrid = () => {
+  const translate = useTranslate();
+  const location = useLocation();
+  const [viewMode, setViewMode] = useStore<DealViewMode>(
+    DEAL_VIEW_STORE_KEY,
+    "kanban",
+  );
+  const { canAccess: canSeeBrochures } = useCanAccess({
+    resource: "brochures",
+    action: "list",
+  });
+  const onDeals = !!matchPath("/deals/*", location.pathname);
+  const onDashboard = location.pathname === "/";
+
+  return (
+    <nav
+      aria-label={translate("crm.sidebar.navigation", { _: "Navigation" })}
+      className="grid grid-cols-2 gap-2 group-data-[collapsible=icon]:grid-cols-1"
+    >
+      <NavTile
+        to="/"
+        icon={LayoutGrid}
+        label={translate("ra.page.dashboard")}
+        isActive={
+          onDashboard && location.hash !== `#${DASHBOARD_SECTIONS.team}`
+        }
+      />
+      <NavTile
+        to="/deals"
+        icon={UsersRound}
+        label={translate("resources.deals.name", { smart_count: 2 })}
+        isActive={onDeals && viewMode !== "kanban"}
+        onClick={() => setViewMode("list")}
+      />
+      <NavTile
+        to="/deals"
+        icon={Columns3}
+        label={translate("crm.sidebar.pipeline", { _: "Pipeline" })}
+        isActive={onDeals && viewMode === "kanban"}
+        onClick={() => setViewMode("kanban")}
+      />
+      <NavTile
+        to="/call_assignments"
+        icon={PhoneCall}
+        label={translate("resources.call_assignments.name", {
+          smart_count: 2,
+          _: "Tasks",
+        })}
+        isActive={!!matchPath("/call_assignments/*", location.pathname)}
+      />
+      {canSeeBrochures ? (
+        <NavTile
+          to="/brochures"
+          icon={FileText}
+          label={translate("resources.brochures.name", { smart_count: 2 })}
+          isActive={!!matchPath("/brochures/*", location.pathname)}
+          badge={<PendingBrochuresBadge />}
+        />
+      ) : null}
+      <NavTile
+        to={`/#${DASHBOARD_SECTIONS.team}`}
+        icon={BarChart3}
+        label={translate("crm.sidebar.reports", { _: "Reports" })}
+        isActive={
+          onDashboard && location.hash === `#${DASHBOARD_SECTIONS.team}`
+        }
+      />
+    </nav>
+  );
+};
+
+const NavTile = ({
+  to,
+  icon: Icon,
+  label,
+  isActive,
+  onClick,
+  badge,
+}: {
+  to: string;
+  icon: LucideIcon;
+  label: string;
+  isActive: boolean;
+  onClick?: () => void;
+  badge?: ReactNode;
+}) => (
+  <Link
+    to={to}
+    onClick={onClick}
+    title={label}
+    aria-current={isActive ? "page" : undefined}
+    className={cn(
+      "relative flex h-[72px] flex-col items-center justify-center gap-1.5 rounded-xl px-2 text-center no-underline transition-colors outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+      "group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:rounded-lg",
+      isActive
+        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+        : "bg-sidebar-accent text-sidebar-accent-foreground hover:bg-card",
+    )}
+  >
+    <Icon className="size-5" strokeWidth={1.75} aria-hidden />
+    <span className="w-full truncate text-[11px] font-medium leading-tight group-data-[collapsible=icon]:sr-only">
+      {label}
+    </span>
+    {badge}
+  </Link>
+);
+
+/** Pending brochure count; shares its query with the brochures page. */
+const PendingBrochuresBadge = () => {
+  const { total } = useGetList<Brochure>("brochures", {
+    pagination: { page: 1, perPage: 1 },
+    sort: { field: "created_at", order: "DESC" },
+    filter: { status: "pending" },
+  });
+  if (!total) return null;
+  return (
+    <span className="absolute top-1.5 right-1.5 min-w-5 rounded-full bg-brand px-1.5 text-[10px] leading-5 font-semibold text-brand-foreground group-data-[collapsible=icon]:top-0 group-data-[collapsible=icon]:right-0 group-data-[collapsible=icon]:min-w-4 group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:leading-4">
+      {total > 99 ? "99+" : total}
+    </span>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Collapsible sections
+
+const SidebarSection = ({
+  id,
+  title,
+  children,
+}: {
+  id: string;
+  title: string;
+  children: ReactNode;
+}) => {
+  const [isOpen, setOpen] = useStore<boolean>(`sidebar.section.${id}`, true);
+  const contentId = `sidebar-section-${id}`;
+  return (
+    <div className="flex flex-col gap-1 group-data-[collapsible=icon]:hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-controls={contentId}
+        className="flex items-center justify-between rounded-md px-1 py-1 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase hover:text-foreground"
+      >
+        {title}
+        <ChevronDown
+          className={cn(
+            "size-3.5 transition-transform",
+            isOpen ? "rotate-0" : "-rotate-90",
+          )}
+          aria-hidden
+        />
+      </button>
+      {isOpen ? (
+        <ul id={contentId} className="flex flex-col gap-0.5">
+          {children}
+        </ul>
+      ) : null}
+    </div>
+  );
+};
+
+const FavoritesSection = () => {
+  const translate = useTranslate();
+  const items = [
+    {
+      id: DASHBOARD_SECTIONS.overview,
+      label: translate("crm.sidebar.sales_overview", { _: "Sales overview" }),
+    },
+    {
+      id: DASHBOARD_SECTIONS.team,
+      label: translate("crm.sidebar.team_performance", {
+        _: "Team performance",
+      }),
+    },
+    {
+      id: DASHBOARD_SECTIONS.metrics,
+      label: translate("crm.sidebar.key_metrics", { _: "Key metrics" }),
+    },
+  ];
+  return (
+    <SidebarSection
+      id="favorites"
+      title={translate("crm.sidebar.favorites", { _: "Favorites" })}
+    >
+      {items.map((item) => (
+        <li key={item.id}>
+          <Link
+            to={`/#${item.id}`}
+            className="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] text-sidebar-foreground no-underline transition-colors hover:bg-sidebar-accent hover:text-foreground"
+          >
+            <span
+              className="size-2 shrink-0 rounded-[3px] bg-brand"
+              aria-hidden
+            />
+            {item.label}
+          </Link>
+        </li>
+      ))}
+    </SidebarSection>
+  );
+};
+
+const WorkspaceSection = () => {
+  const translate = useTranslate();
+  const location = useLocation();
+  const items: {
+    to: string;
+    pattern: string;
+    icon: LucideIcon;
+    label: string;
+  }[] = [
+    {
+      to: "/contacts",
+      pattern: "/contacts/*",
+      icon: Contact,
+      label: translate("resources.contacts.name", { smart_count: 2 }),
+    },
+    {
+      to: "/companies",
+      pattern: "/companies/*",
+      icon: Building2,
+      label: translate("resources.companies.name", { smart_count: 2 }),
+    },
+    {
+      to: "/sales",
+      pattern: "/sales/*",
+      icon: Users,
+      label: translate("resources.sales.name", { smart_count: 2 }),
+    },
+    {
+      to: "/import",
+      pattern: "/import",
+      icon: Import,
+      label: translate("crm.sidebar.import", { _: "Import" }),
+    },
+    {
+      to: "/settings",
+      pattern: "/settings",
+      icon: Settings,
+      label: translate("crm.settings.title"),
+    },
+  ];
+  return (
+    <>
+      <SidebarSection
+        id="workspace"
+        title={translate("crm.sidebar.workspace", { _: "Workspace" })}
+      >
+        {items.map(({ to, pattern, icon: Icon, label }) => {
+          const isActive = !!matchPath(pattern, location.pathname);
+          return (
+            <li key={to}>
+              <Link
+                to={to}
+                aria-current={isActive ? "page" : undefined}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] no-underline transition-colors",
+                  isActive
+                    ? "bg-card font-medium text-foreground shadow-sm"
+                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground",
+                )}
+              >
+                <Icon className="size-4" strokeWidth={1.75} aria-hidden />
+                {label}
+              </Link>
+            </li>
+          );
+        })}
+      </SidebarSection>
+      {/* Collapsed sidebar: the same links as icons with tooltips. */}
+      <SidebarMenu className="hidden items-center gap-1 group-data-[collapsible=icon]:flex">
+        {items.map(({ to, pattern, icon: Icon, label }) => (
+          <SidebarMenuItem key={to}>
+            <SidebarMenuButton
+              tooltip={label}
+              isActive={!!matchPath(pattern, location.pathname)}
+              render={<Link to={to} />}
+              className="size-10! justify-center rounded-lg! p-0!"
+            >
+              <Icon strokeWidth={1.75} />
+              <span className="sr-only">{label}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+    </>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Footer: AxiCore tile and the signed-in user
+
 /**
- * AxiCore 2.0: Codeace's tools (SWOT pitch, brochure, proposal) and their settings, for admins and managers.
- * At the very bottom of the sidebar; it opens the tools as their own full page (a plain link).
+ * AxiCore 2.0: Codeace's tools (SWOT pitch, brochure, proposal) and their
+ * settings, for admins and managers. Opens the tools as their own full page.
  */
 const AxiCoreFooter = () => {
   const translate = useTranslate();
@@ -121,11 +413,11 @@ const AxiCoreFooter = () => {
   if (!canAccess) return null;
   const label = translate("crm.sidebar.axicore", { _: "AxiCore 2.0" });
   return (
-    <SidebarFooter className="p-0 gap-0">
+    <SidebarFooter className="gap-0 px-4 pb-0 group-data-[collapsible=icon]:px-0">
       <a
         href={AXICORE_APP}
         title={label}
-        className="axc-tile group/axc relative flex items-center gap-2.5 px-4 py-2.5 text-sidebar-foreground no-underline group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+        className="axc-tile group/axc relative flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sidebar-foreground no-underline group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
       >
         <span className="axc-mark relative grid size-8 shrink-0 place-items-center rounded-lg group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:rounded-xl">
           <svg
@@ -136,10 +428,10 @@ const AxiCoreFooter = () => {
             <path d="M15.4 0 2 18.2h8.1L7.6 32 22 12.6h-8.2L17.7 0Z" />
           </svg>
         </span>
-        <span className="grow min-w-0 group-data-[collapsible=icon]:hidden">
-          <span className="flex items-center gap-1.5 text-[13px] font-semibold leading-tight tracking-tight">
+        <span className="min-w-0 grow group-data-[collapsible=icon]:hidden">
+          <span className="flex items-center gap-1.5 text-[13px] leading-tight font-semibold tracking-tight">
             AxiCore
-            <span className="axc-chip rounded-full px-1.5 py-px text-[9px] font-semibold leading-none">
+            <span className="axc-chip rounded-full px-1.5 py-px text-[9px] leading-none font-semibold">
               2.0
             </span>
           </span>
@@ -155,85 +447,69 @@ const AxiCoreFooter = () => {
   );
 };
 
-const AdminGroup = () => {
+const ROLE_FALLBACK: Record<string, string> = {
+  admin: "Admin",
+  manager: "Manager",
+  bde: "BDE",
+};
+
+const UserProfile = () => {
   const translate = useTranslate();
-  return (
-    <SidebarGroup className="mt-auto">
-      <SidebarGroupLabel>{translate("crm.sidebar.admin")}</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu className="group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:gap-1 group-data-[collapsible=icon]:rounded-2xl group-data-[collapsible=icon]:border group-data-[collapsible=icon]:border-sidebar-border group-data-[collapsible=icon]:bg-sidebar-accent/60 group-data-[collapsible=icon]:p-1.5">
-          <NavItem
-            to="/sales"
-            pattern="/sales/*"
-            icon={UsersIcon}
-            label={translate("resources.sales.name", { smart_count: 2 })}
-          />
-          <NavItem
-            to="/settings"
-            pattern="/settings"
-            icon={SettingsIcon}
-            label={translate("crm.settings.title")}
-          />
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
-  );
-};
+  const logout = useLogout();
+  const { identity } = useGetIdentity();
+  if (!identity) return null;
+  const [firstName = "", ...rest] = (identity.fullName ?? "").split(" ");
+  const role = typeof identity.role === "string" ? identity.role : "";
 
-const NavItem = ({
-  to,
-  pattern,
-  icon: Icon,
-  label,
-  badge,
-}: {
-  to: string;
-  pattern: string;
-  icon: NavIcon;
-  label: string;
-  badge?: ReactNode;
-}) => {
-  const location = useLocation();
-  const isActive = !!matchPath(pattern, location.pathname);
   return (
-    <SidebarMenuItem>
-      {isActive ? (
-        <span
-          aria-hidden
-          className="absolute top-1/2 -left-3 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-foreground group-data-[collapsible=icon]:hidden"
-        />
-      ) : null}
-      <SidebarMenuButton
-        isActive={isActive}
-        tooltip={label}
-        render={<Link to={to} aria-current={isActive ? "page" : undefined} />}
-        className="nav-btn h-9 rounded-full px-3 font-medium data-active:font-semibold [&_svg]:size-[18px]! group-data-[collapsible=icon]:size-10! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:text-sidebar-accent-foreground/85 group-data-[collapsible=icon]:[&_svg]:size-[21px]! group-data-[collapsible=icon]:[&_svg]:stroke-[1.8] group-data-[collapsible=icon]:rounded-xl! group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:data-active:bg-sidebar-primary group-data-[collapsible=icon]:data-active:text-sidebar-primary-foreground group-data-[collapsible=icon]:data-active:shadow-sm"
-      >
-        <Icon />
-        <span className="group-data-[collapsible=icon]:hidden">{label}</span>
-      </SidebarMenuButton>
-      {badge}
-    </SidebarMenuItem>
-  );
-};
-
-/** Dark count bubble; shares its query with the brochures page so both stay in sync. */
-const PendingBrochuresBadge = () => {
-  const { total } = useGetList<Brochure>("brochures", {
-    pagination: { page: 1, perPage: 1 },
-    sort: { field: "created_at", order: "DESC" },
-    filter: { status: "pending" },
-  });
-  if (!total) return null;
-  return (
-    <>
-      <span
-        aria-hidden
-        className="pointer-events-none absolute top-1 right-1 hidden size-2.5 rounded-full bg-red-500 ring-2 ring-sidebar group-data-[collapsible=icon]:block"
-      />
-      <SidebarMenuBadge className="top-2! right-2 rounded-full bg-foreground px-1.5 text-background! peer-hover/menu-button:text-background">
-        {total > 99 ? "99+" : total}
-      </SidebarMenuBadge>
-    </>
+    <SidebarFooter className="p-3 group-data-[collapsible=icon]:items-center">
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <button
+              type="button"
+              className="flex w-full items-center gap-2.5 rounded-xl border border-sidebar-border bg-sidebar-accent p-2 text-left transition-colors outline-none hover:bg-card focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0"
+              aria-label={translate("crm.sidebar.account", { _: "Account" })}
+            />
+          }
+        >
+          <PersonAvatar
+            firstName={firstName}
+            lastName={rest.join(" ")}
+            avatar={identity.avatar ? { src: identity.avatar } : null}
+            className="size-8"
+          />
+          <span className="min-w-0 flex-1 group-data-[collapsible=icon]:hidden">
+            <span className="block truncate text-[13px] font-semibold text-foreground">
+              {identity.fullName}
+            </span>
+            <span className="block truncate text-[11px] text-muted-foreground">
+              {translate(`crm.sidebar.role_${role}`, {
+                _: ROLE_FALLBACK[role] ?? role,
+              })}
+            </span>
+          </span>
+          <ChevronsUpDown
+            className="size-4 shrink-0 text-muted-foreground group-data-[collapsible=icon]:hidden"
+            aria-hidden
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="top" align="start" className="w-56">
+          <DropdownMenuItem render={<Link to="/profile" />} className="gap-2">
+            <User className="size-4" aria-hidden />
+            {translate("crm.profile.title")}
+          </DropdownMenuItem>
+          <DropdownMenuItem render={<Link to="/settings" />} className="gap-2">
+            <Settings className="size-4" aria-hidden />
+            {translate("crm.settings.title")}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => logout()} className="gap-2">
+            <LogOut className="size-4" aria-hidden />
+            {translate("ra.auth.logout")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </SidebarFooter>
   );
 };

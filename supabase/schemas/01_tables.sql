@@ -337,3 +337,4 @@ create index call_assignments_contact_id_idx
     on public.call_assignments using btree (contact_id);
 create index call_logs_assignment_id_idx on public.call_logs using btree (assignment_id);
 create index call_logs_contact_id_idx on public.call_logs using btree (contact_id);
+create index call_logs_sales_id_created_at_idx on public.call_logs using btree (sales_id, created_at);

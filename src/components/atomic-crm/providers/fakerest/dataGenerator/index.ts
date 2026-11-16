@@ -1,3 +1,4 @@
+import { generateCallLogs } from "./callLogs";
 import { generateCompanies } from "./companies";
 import { generateContactNotes } from "./contactNotes";
 import { generateContacts } from "./contacts";
@@ -22,7 +23,7 @@ export default (): Db => {
   db.import_batches = [];
   db.brochures = [];
   db.call_assignments = [];
-  db.call_logs = [];
+  db.call_logs = generateCallLogs(db);
   db.configuration = [
     {
       id: 1,

@@ -2,7 +2,7 @@ import { useGetList, useTimeout } from "ra-core";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import type { Contact, ContactNote } from "../types";
-import { DashboardActivityLog } from "./DashboardActivityLog";
+import { DashboardContent } from "./Dashboard";
 import { DashboardStepper } from "./DashboardStepper";
 import { Welcome } from "./Welcome";
 import MobileHeader from "../layout/MobileHeader";
@@ -81,9 +81,9 @@ export const MobileDashboard = () => {
 
   return (
     <Wrapper>
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-1">
+      <div className="mt-1 flex flex-col gap-5">
         {import.meta.env.VITE_IS_DEMO === "true" ? <Welcome /> : null}
-        <DashboardActivityLog />
+        <DashboardContent />
       </div>
     </Wrapper>
   );

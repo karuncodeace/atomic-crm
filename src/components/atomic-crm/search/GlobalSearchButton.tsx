@@ -65,7 +65,8 @@ const SHORTCUT_LABEL =
 export const GlobalSearchButton = ({
   variant = "labelled",
 }: {
-  variant?: "labelled" | "icon";
+  /** "sidebar": a full-width field that turns into an icon when the sidebar collapses. */
+  variant?: "labelled" | "icon" | "sidebar";
 }) => {
   const translate = useTranslate();
   const [open, setOpen] = useState(false);
@@ -87,7 +88,24 @@ export const GlobalSearchButton = ({
 
   return (
     <>
-      {variant === "icon" ? (
+      {variant === "sidebar" ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label={translate("crm.search.title")}
+          aria-keyshortcuts="Control+K Meta+K"
+          title={translate("crm.search.title")}
+          className="flex h-10 w-full items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent px-3 text-sm text-muted-foreground transition-colors outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+        >
+          <Search className="size-4 shrink-0" aria-hidden />
+          <span className="flex-1 truncate text-left group-data-[collapsible=icon]:hidden">
+            {translate("crm.search.title")}
+          </span>
+          <kbd className="pointer-events-none rounded border border-sidebar-border bg-card px-1.5 font-sans text-[10px] font-medium group-data-[collapsible=icon]:hidden">
+            {SHORTCUT_LABEL}
+          </kbd>
+        </button>
+      ) : variant === "icon" ? (
         <Button
           variant="ghost"
           size="icon"

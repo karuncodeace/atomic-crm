@@ -15,7 +15,8 @@ import {
 import fakeRestDataProvider from "ra-data-fakerest";
 import { assignDailyCallsInMemory } from "../../calls/assignDailyCallsInMemory";
 import { recordCallOutcomeInMemory } from "../../calls/recordCallOutcomeInMemory";
-import type { CallOutcome } from "../../types";
+import { computeDashboardStatsInMemory } from "../../dashboard/dashboardStats";
+import type { CallOutcome, SalesRole } from "../../types";
 import { importLeadsInMemory } from "../../leads/importLeadsInMemory";
 import type { LeadImportResult, LeadImportRow } from "../../leads/leadImport";
 
@@ -266,6 +267,11 @@ export const createDataProvider = ({
       return importLeadsInMemory(dataProvider, fileName, rows, identity?.id);
     },
     assignDailyCalls: async () => assignDailyCallsInMemory(dataProvider),
+    getDashboardStats: async () =>
+      computeDashboardStatsInMemory(
+        dataProvider,
+        (await getIdentity()) as { id: Identifier; role?: SalesRole },
+      ),
     recordCallOutcome: async (params: {
       assignmentId: Identifier;
       outcome: string;

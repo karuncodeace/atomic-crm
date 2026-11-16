@@ -1,81 +1,73 @@
-import { useGetIdentity, useGetList, useTranslate } from "ra-core";
+import { useEffect } from "react";
+import { useTranslate } from "ra-core";
+import { useLocation } from "react-router";
+import { Button } from "@/components/ui/button";
 
-import type { Contact } from "../types";
-import { ClientsCard } from "./ClientsCard";
-import { DashboardActivityLog } from "./DashboardActivityLog";
-import { DashboardKpis } from "./DashboardKpis";
-import { DashboardPanel, DashboardPanelDrawer } from "./DashboardPanel";
-import { DealsChart } from "./DealsChart";
-import { HotContacts } from "./HotContacts";
-import { RecentNotesCard } from "./RecentNotesCard";
-import { Welcome } from "./Welcome";
+import { DashboardCard } from "./DashboardCard";
+import { DashboardHero } from "./DashboardHero";
+import { PerformancePanel } from "./PerformancePanel";
+import { QuickStats } from "./QuickStats";
+import { SchedulePanel } from "./SchedulePanel";
+import { StatusPanel } from "./StatusPanel";
+import { TeamTable } from "./TeamTable";
+import { useDashboardStats } from "./useDashboardStats";
 
-export const Dashboard = () => {
-  const { total: totalContact, isPending: isPendingContact } =
-    useGetList<Contact>("contacts", {
-      pagination: { page: 1, perPage: 1 },
-    });
-
-  const { total: totalDeal, isPending: isPendingDeal } = useGetList("deals", {
-    pagination: { page: 1, perPage: 1 },
-  });
-
-  const isPending = isPendingContact || isPendingDeal;
-
-  if (isPending) {
-    return null;
-  }
-
-  return (
-    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]">
-      <div className="flex min-w-0 flex-col gap-6">
-        <DashboardGreeting />
-        <DashboardKpis totalContacts={totalContact} totalDeals={totalDeal} />
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-          <div className="min-w-0 lg:col-span-7">
-            <RecentNotesCard />
-          </div>
-          <div className="min-w-0 lg:col-span-5">
-            <ClientsCard total={totalContact} />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-          <div className="flex flex-col gap-4 lg:col-span-5">
-            {import.meta.env.VITE_IS_DEMO === "true" ? <Welcome /> : null}
-            <HotContacts />
-          </div>
-          <div className="flex min-w-0 flex-col gap-6 lg:col-span-7">
-            {totalDeal ? <DealsChart /> : null}
-            <DashboardActivityLog />
-          </div>
-        </div>
-      </div>
-      <DashboardPanel />
-    </div>
-  );
-};
-
-const DashboardGreeting = () => {
-  const { identity } = useGetIdentity();
+/**
+ * Five sections: hero (greeting, today's KPIs, target gauge); schedule on the
+ * left running alongside performance + status charts and the five quick
+ * stats; then the full-width team table. Every number comes from
+ * dashboard_stats() (team scope for admins / managers, own scope for BDEs).
+ */
+export const DashboardContent = () => {
   const translate = useTranslate();
-  const firstName = identity?.fullName?.split(" ")[0] ?? "";
-  const today = new Date().toLocaleDateString(undefined, {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+  const { data: stats, error, refetch } = useDashboardStats();
+  const { hash } = useLocation();
+  const hasStats = !!stats;
+
+  // Sidebar Favorites / Reports link to "/#<section>": scroll there once the
+  // section has its real height (after the numbers load).
+  useEffect(() => {
+    if (!hash) return;
+    document
+      .getElementById(hash.slice(1))
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [hash, hasStats]);
 
   return (
-    <div className="flex flex-wrap items-end justify-between gap-3">
-      <div className="space-y-1">
-        <h1 className="text-xl font-semibold tracking-tight">
-          {firstName
-            ? translate("crm.dashboard.welcome_back", { name: firstName })
-            : translate("ra.page.dashboard")}
-        </h1>
-        <p className="text-sm text-muted-foreground">{today}</p>
+    <div className="flex flex-col gap-5">
+      {error ? (
+        <DashboardCard className="flex flex-wrap items-center justify-between gap-3 border-destructive/30">
+          <p className="text-sm text-destructive">
+            {translate("crm.dashboard.home.stats_error", {
+              _: "The dashboard numbers could not be loaded.",
+            })}
+          </p>
+          <Button variant="outline" size="sm" onClick={() => refetch()}>
+            {translate("crm.dashboard.home.retry", { _: "Try again" })}
+          </Button>
+        </DashboardCard>
+      ) : null}
+
+      <DashboardHero stats={stats} />
+
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[21rem_minmax(0,1fr)]">
+        <div className="relative">
+          <SchedulePanel />
+        </div>
+        <div className="flex min-w-0 flex-col gap-5">
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+            <PerformancePanel stats={stats} />
+            <StatusPanel stats={stats} />
+          </div>
+          <div id="dashboard-metrics" className="scroll-mt-20">
+            <QuickStats stats={stats} />
+          </div>
+        </div>
       </div>
-      <DashboardPanelDrawer />
+
+      <TeamTable stats={stats} />
     </div>
   );
 };
+
+export const Dashboard = () => <DashboardContent />;
