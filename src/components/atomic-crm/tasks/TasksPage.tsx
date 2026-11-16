@@ -2,6 +2,7 @@ import { useTranslate } from "ra-core";
 import { Card } from "@/components/ui/card";
 
 import { TopToolbar } from "../layout/TopToolbar";
+import { PageHeader } from "../misc/PageHeader";
 import { AddTask } from "./AddTask";
 import { TasksListContent } from "./TasksListContent";
 
@@ -10,14 +11,15 @@ export const TasksPage = () => {
   const translate = useTranslate();
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between gap-2">
-        <h1 className="text-xl font-semibold">
-          {translate("resources.tasks.name", { smart_count: 2 })}
-        </h1>
-        <TopToolbar>
-          <AddTask selectContact />
-        </TopToolbar>
-      </div>
+      <PageHeader
+        className="mb-0"
+        title={translate("resources.tasks.name", { smart_count: 2 })}
+        actions={
+          <TopToolbar>
+            <AddTask selectContact />
+          </TopToolbar>
+        }
+      />
       <Card className="p-4">
         <TasksListContent />
       </Card>

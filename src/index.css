@@ -53,6 +53,14 @@
   --color-kpi-blue: var(--kpi-blue);
   --color-kpi-lavender: var(--kpi-lavender);
   --color-kpi-foreground: var(--kpi-foreground);
+  --color-stage-new: var(--stage-new);
+  --color-stage-callback: var(--stage-callback);
+  --color-stage-not-answered: var(--stage-not-answered);
+  --color-stage-interested: var(--stage-interested);
+  --color-stage-not-interested: var(--stage-not-interested);
+  --shadow-card: var(--elevation-card);
+  --shadow-raised: var(--elevation-raised);
+  --shadow-float: var(--elevation-float);
 }
 
 :root {
@@ -61,9 +69,9 @@
   --canvas: #eae7e2;
   --panel: #f2efe8;
   --background: #f7f5ef;
-  --foreground: #292929;
+  --foreground: #1f1e1c;
   --card: #ffffff;
-  --card-foreground: #292929;
+  --card-foreground: #1f1e1c;
   --popover: #ffffff;
   --popover-foreground: #292929;
   --primary: #292929;
@@ -71,14 +79,14 @@
   --secondary: #f2efe8;
   --secondary-foreground: #292929;
   --muted: #f2efe8;
-  --muted-foreground: #858585;
+  --muted-foreground: #77746e;
   --accent: #f2efe8;
   --accent-foreground: #292929;
   --destructive: #de6666;
   --success: #269b70;
   --warning: #e6a23c;
-  --border: #e8e5df;
-  --input: #e8e5df;
+  --border: #e7e3db;
+  --input: #dedad1;
   --ring: #292929;
   --brand: #f5c842;
   --brand-foreground: #292929;
@@ -100,6 +108,19 @@
   --sidebar-accent-foreground: #292929;
   --sidebar-border: #dcd8d1;
   --sidebar-ring: #292929;
+  /* One colour per lead stage, shared by charts, badges and legends. */
+  --stage-new: #6f86dc;
+  --stage-callback: #f0bd2c;
+  --stage-not-answered: #e8924a;
+  --stage-interested: #2e9b74;
+  --stage-not-interested: #dc6a5d;
+  /* Elevation: hairline contact shadow + soft ambient shadow. */
+  --elevation-card:
+    0 1px 2px rgb(31 27 20 / 0.04), 0 4px 18px -8px rgb(31 27 20 / 0.1);
+  --elevation-raised:
+    0 1px 2px rgb(31 27 20 / 0.05), 0 12px 32px -12px rgb(31 27 20 / 0.18);
+  --elevation-float:
+    0 2px 6px rgb(31 27 20 / 0.08), 0 18px 40px -12px rgb(31 27 20 / 0.28);
   --avatar-0: oklch(0.85 0.08 240);
   --avatar-1: oklch(0.88 0.1 340);
   --avatar-2: oklch(0.85 0.07 180);
@@ -155,6 +176,17 @@
   --sidebar-accent-foreground: #f2f2f3;
   --sidebar-border: #ffffff14;
   --sidebar-ring: #f2f2f3;
+  --stage-new: #8399ee;
+  --stage-callback: #f2c544;
+  --stage-not-answered: #f0a261;
+  --stage-interested: #4fbf92;
+  --stage-not-interested: #ec7e72;
+  --elevation-card:
+    0 1px 2px rgb(0 0 0 / 0.3), 0 6px 20px -10px rgb(0 0 0 / 0.5);
+  --elevation-raised:
+    0 1px 2px rgb(0 0 0 / 0.35), 0 14px 34px -12px rgb(0 0 0 / 0.6);
+  --elevation-float:
+    0 2px 6px rgb(0 0 0 / 0.4), 0 20px 44px -12px rgb(0 0 0 / 0.7);
   --avatar-0: oklch(0.35 0.12 240);
   --avatar-1: oklch(0.38 0.14 340);
   --avatar-2: oklch(0.35 0.11 180);
@@ -220,6 +252,35 @@ input[type="time"] {
 
 body {
   font-family: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "cv11", "ss01", "ss03";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.011em;
+}
+
+/* Charts: entrance animations, switched off for reduced motion. */
+@keyframes chart-grow-y {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+.chart-grow-y {
+  transform-origin: bottom;
+  animation: chart-grow-y 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .chart-grow-y {
+    animation: none;
+  }
 }
 
 /* The mobile pull-to-refresh (see layout/PullToRefresh.tsx) owns the overscroll

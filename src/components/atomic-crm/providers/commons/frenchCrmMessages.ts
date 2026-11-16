@@ -505,6 +505,9 @@ export const frenchCrmMessages = {
     },
   },
   crm: {
+    calls: {
+      empty_title: "Votre liste d'appels est vide",
+    },
     followups: {
       title: "Relances",
       subtitle:
@@ -589,6 +592,12 @@ export const frenchCrmMessages = {
     },
     dashboard: {
       home: {
+        contacted_label: "Contactés",
+        contacted_hint: "%{count} sur %{total} prospects après Nouveau",
+        win_rate: "Taux de réussite",
+        win_rate_hint: "Intéressés parmi les prospects décidés",
+        in_follow_up: "En relance",
+        in_follow_up_hint: "Rappel + non joint",
         pipeline: "Parcours des prospects",
         pipeline_hint: "Où en est chaque prospect ouvert",
         contacted: "contactés",

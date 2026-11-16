@@ -480,6 +480,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/misc/PageHeader.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/misc/MobileBackButton.tsx",
           "type": "registry:component"
         },
@@ -784,10 +788,6 @@
           "type": "registry:component"
         },
         {
-          "path": "src/components/atomic-crm/dashboard/StatusPanel.tsx",
-          "type": "registry:component"
-        },
-        {
           "path": "src/components/atomic-crm/dashboard/SchedulePanel.tsx",
           "type": "registry:component"
         },
@@ -800,7 +800,7 @@
           "type": "registry:component"
         },
         {
-          "path": "src/components/atomic-crm/dashboard/QuickStats.tsx",
+          "path": "src/components/atomic-crm/dashboard/PipelinePanel.tsx",
           "type": "registry:component"
         },
         {
@@ -808,15 +808,11 @@
           "type": "registry:component"
         },
         {
-          "path": "src/components/atomic-crm/dashboard/PerformancePanel.tsx",
+          "path": "src/components/atomic-crm/dashboard/NeedsAction.tsx",
           "type": "registry:component"
         },
         {
           "path": "src/components/atomic-crm/dashboard/MobileDashboard.tsx",
-          "type": "registry:component"
-        },
-        {
-          "path": "src/components/atomic-crm/dashboard/LineChart.tsx",
           "type": "registry:component"
         },
         {
@@ -825,6 +821,10 @@
         },
         {
           "path": "src/components/atomic-crm/dashboard/HotContacts.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/DonutChart.tsx",
           "type": "registry:component"
         },
         {
@@ -869,6 +869,10 @@
         },
         {
           "path": "src/components/atomic-crm/dashboard/CircularGauge.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/ActivityPanel.tsx",
           "type": "registry:component"
         },
         {

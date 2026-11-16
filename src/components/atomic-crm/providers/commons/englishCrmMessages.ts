@@ -498,6 +498,9 @@ export const englishCrmMessages = {
     },
   },
   crm: {
+    calls: {
+      empty_title: "Your call list is empty",
+    },
     followups: {
       title: "Follow-ups",
       subtitle:
@@ -582,6 +585,12 @@ export const englishCrmMessages = {
     },
     dashboard: {
       home: {
+        contacted_label: "Contacted",
+        contacted_hint: "%{count} of %{total} leads past New",
+        win_rate: "Win rate",
+        win_rate_hint: "Interested out of decided leads",
+        in_follow_up: "In follow-up",
+        in_follow_up_hint: "Callback + not connected",
         pipeline: "Lead pipeline",
         pipeline_hint: "Where every open lead stands right now",
         contacted: "contacted",

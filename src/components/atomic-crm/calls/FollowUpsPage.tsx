@@ -7,7 +7,7 @@ import {
   useTranslate,
 } from "ra-core";
 import { Link } from "react-router";
-import { Phone } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Phone } from "lucide-react";
 import { ReferenceField } from "@/components/admin/reference-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import type { CrmDataProvider } from "../providers/types";
 import type { Contact, Deal, Sale, SalesRole } from "../types";
 import { CallOutcomeDialog, type OutcomeDeal } from "./CallOutcomeDialog";
 import { todayInCallTimezone } from "./callEngine";
+import { EmptyState, PageHeader } from "../misc/PageHeader";
 
 type FollowUpTab = "callback" | "not_answered";
 
@@ -47,16 +48,13 @@ export const FollowUpsPage = () => {
 
   return (
     <div className={cn("flex flex-col gap-4", isMobile && "px-3 pb-20")}>
-      <div>
-        <h1 className="text-xl font-semibold">
-          {translate("crm.followups.title", { _: "Follow-ups" })}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {translate("crm.followups.subtitle", {
-            _: "Leads to call again. They are not part of the daily call list.",
-          })}
-        </p>
-      </div>
+      <PageHeader
+        className="mb-1"
+        title={translate("crm.followups.title", { _: "Follow-ups" })}
+        description={translate("crm.followups.subtitle", {
+          _: "Leads to call again. They are not part of the daily call list.",
+        })}
+      />
 
       <Tabs value={tab} onValueChange={(value) => setTab(value as FollowUpTab)}>
         <TabsList>
@@ -80,17 +78,20 @@ export const FollowUpsPage = () => {
           ))}
         </div>
       ) : current.error ? (
-        <Card className="p-8 text-center text-sm text-destructive">
-          {translate("crm.followups.error", {
+        <EmptyState
+          tone="error"
+          icon={AlertTriangle}
+          title={translate("crm.followups.error", {
             _: "Could not load follow-ups.",
           })}
-        </Card>
+        />
       ) : current.data.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-muted-foreground">
-          {translate(`crm.followups.empty.${tab}`, {
+        <EmptyState
+          icon={CheckCircle2}
+          title={translate(`crm.followups.empty.${tab}`, {
             _: "Nothing to follow up here.",
           })}
-        </Card>
+        />
       ) : (
         <ul className="flex flex-col gap-3">
           {current.data.map((contact) => (
@@ -141,12 +142,24 @@ const FollowUpCard = ({
   };
 
   return (
-    <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+    <Card className="flex flex-col gap-4 p-4 transition-shadow hover:shadow-raised sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <span
+        className="hidden size-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-foreground sm:flex"
+        style={{
+          background:
+            contact.status === "callback"
+              ? "color-mix(in oklab, var(--stage-callback) 22%, transparent)"
+              : "color-mix(in oklab, var(--stage-not-answered) 22%, transparent)",
+        }}
+        aria-hidden
+      >
+        {initials(contact.company_name || name)}
+      </span>
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex flex-wrap items-center gap-2">
           <Link
             to={`/contacts/${contact.id}/show`}
-            className="font-medium hover:underline"
+            className="text-[15px] font-semibold hover:underline"
           >
             {contact.company_name || name}
           </Link>
@@ -270,3 +283,11 @@ const formatDay = (value: string) =>
   });
 
 FollowUpsPage.path = "/follow-ups";
+
+const initials = (value: string) =>
+  value
+    .split(/\s+/)
+    .filter((word) => /[\p{L}\p{N}]/u.test(word))
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? "")
+    .join("") || "—";

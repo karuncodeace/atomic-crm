@@ -21,6 +21,8 @@ import type { CallAssignment, Contact, SalesRole } from "../types";
 import { todayInCallTimezone } from "./callEngine";
 import { CallOutcomeDialog, type OutcomeDeal } from "./CallOutcomeDialog";
 import { ConnectedDate } from "../misc/ConnectedDate";
+import { EmptyState, PageHeader } from "../misc/PageHeader";
+import { PhoneCall } from "lucide-react";
 
 const quotaForRole = (role?: string) => (role === "manager" ? 10 : 25);
 
@@ -89,36 +91,39 @@ export const MyCallsPage = () => {
   if (!identity) return null;
 
   return (
-    <div className={cn("flex flex-col gap-4", isMobile && "px-3 pb-20")}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold">
-            {translate("resources.call_assignments.name", { smart_count: 2 })}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {translate("resources.call_assignments.progress", {
-              done: doneCount,
-              open: openCount,
-              quota,
-            })}
-          </p>
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          disabled={assigning}
-          onClick={handleAssign}
-        >
-          {assigning
-            ? translate("resources.call_assignments.assigning")
-            : translate("resources.call_assignments.assign_today")}
-        </Button>
-      </div>
+    <div className={cn("flex flex-col gap-3", isMobile && "px-3 pb-20")}>
+      <PageHeader
+        title={translate("resources.call_assignments.name", {
+          smart_count: 2,
+        })}
+        description={translate("resources.call_assignments.progress", {
+          done: doneCount,
+          open: openCount,
+          quota,
+        })}
+        actions={
+          <Button
+            type="button"
+            variant="outline"
+            disabled={assigning}
+            onClick={handleAssign}
+          >
+            {assigning
+              ? translate("resources.call_assignments.assigning")
+              : translate("resources.call_assignments.assign_today")}
+          </Button>
+        }
+      />
+      <DailyProgress done={doneCount} quota={quota} />
 
       {isPending ? null : openRows.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-muted-foreground">
-          {translate("resources.call_assignments.empty")}
-        </Card>
+        <EmptyState
+          icon={PhoneCall}
+          title={translate("crm.calls.empty_title", {
+            _: "Your call list is empty",
+          })}
+          description={translate("resources.call_assignments.empty")}
+        />
       ) : (
         <ul className="flex flex-col gap-3">
           {openRows.map((row) => (
@@ -142,9 +147,15 @@ const CallAssignmentCard = () => {
   if (!record) return null;
 
   return (
-    <Card className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="min-w-0 flex-1 space-y-1">
-        <div className="font-medium">
+    <Card className="flex flex-col gap-4 p-4 transition-shadow hover:shadow-raised sm:flex-row sm:items-center sm:justify-between sm:px-5">
+      <span
+        className="hidden size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft text-foreground sm:flex"
+        aria-hidden
+      >
+        <PhoneCall className="size-4" strokeWidth={1.75} />
+      </span>
+      <div className="min-w-0 flex-1 space-y-0.5">
+        <div className="text-[15px] font-semibold">
           <ReferenceField
             source="company_id"
             reference="companies"
@@ -246,5 +257,23 @@ const CompleteCallDialog = ({
         })
       }
     />
+  );
+};
+
+/** Today's calls against the daily target, as a slim progress bar. */
+const DailyProgress = ({ done, quota }: { done: number; quota: number }) => {
+  const share = quota > 0 ? Math.min(Math.round((done / quota) * 100), 100) : 0;
+  return (
+    <div className="mb-2 flex items-center gap-3">
+      <div className="h-2 flex-1 overflow-hidden rounded-full bg-secondary">
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-brand/70 to-brand transition-[width] duration-700 ease-out"
+          style={{ width: `${share}%` }}
+        />
+      </div>
+      <span className="text-xs font-medium text-muted-foreground tabular-nums">
+        {share}%
+      </span>
+    </div>
   );
 };
