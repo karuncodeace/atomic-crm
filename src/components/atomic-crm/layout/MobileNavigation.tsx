@@ -1,6 +1,12 @@
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { FileText, Handshake, Home, ListTodo } from "lucide-react";
+import {
+  FileText,
+  Handshake,
+  Home,
+  ListTodo,
+  PhoneForwarded,
+} from "lucide-react";
 import { useTranslate } from "ra-core";
 import { Link, matchPath, useLocation } from "react-router";
 
@@ -15,6 +21,8 @@ export const MobileNavigation = () => {
     currentPath = "/deals";
   } else if (matchPath("/call_assignments/*", location.pathname)) {
     currentPath = "/call_assignments";
+  } else if (matchPath("/follow-ups/*", location.pathname)) {
+    currentPath = "/follow-ups";
   } else if (matchPath("/brochures/*", location.pathname)) {
     currentPath = "/brochures";
   } else {
@@ -61,6 +69,12 @@ export const MobileNavigation = () => {
             _: "Tasks",
           })}
           isActive={currentPath === "/call_assignments"}
+        />
+        <NavigationButton
+          href="/follow-ups"
+          Icon={PhoneForwarded}
+          label={translate("crm.followups.title", { _: "Follow-ups" })}
+          isActive={currentPath === "/follow-ups"}
         />
         <NavigationButton
           href="/brochures"

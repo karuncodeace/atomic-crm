@@ -5,7 +5,6 @@ import { NumberField } from "@/components/admin/number-field";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { CompanyAvatar } from "../companies/CompanyAvatar";
-import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Deal } from "../types";
 export const DealCard = ({ deal, index }: { deal: Deal; index: number }) => {
   if (!deal) return null;
@@ -28,7 +27,6 @@ export const DealCardContent = ({
   snapshot?: any;
   deal: Deal;
 }) => {
-  const { currency } = useConfigurationContext();
   const redirect = useRedirect();
   const handleClick = () => {
     redirect(`/deals/${deal.id}/show`, undefined, undefined, undefined, {
@@ -76,9 +74,6 @@ export const DealCardContent = ({
                 source="amount"
                 options={{
                   notation: "compact",
-                  style: "currency",
-                  currency,
-                  currencyDisplay: "narrowSymbol",
                   minimumSignificantDigits: 3,
                 }}
               />

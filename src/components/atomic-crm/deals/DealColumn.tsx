@@ -17,7 +17,7 @@ export const DealColumn = ({
     (sum, deal) => sum + (Number(deal.amount) || 0),
     0,
   );
-  const { dealStages, currency } = useConfigurationContext();
+  const { dealStages } = useConfigurationContext();
   return (
     <div className="flex-1 pb-8">
       <div className="flex flex-col items-center">
@@ -27,9 +27,6 @@ export const DealColumn = ({
         <p className="text-sm text-muted-foreground">
           {totalAmount.toLocaleString("en-US", {
             notation: "compact",
-            style: "currency",
-            currency: currency || "USD",
-            currencyDisplay: "narrowSymbol",
             minimumSignificantDigits: 3,
           })}
         </p>

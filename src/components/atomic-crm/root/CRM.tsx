@@ -57,6 +57,7 @@ import { i18nProvider as defaulti18nProvider } from "../providers/commons/i18nPr
 import { StartPage } from "../login/StartPage.tsx";
 import { useIsMobile } from "@/hooks/use-mobile.ts";
 import { MyCallsPage } from "../calls/MyCallsPage.tsx";
+import { FollowUpsPage } from "../calls/FollowUpsPage.tsx";
 import { ContactListMobile } from "../contacts/ContactList.tsx";
 import { ContactShow } from "../contacts/ContactShow.tsx";
 import { CompanyShow } from "../companies/CompanyShow.tsx";
@@ -264,6 +265,7 @@ const DesktopAdmin = (
         <Route path={ImportPage.path} element={<ImportPage />} />
         <Route path={ChangelogPage.path} element={<ChangelogPage />} />
         <Route path={AxiCorePage.path} element={<AxiCorePage />} />
+        <Route path={FollowUpsPage.path} element={<FollowUpsPage />} />
       </CustomRoutes>
       <Resource name="deals" {...deals} />
       <Resource name="brochures" {...brochures} />
@@ -343,6 +345,7 @@ const MobileAdmin = (
           />
           <Route path={ChangelogPage.path} element={<ChangelogPage />} />
           <Route path={AxiCorePage.path} element={<AxiCorePage />} />
+          <Route path={FollowUpsPage.path} element={<FollowUpsPage />} />
         </CustomRoutes>
         <Resource
           name="contacts"

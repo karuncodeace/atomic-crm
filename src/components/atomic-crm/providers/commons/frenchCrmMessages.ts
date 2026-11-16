@@ -505,6 +505,27 @@ export const frenchCrmMessages = {
     },
   },
   crm: {
+    followups: {
+      title: "Relances",
+      subtitle:
+        "Prospects à rappeler. Ils ne font pas partie de la liste d'appels du jour.",
+      tabs: {
+        callback: "Rappel",
+        not_answered: "Non joint",
+      },
+      empty: {
+        callback: "Aucun rappel à faire.",
+        not_answered: "Aucun prospect non joint à relancer.",
+      },
+      error: "Impossible de charger les relances.",
+      attempts: "Tentatives : %{count}",
+      last_called: "Dernier appel le %{date}",
+      log_call: "Noter l'appel",
+      due_now: "À faire",
+      due_today: "Aujourd'hui",
+      due_on: "Le %{date}",
+      overdue: "En retard",
+    },
     action: {
       reset_password: "Réinitialiser le mot de passe",
     },
@@ -528,6 +549,8 @@ export const frenchCrmMessages = {
       welcome_title: "Bienvenue sur LEGO",
     },
     common: {
+      connected_at: "Joint le",
+      not_connected_yet: "Pas encore joint",
       account_manager: "Responsable de compte",
       not_assigned: "Non assigné",
       activity: "Activité",

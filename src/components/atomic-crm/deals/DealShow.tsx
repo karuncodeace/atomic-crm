@@ -158,7 +158,6 @@ const DealHeader = ({ record }: { record: Deal }) => {
 const DealDetails = ({ record }: { record: Deal }) => {
   const translate = useTranslate();
   const [locale = "en"] = useLocaleState();
-  const { currency } = useConfigurationContext();
 
   return (
     <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-8 gap-y-4">
@@ -166,9 +165,6 @@ const DealDetails = ({ record }: { record: Deal }) => {
         {typeof record.amount === "number"
           ? record.amount.toLocaleString("en-US", {
               notation: "compact",
-              style: "currency",
-              currency,
-              currencyDisplay: "narrowSymbol",
               minimumSignificantDigits: 3,
             })
           : "—"}

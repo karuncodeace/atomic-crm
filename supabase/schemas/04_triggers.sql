@@ -1,6 +1,6 @@
 
 
--- Keep the call engine's lead_stage equal to the visible stage
-create or replace trigger sync_contact_status_to_call_queue
-    after update of status on public.contacts
-    for each row execute function public.sync_contact_status_to_call_queue();
+-- Answered calls stamp the connected date on the contact and its lead
+create or replace trigger set_last_connected_at
+    after insert on public.call_logs
+    for each row execute function public.set_last_connected_at();

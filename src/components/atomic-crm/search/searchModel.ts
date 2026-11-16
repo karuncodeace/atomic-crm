@@ -1,4 +1,4 @@
-import { Building2, DollarSign, FileText, ListTodo, User } from "lucide-react";
+import { Building2, FileText, Handshake, ListTodo, User } from "lucide-react";
 import type { ComponentType } from "react";
 
 import type { SearchResourceName, SearchResult } from "../types";
@@ -167,7 +167,7 @@ export const SEARCH_RESOURCES: SearchResourceDescriptor[] = [
     icon: Building2,
     labelKey: "crm.search.groups.companies",
   },
-  { name: "deals", icon: DollarSign, labelKey: "crm.search.groups.deals" },
+  { name: "deals", icon: Handshake, labelKey: "crm.search.groups.deals" },
   { name: "tasks", icon: ListTodo, labelKey: "crm.search.groups.tasks" },
   {
     name: "contact_notes",

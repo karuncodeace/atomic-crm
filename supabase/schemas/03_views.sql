@@ -144,7 +144,8 @@ select
     co.import_batch_id,
     co.phone_e164,
     co.do_not_contact,
-    c.sector as company_sector
+    c.sector as company_sector,
+    co.last_connected_at
 from public.contacts co
     left join public.companies c on co.company_id = c.id;
 

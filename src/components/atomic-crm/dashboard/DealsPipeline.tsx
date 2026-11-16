@@ -1,4 +1,4 @@
-import { DollarSign } from "lucide-react";
+import { Handshake } from "lucide-react";
 import { useGetIdentity, useGetList, useTranslate } from "ra-core";
 import { Link } from "react-router";
 import { ReferenceField } from "@/components/admin/reference-field";
@@ -17,8 +17,7 @@ import type { Deal } from "../types";
 export const DealsPipeline = () => {
   const translate = useTranslate();
   const { identity } = useGetIdentity();
-  const { dealStages, dealPipelineStatuses, currency } =
-    useConfigurationContext();
+  const { dealStages, dealPipelineStatuses } = useConfigurationContext();
   const { data, total, isPending } = useGetList<Deal>(
     "deals",
     {
@@ -48,7 +47,7 @@ export const DealsPipeline = () => {
     <>
       <div className="flex items-center mb-4">
         <div className="ml-8 mr-8 flex">
-          <DollarSign className="text-muted-foreground w-6 h-6" />
+          <Handshake className="text-muted-foreground w-6 h-6" />
         </div>
         <Link
           className="text-xl font-semibold text-muted-foreground hover:underline"
@@ -68,9 +67,6 @@ export const DealsPipeline = () => {
           secondaryText={(deal) =>
             `${deal.amount.toLocaleString("en-US", {
               notation: "compact",
-              style: "currency",
-              currency,
-              currencyDisplay: "narrowSymbol",
               minimumSignificantDigits: 3,
             })} , ${findDealLabel(dealStages, deal.stage)}`
           }

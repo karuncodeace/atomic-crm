@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import {
   ArrowUpRight,
   BarChart3,
-  Building2,
   ChevronDown,
   ChevronsUpDown,
   Columns3,
@@ -12,6 +11,7 @@ import {
   LayoutGrid,
   LogOut,
   PhoneCall,
+  PhoneForwarded,
   Settings,
   User,
   Users,
@@ -158,6 +158,12 @@ const NavigationGrid = () => {
           _: "Tasks",
         })}
         isActive={!!matchPath("/call_assignments/*", location.pathname)}
+      />
+      <NavTile
+        to="/follow-ups"
+        icon={PhoneForwarded}
+        label={translate("crm.followups.title", { _: "Follow-ups" })}
+        isActive={!!matchPath("/follow-ups/*", location.pathname)}
       />
       {canSeeBrochures ? (
         <NavTile
@@ -327,12 +333,6 @@ const WorkspaceSection = () => {
       pattern: "/contacts/*",
       icon: Contact,
       label: translate("resources.contacts.name", { smart_count: 2 }),
-    },
-    {
-      to: "/companies",
-      pattern: "/companies/*",
-      icon: Building2,
-      label: translate("resources.companies.name", { smart_count: 2 }),
     },
     {
       to: "/sales",

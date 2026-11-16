@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import type { ComponentProps } from "react";
 
 import { Avatar } from "../contacts/Avatar";
+import { ConnectedDate } from "../misc/ConnectedDate";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import {
   COMPANY_CATEGORY_BADGE_CLASSES,
@@ -137,13 +138,11 @@ export const DealTableView = () => {
           </ReferenceField>
         </DataTable.Col>
         <DataTable.Col
-          source="created_at"
-          label={translate("resources.companies.fields.created_at", {
-            _: "Created",
-          })}
+          source="last_connected_at"
+          label={translate("crm.common.connected_at", { _: "Connected" })}
           className="hidden lg:table-cell whitespace-nowrap"
         >
-          <DealCreatedAtField />
+          <DealConnectedAtField />
         </DataTable.Col>
         <DataTable.Col label={false} className="w-12" disableSort>
           <div onClick={(event) => event.stopPropagation()}>
@@ -426,35 +425,11 @@ const SaleNameField = () => {
   );
 };
 
-/** Short date ("Oct 26"), including the year when it is not the current one. */
-const DealCreatedAtField = () => {
+/** When the lead last answered a call, in place of the created date. */
+const DealConnectedAtField = () => {
   const record = useRecordContext<Deal>();
-  if (!record?.created_at) return null;
-  const date = new Date(record.created_at);
-  const fullDate = date.toLocaleDateString("en-US", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-  if (date.getFullYear() === new Date().getFullYear()) {
-    const shortDate = date.toLocaleDateString("en-US", {
-      day: "numeric",
-      month: "short",
-    });
-    return (
-      <span
-        title={fullDate}
-        className="text-sm whitespace-nowrap text-muted-foreground"
-      >
-        {shortDate}
-      </span>
-    );
-  }
-  return (
-    <span className="text-sm whitespace-nowrap text-muted-foreground">
-      {fullDate}
-    </span>
-  );
+  if (!record) return null;
+  return <ConnectedDate value={record.last_connected_at} />;
 };
 
 const DealTableSkeleton = () => {

@@ -15,6 +15,7 @@ import {
 import fakeRestDataProvider from "ra-data-fakerest";
 import { assignDailyCallsInMemory } from "../../calls/assignDailyCallsInMemory";
 import { recordCallOutcomeInMemory } from "../../calls/recordCallOutcomeInMemory";
+import { todayInCallTimezone } from "../../calls/callEngine";
 import { computeDashboardStatsInMemory } from "../../dashboard/dashboardStats";
 import type { CallOutcome, SalesRole } from "../../types";
 import { importLeadsInMemory } from "../../leads/importLeadsInMemory";
@@ -272,6 +273,38 @@ export const createDataProvider = ({
         dataProvider,
         (await getIdentity()) as { id: Identifier; role?: SalesRole },
       ),
+    recordFollowupOutcome: async (params: {
+      contactId: Identifier;
+      outcome: string;
+      notes?: string | null;
+      nextAttemptAt?: string | null;
+    }) => {
+      // Same shape as the Postgres twin: open a call for today, then complete it.
+      const identity = await getIdentity();
+      const { data: contact } = await dataProvider.getOne("contacts", {
+        id: params.contactId,
+      });
+      const { data: assignment } = await dataProvider.create(
+        "call_assignments",
+        {
+          data: {
+            assignment_date: todayInCallTimezone(),
+            sales_id: identity?.id,
+            contact_id: params.contactId,
+            company_id: contact?.company_id ?? null,
+            deal_id: null,
+            status: "open",
+          },
+        },
+      );
+      return recordCallOutcomeInMemory(dataProvider, {
+        assignmentId: assignment.id,
+        outcome: params.outcome as CallOutcome,
+        notes: params.notes,
+        nextAttemptAt: params.nextAttemptAt,
+        salesId: identity?.id,
+      });
+    },
     recordCallOutcome: async (params: {
       assignmentId: Identifier;
       outcome: string;

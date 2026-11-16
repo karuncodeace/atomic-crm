@@ -113,6 +113,7 @@ export const generateContacts = (db: Db, size = 500): Required<Contact>[] => {
       last_attempt_at: null,
       next_attempt_at: null,
       last_outcome: null,
+      last_connected_at: null,
       recycled_at: null,
       recycle_reason: null,
       assigned_to: null,

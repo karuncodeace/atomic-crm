@@ -70,6 +70,8 @@ create table public.contacts (
     last_attempt_at timestamp with time zone,
     next_attempt_at timestamp with time zone,
     last_outcome text,
+    -- Last answered call (any outcome but no_answer), set from call_logs
+    last_connected_at timestamp with time zone,
     recycled_at timestamp with time zone,
     recycle_reason text,
     assigned_to bigint,
@@ -105,7 +107,9 @@ create table public.deals (
     archived_at timestamp with time zone,
     expected_closing_date date,
     sales_id bigint,
-    index smallint
+    index smallint,
+    -- Last answered call on one of its contacts, set from call_logs
+    last_connected_at timestamp with time zone
 );
 
 create table public.deal_notes (

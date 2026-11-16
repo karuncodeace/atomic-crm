@@ -49,7 +49,6 @@ export const DealCompanyView = () => {
 
 const CompanyDealGroup = ({ group }: { group: DealCompanyGroup }) => {
   const translate = useTranslate();
-  const { currency } = useConfigurationContext();
 
   return (
     <Card className="p-0 gap-0 overflow-hidden">
@@ -77,9 +76,6 @@ const CompanyDealGroup = ({ group }: { group: DealCompanyGroup }) => {
           ·{" "}
           {group.totalAmount.toLocaleString("en-US", {
             notation: "compact",
-            style: "currency",
-            currency,
-            currencyDisplay: "narrowSymbol",
           })}
         </span>
       </div>
@@ -93,7 +89,7 @@ const CompanyDealGroup = ({ group }: { group: DealCompanyGroup }) => {
 };
 
 const DealRow = ({ deal }: { deal: Deal }) => {
-  const { dealStages, currency } = useConfigurationContext();
+  const { dealStages } = useConfigurationContext();
   return (
     <li>
       <Link
@@ -110,9 +106,6 @@ const DealRow = ({ deal }: { deal: Deal }) => {
           {typeof deal.amount === "number"
             ? deal.amount.toLocaleString("en-US", {
                 notation: "compact",
-                style: "currency",
-                currency,
-                currencyDisplay: "narrowSymbol",
               })
             : "—"}
         </span>

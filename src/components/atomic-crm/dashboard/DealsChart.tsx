@@ -38,7 +38,7 @@ const DEFAULT_LOCALE = "en-US";
 
 export const DealsChart = memo(() => {
   const translate = useTranslate();
-  const { dealStages, currency } = useConfigurationContext();
+  const { dealStages } = useConfigurationContext();
   const acceptedLanguages = navigator
     ? navigator.languages || [navigator.language]
     : [DEFAULT_LOCALE];
@@ -132,10 +132,10 @@ export const DealsChart = memo(() => {
           tooltip={({ value, indexValue }) => (
             <div className="p-2 bg-popover rounded-xl ring-1 ring-border inline-flex items-center gap-1 text-popover-foreground">
               <strong>{indexValue}: </strong>&nbsp;{value > 0 ? "+" : ""}
-              {value.toLocaleString(acceptedLanguages.at(0) ?? DEFAULT_LOCALE, {
-                style: "currency",
-                currency,
-              })}
+              {value.toLocaleString(
+                acceptedLanguages.at(0) ?? DEFAULT_LOCALE,
+                {},
+              )}
             </div>
           )}
           axisTop={{

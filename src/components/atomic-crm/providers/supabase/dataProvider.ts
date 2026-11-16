@@ -352,6 +352,28 @@ const getDataProviderWithCustomMethods = () => {
       }
       return data as DashboardStats;
     },
+    /** A call made from the Follow-ups page: same outcome logic as a queue call. */
+    async recordFollowupOutcome(params: {
+      contactId: Identifier;
+      outcome: string;
+      notes?: string | null;
+      nextAttemptAt?: string | null;
+    }) {
+      const { data, error } = await getSupabaseClient().rpc(
+        "record_followup_outcome",
+        {
+          p_contact_id: params.contactId,
+          p_outcome: params.outcome,
+          p_notes: params.notes ?? null,
+          p_next_attempt_at: params.nextAttemptAt ?? null,
+        },
+      );
+      if (error) {
+        console.error("record_followup_outcome.error", error);
+        throw new Error(error.message);
+      }
+      return data;
+    },
     async recordCallOutcome(params: {
       assignmentId: Identifier;
       outcome: string;

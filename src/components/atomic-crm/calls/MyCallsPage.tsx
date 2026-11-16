@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
   RecordContextProvider,
   useDataProvider,
@@ -13,28 +13,14 @@ import { ReferenceField } from "@/components/admin/reference-field";
 import { TextField } from "@/components/admin/text-field";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 import type { CrmDataProvider } from "../providers/types";
-import type { CallAssignment, CallOutcome, Contact, SalesRole } from "../types";
-import { CALL_OUTCOMES, todayInCallTimezone } from "./callEngine";
-import { PackageChoices } from "../axicore/PackagePicker";
-import {
-  INTERESTED_STAGE,
-  savePackage,
-  sendPackageToAxiCore,
-  type WebsitePackage,
-} from "../axicore/packages";
+import type { CallAssignment, Contact, SalesRole } from "../types";
+import { todayInCallTimezone } from "./callEngine";
+import { CallOutcomeDialog, type OutcomeDeal } from "./CallOutcomeDialog";
+import { ConnectedDate } from "../misc/ConnectedDate";
 
 const quotaForRole = (role?: string) => (role === "manager" ? 10 : 25);
 
@@ -179,8 +165,21 @@ const CallAssignmentCard = () => {
           </ReferenceField>
         </div>
         <p className="text-xs text-muted-foreground">
-          {translate("resources.call_assignments.fields.assignment_date")}:{" "}
-          {record.assignment_date}
+          {translate("crm.common.connected_at", { _: "Connected" })}:{" "}
+          <ReferenceField
+            source="contact_id"
+            reference="contacts"
+            link={false}
+            empty="—"
+            render={({ referenceRecord }) => (
+              <ConnectedDate
+                value={
+                  (referenceRecord as Contact | undefined)?.last_connected_at
+                }
+                className="text-xs"
+              />
+            )}
+          />
         </p>
       </div>
       <Button type="button" onClick={() => setOpen(true)}>
@@ -219,140 +218,33 @@ const CompleteCallDialog = ({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) => {
-  const translate = useTranslate();
   const dataProvider = useDataProvider<CrmDataProvider>();
-  const notify = useNotify();
-  const refresh = useRefresh();
-  const [outcome, setOutcome] = useState<CallOutcome | null>(null);
-  const [notes, setNotes] = useState("");
-  const [callbackAt, setCallbackAt] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [pkg, setPkg] = useState<WebsitePackage | null>(null);
 
-  const needsDate = outcome === "callback";
-  const needsPackage = outcome === INTERESTED_STAGE;
-
-  const submit = async () => {
-    if (!outcome || !dataProvider.recordCallOutcome) return;
-    if (needsPackage && !pkg) return;
-    setSaving(true);
-    try {
-      // the package goes first, so AxiCore has it when the deal turns Interested
-      if (needsPackage && pkg) {
-        if (assignment.deal_id) {
-          const dealId = assignment.deal_id;
-          const deal = await dataProvider
-            .getOne("deals", { id: dealId })
-            .then((r) => r.data)
-            .catch(() => ({
-              id: dealId,
-              company_id: assignment.company_id,
-              categories: [],
-            }));
-          await savePackage(dataProvider, deal, pkg);
-        } else {
-          await sendPackageToAxiCore({ companyId: assignment.company_id, pkg });
-        }
-      }
-      await dataProvider.recordCallOutcome({
-        assignmentId: assignment.id,
-        outcome,
-        notes: notes.trim() || null,
-        nextAttemptAt:
-          needsDate && callbackAt
-            ? new Date(`${callbackAt}T10:00:00+05:30`).toISOString()
-            : null,
-      });
-      refresh();
-      onOpenChange(false);
-      notify(`resources.call_assignments.outcome.${outcome}`, {
-        type: "info",
-      });
-    } catch (error) {
-      console.error(error);
-      notify(
-        error instanceof Error ? error.message : "ra.notification.http_error",
-        { type: "error" },
-      );
-    } finally {
-      setSaving(false);
-    }
+  const getDeal = async (): Promise<OutcomeDeal | null> => {
+    if (!assignment.deal_id) return null;
+    const dealId = assignment.deal_id;
+    return dataProvider
+      .getOne("deals", { id: dealId })
+      .then((r) => r.data)
+      .catch(() => ({
+        id: dealId,
+        company_id: assignment.company_id,
+        categories: [],
+      }));
   };
 
-  const outcomeChoices = useMemo(() => CALL_OUTCOMES, []);
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {translate("resources.call_assignments.complete_title")}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="flex flex-col gap-3">
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {outcomeChoices.map(({ value }) => (
-              <Button
-                key={value}
-                type="button"
-                variant={outcome === value ? "default" : "outline"}
-                onClick={() => setOutcome(value)}
-              >
-                {translate(`resources.call_assignments.outcome.${value}`)}
-              </Button>
-            ))}
-          </div>
-          {needsPackage && (
-            <div className="space-y-1">
-              <Label>Which website does the client want?</Label>
-              <PackageChoices value={pkg} onChange={setPkg} />
-            </div>
-          )}
-          {needsDate && (
-            <div className="space-y-1">
-              <Label htmlFor="callback-at">
-                {translate("resources.call_assignments.fields.next_attempt_at")}
-              </Label>
-              <input
-                id="callback-at"
-                type="date"
-                value={callbackAt}
-                onChange={(event) => setCallbackAt(event.target.value)}
-                className="w-full rounded-md border bg-background px-3 py-2 text-sm"
-              />
-            </div>
-          )}
-          <div className="space-y-1">
-            <Label htmlFor="call-notes">
-              {translate("resources.call_assignments.fields.notes")}
-            </Label>
-            <Textarea
-              id="call-notes"
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              rows={3}
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
-            {translate("ra.action.cancel")}
-          </Button>
-          <Button
-            type="button"
-            disabled={!outcome || saving || (needsPackage && !pkg)}
-            onClick={submit}
-          >
-            {saving
-              ? translate("ra.message.loading", { _: "Saving…" })
-              : translate("resources.call_assignments.action.save_outcome")}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <CallOutcomeDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      companyId={assignment.company_id}
+      getDeal={getDeal}
+      onSave={(input) =>
+        dataProvider.recordCallOutcome({
+          assignmentId: assignment.id,
+          ...input,
+        })
+      }
+    />
   );
 };

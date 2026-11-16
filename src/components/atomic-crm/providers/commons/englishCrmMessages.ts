@@ -498,6 +498,27 @@ export const englishCrmMessages = {
     },
   },
   crm: {
+    followups: {
+      title: "Follow-ups",
+      subtitle:
+        "Leads to call again. They are not part of the daily call list.",
+      tabs: {
+        callback: "Callback",
+        not_answered: "Not connected",
+      },
+      empty: {
+        callback: "No callbacks to make.",
+        not_answered: "No unanswered leads to try again.",
+      },
+      error: "Could not load follow-ups.",
+      attempts: "Attempts: %{count}",
+      last_called: "Last called %{date}",
+      log_call: "Log call",
+      due_now: "Due now",
+      due_today: "Due today",
+      due_on: "Due %{date}",
+      overdue: "Overdue",
+    },
     action: {
       reset_password: "Reset Password",
     },
@@ -521,6 +542,8 @@ export const englishCrmMessages = {
       welcome_title: "Welcome to LEGO",
     },
     common: {
+      connected_at: "Connected",
+      not_connected_yet: "Not connected yet",
       account_manager: "Account manager",
       not_assigned: "Not assigned",
       activity: "Activity",

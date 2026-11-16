@@ -190,6 +190,8 @@ export type Contact = {
   last_attempt_at?: string | null;
   next_attempt_at?: string | null;
   last_outcome?: CallOutcome | null;
+  /** Last answered call (any outcome but no answer). */
+  last_connected_at?: string | null;
   recycled_at?: string | null;
   recycle_reason?: string | null;
   assigned_to?: Identifier | null;
@@ -223,6 +225,8 @@ export type Deal = {
   expected_closing_date: string;
   sales_id: Identifier;
   index: number;
+  /** Last answered call on one of its contacts. */
+  last_connected_at?: string | null;
 } & Pick<RaRecord, "id">;
 
 export type BrochureStatus = "pending" | "approved" | "not_approved";
