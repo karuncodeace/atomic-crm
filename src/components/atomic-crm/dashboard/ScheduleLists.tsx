@@ -5,8 +5,8 @@ import { ArrowUpRight, Phone } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
+import type { Contact, Sale } from "../types";
 import { useConfigurationContext } from "../root/ConfigurationContext";
-import type { CallAssignment, Contact, Sale, Task } from "../types";
 import { DashboardEmpty } from "./DashboardCard";
 import { PersonAvatar } from "./PersonAvatar";
 import type { ScheduleDay } from "./SchedulePanel";
@@ -173,136 +173,6 @@ const contactName = (contact?: Contact) =>
 
 const PER_PAGE = 100;
 
-/** Today: the open call queue (any day) plus calls finished today. Other days: that day's calls. */
-export const CallsList = ({ day }: { day: ScheduleDay }) => {
-  const translate = useTranslate();
-  const open = useGetList<CallAssignment>(
-    "call_assignments",
-    {
-      pagination: { page: 1, perPage: PER_PAGE },
-      sort: { field: "assignment_date", order: "ASC" },
-      filter: { status: "open" },
-    },
-    { enabled: day.isToday },
-  );
-  const ofDay = useGetList<CallAssignment>("call_assignments", {
-    pagination: { page: 1, perPage: PER_PAGE },
-    sort: { field: "id", order: "ASC" },
-    filter: day.isToday
-      ? { status: "done", assignment_date: day.date }
-      : { assignment_date: day.date },
-  });
-  const calls = [
-    ...(day.isToday ? (open.data ?? []) : []),
-    ...(ofDay.data ?? []),
-  ];
-  const { contactOf, saleOf } = useRelated(
-    calls.map((call) => call.contact_id),
-    calls.map((call) => call.sales_id),
-  );
-
-  return (
-    <ListState
-      isPending={(day.isToday && open.isPending) || ofDay.isPending}
-      error={open.error ?? ofDay.error}
-      count={calls.length}
-      empty={translate("crm.dashboard.home.no_calls", {
-        _: "No calls for this day.",
-      })}
-    >
-      {calls.map((call) => {
-        const contact = contactOf(call.contact_id);
-        const isDone = call.status === "done";
-        const carried = !isDone && call.assignment_date < day.date;
-        return (
-          <ActivityCard
-            key={call.id}
-            title={contactName(contact)}
-            related={contact?.company_name}
-            description={
-              carried
-                ? translate("crm.dashboard.home.carried_over", {
-                    _: "Carried over from %{date}",
-                    date: call.assignment_date,
-                  })
-                : undefined
-            }
-            time={isDone ? timeOf(call.done_at) : null}
-            channel={translate("crm.dashboard.home.channel_phone", {
-              _: "Phone call",
-            })}
-            owner={saleOf(call.sales_id)}
-            status={
-              isDone
-                ? translate("crm.dashboard.home.status_done", { _: "Done" })
-                : translate("crm.dashboard.home.status_open", { _: "To call" })
-            }
-            tone={isDone ? "done" : carried ? "late" : "open"}
-            to={`/contacts/${call.contact_id}/show`}
-          />
-        );
-      })}
-    </ListState>
-  );
-};
-
-/** Tasks due on the selected day. */
-export const TasksDueList = ({ day }: { day: ScheduleDay }) => {
-  const translate = useTranslate();
-  const { taskTypes } = useConfigurationContext();
-  const { data, isPending, error } = useGetList<Task>("tasks", {
-    pagination: { page: 1, perPage: PER_PAGE },
-    sort: { field: "due_date", order: "ASC" },
-    filter: { "due_date@gte": day.startIso, "due_date@lte": day.endIso },
-  });
-  const tasks = data ?? [];
-  const { contactOf, saleOf } = useRelated(
-    tasks.map((task) => task.contact_id),
-    tasks.map((task) => task.sales_id),
-  );
-
-  return (
-    <ListState
-      isPending={isPending}
-      error={error}
-      count={tasks.length}
-      empty={translate("crm.dashboard.panel.empty_day")}
-    >
-      {tasks.map((task) => {
-        const contact = contactOf(task.contact_id);
-        const isDone = !!task.done_date;
-        const isLate = !isDone && new Date(task.due_date) < new Date();
-        const type = taskTypes.find((t) => t.value === task.type)?.label;
-        return (
-          <ActivityCard
-            key={task.id}
-            title={task.text || type || "—"}
-            related={[contactName(contact), contact?.company_name]
-              .filter(Boolean)
-              .join(" · ")}
-            time={timeOf(task.due_date)}
-            channel={
-              type ?? translate("resources.tasks.name", { smart_count: 1 })
-            }
-            owner={saleOf(task.sales_id)}
-            status={
-              isDone
-                ? translate("crm.dashboard.home.status_done", { _: "Done" })
-                : isLate
-                  ? translate("crm.dashboard.home.status_late", {
-                      _: "Overdue",
-                    })
-                  : translate("crm.dashboard.home.status_due", { _: "Due" })
-            }
-            tone={isDone ? "done" : isLate ? "late" : "open"}
-            to={`/contacts/${task.contact_id}/show?tab=tasks`}
-          />
-        );
-      })}
-    </ListState>
-  );
-};
-
 /** Leads on Callback whose callback falls on the day (today also shows overdue ones). */
 export const CallbacksList = ({ day }: { day: ScheduleDay }) => {
   const translate = useTranslate();
@@ -364,6 +234,55 @@ export const CallbacksList = ({ day }: { day: ScheduleDay }) => {
           />
         );
       })}
+    </ListState>
+  );
+};
+
+/** Leads that answered a call on the day (newest first), with their stage. */
+export const RecentConnectedList = ({ day }: { day: ScheduleDay }) => {
+  const translate = useTranslate();
+  const { noteStatuses } = useConfigurationContext();
+  const { data, isPending, error } = useGetList<Contact>("contacts", {
+    pagination: { page: 1, perPage: PER_PAGE },
+    sort: { field: "last_connected_at", order: "DESC" },
+    filter: {
+      "last_connected_at@gte": day.startIso,
+      "last_connected_at@lte": day.endIso,
+    },
+  });
+  const contacts = data ?? [];
+  const { saleOf } = useRelated(
+    [],
+    contacts.map((contact) => contact.assigned_to),
+  );
+
+  return (
+    <ListState
+      isPending={isPending}
+      error={error}
+      count={contacts.length}
+      empty={translate("crm.dashboard.home.no_recent", {
+        _: "No leads connected on this day.",
+      })}
+    >
+      {contacts.map((contact) => (
+        <ActivityCard
+          key={contact.id}
+          title={contactName(contact)}
+          related={contact.company_name}
+          time={timeOf(contact.last_connected_at)}
+          channel={translate("crm.dashboard.home.channel_phone", {
+            _: "Phone call",
+          })}
+          owner={saleOf(contact.assigned_to)}
+          status={
+            noteStatuses.find((status) => status.value === contact.status)
+              ?.label ?? contact.status
+          }
+          tone={contact.status === "interested" ? "done" : "open"}
+          to={`/contacts/${contact.id}/show`}
+        />
+      ))}
     </ListState>
   );
 };

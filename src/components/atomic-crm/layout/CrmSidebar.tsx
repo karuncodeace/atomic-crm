@@ -1,10 +1,8 @@
 import type { ReactNode } from "react";
 import {
   ArrowUpRight,
-  BarChart3,
   ChevronDown,
   ChevronsUpDown,
-  Columns3,
   Contact,
   FileText,
   Import,
@@ -48,20 +46,9 @@ import { cn } from "@/lib/utils";
 
 import { AXICORE_APP } from "../axicore/axicore";
 import { PersonAvatar } from "../dashboard/PersonAvatar";
-import {
-  DEAL_VIEW_STORE_KEY,
-  type DealViewMode,
-} from "../deals/DealViewToggle";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import { GlobalSearchButton } from "../search/GlobalSearchButton";
 import type { Brochure } from "../types";
-
-/** Dashboard sections the Favorites links scroll to (ids set in the dashboard). */
-const DASHBOARD_SECTIONS = {
-  overview: "dashboard-overview",
-  metrics: "dashboard-metrics",
-  team: "dashboard-team",
-} as const;
 
 export const CrmSidebar = () => {
   const { darkModeLogo, lightModeLogo, title } = useConfigurationContext();
@@ -95,7 +82,6 @@ export const CrmSidebar = () => {
       </SidebarHeader>
       <SidebarContent className="gap-5 px-4 py-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-0">
         <NavigationGrid />
-        <FavoritesSection />
         <WorkspaceSection />
       </SidebarContent>
       <AxiCoreFooter />
@@ -112,10 +98,6 @@ export const CrmSidebar = () => {
 const NavigationGrid = () => {
   const translate = useTranslate();
   const location = useLocation();
-  const [viewMode, setViewMode] = useStore<DealViewMode>(
-    DEAL_VIEW_STORE_KEY,
-    "kanban",
-  );
   const { canAccess: canSeeBrochures } = useCanAccess({
     resource: "brochures",
     action: "list",
@@ -132,23 +114,13 @@ const NavigationGrid = () => {
         to="/"
         icon={LayoutGrid}
         label={translate("ra.page.dashboard")}
-        isActive={
-          onDashboard && location.hash !== `#${DASHBOARD_SECTIONS.team}`
-        }
+        isActive={onDashboard}
       />
       <NavTile
         to="/deals"
         icon={UsersRound}
         label={translate("resources.deals.name", { smart_count: 2 })}
-        isActive={onDeals && viewMode !== "kanban"}
-        onClick={() => setViewMode("list")}
-      />
-      <NavTile
-        to="/deals"
-        icon={Columns3}
-        label={translate("crm.sidebar.pipeline", { _: "Pipeline" })}
-        isActive={onDeals && viewMode === "kanban"}
-        onClick={() => setViewMode("kanban")}
+        isActive={onDeals}
       />
       <NavTile
         to="/call_assignments"
@@ -174,14 +146,6 @@ const NavigationGrid = () => {
           badge={<PendingBrochuresBadge />}
         />
       ) : null}
-      <NavTile
-        to={`/#${DASHBOARD_SECTIONS.team}`}
-        icon={BarChart3}
-        label={translate("crm.sidebar.reports", { _: "Reports" })}
-        isActive={
-          onDashboard && location.hash === `#${DASHBOARD_SECTIONS.team}`
-        }
-      />
     </nav>
   );
 };
@@ -275,47 +239,6 @@ const SidebarSection = ({
         </ul>
       ) : null}
     </div>
-  );
-};
-
-const FavoritesSection = () => {
-  const translate = useTranslate();
-  const items = [
-    {
-      id: DASHBOARD_SECTIONS.overview,
-      label: translate("crm.sidebar.sales_overview", { _: "Sales overview" }),
-    },
-    {
-      id: DASHBOARD_SECTIONS.team,
-      label: translate("crm.sidebar.team_performance", {
-        _: "Team performance",
-      }),
-    },
-    {
-      id: DASHBOARD_SECTIONS.metrics,
-      label: translate("crm.sidebar.key_metrics", { _: "Key metrics" }),
-    },
-  ];
-  return (
-    <SidebarSection
-      id="favorites"
-      title={translate("crm.sidebar.favorites", { _: "Favorites" })}
-    >
-      {items.map((item) => (
-        <li key={item.id}>
-          <Link
-            to={`/#${item.id}`}
-            className="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] text-sidebar-foreground no-underline transition-colors hover:bg-sidebar-accent hover:text-foreground"
-          >
-            <span
-              className="size-2 shrink-0 rounded-[3px] bg-brand"
-              aria-hidden
-            />
-            {item.label}
-          </Link>
-        </li>
-      ))}
-    </SidebarSection>
   );
 };
 

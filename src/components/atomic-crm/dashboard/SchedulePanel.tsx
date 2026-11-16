@@ -14,9 +14,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { DashboardCard, DashboardCardTitle } from "./DashboardCard";
 import { SCHEDULE_ANCHOR } from "./DashboardHero";
-import { CallbacksList, CallsList, TasksDueList } from "./ScheduleLists";
+import { CallbacksList, RecentConnectedList } from "./ScheduleLists";
 
-type ScheduleTab = "calls" | "tasks" | "callbacks";
+type ScheduleTab = "callbacks" | "recent";
 
 export interface ScheduleDay {
   /** YYYY-MM-DD (local), the call queue's assignment date format. */
@@ -33,11 +33,11 @@ const toScheduleDay = (day: Date): ScheduleDay => ({
   isToday: isToday(day),
 });
 
-/** Left column: the selected day's calls, tasks and scheduled callbacks. */
+/** Left column: the selected day's callbacks and recently connected leads. */
 export const SchedulePanel = () => {
   const translate = useTranslate();
   const [day, setDay] = useState(() => startOfDay(new Date()));
-  const [tab, setTab] = useState<ScheduleTab>("calls");
+  const [tab, setTab] = useState<ScheduleTab>("callbacks");
   const dateInputRef = useRef<HTMLInputElement>(null);
   const scheduleDay = toScheduleDay(day);
 
@@ -139,25 +139,19 @@ export const SchedulePanel = () => {
         className="flex min-h-0 flex-1 flex-col gap-3"
       >
         <TabsList className="w-full">
-          <TabsTrigger value="calls">
-            {translate("crm.dashboard.home.tab_calls", { _: "Calls" })}
-          </TabsTrigger>
-          <TabsTrigger value="tasks">
-            {translate("resources.tasks.name", { smart_count: 2 })}
-          </TabsTrigger>
           <TabsTrigger value="callbacks">
-            {translate("crm.dashboard.home.tab_callbacks", { _: "Callbacks" })}
+            {translate("crm.dashboard.home.tab_callbacks", { _: "Callback" })}
+          </TabsTrigger>
+          <TabsTrigger value="recent">
+            {translate("crm.dashboard.home.tab_recent", { _: "Recent" })}
           </TabsTrigger>
         </TabsList>
         <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1 pb-1">
-          <TabsContent value="calls">
-            <CallsList day={scheduleDay} />
-          </TabsContent>
-          <TabsContent value="tasks">
-            <TasksDueList day={scheduleDay} />
-          </TabsContent>
           <TabsContent value="callbacks">
             <CallbacksList day={scheduleDay} />
+          </TabsContent>
+          <TabsContent value="recent">
+            <RecentConnectedList day={scheduleDay} />
           </TabsContent>
         </div>
       </Tabs>

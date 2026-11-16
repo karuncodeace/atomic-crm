@@ -512,6 +512,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/misc/ConnectedDate.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/misc/ChangelogPage.tsx",
           "type": "registry:component"
         },
@@ -1060,6 +1064,14 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/calls/FollowUpsPage.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/calls/CallOutcomeDialog.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/brochures/index.ts",
           "type": "registry:component"
         },
@@ -1097,6 +1109,14 @@
         },
         {
           "path": "src/components/atomic-crm/axicore/PackagePicker.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/axicore/MakeProposal.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/axicore/DocProgress.tsx",
           "type": "registry:component"
         },
         {
