@@ -291,7 +291,7 @@ const DealsIterator = () => {
                   {findDealLabel(dealStages, deal.stage)},{" "}
                   {deal.amount.toLocaleString("en-US", {
                     notation: "compact",
-                    minimumSignificantDigits: 3,
+                    maximumFractionDigits: 1,
                   })}
                   {deal.categories?.length
                     ? `, ${formatDealCategories(dealCategories, deal.categories)}`

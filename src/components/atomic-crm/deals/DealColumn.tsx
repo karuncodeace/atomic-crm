@@ -27,7 +27,7 @@ export const DealColumn = ({
         <p className="text-sm text-muted-foreground">
           {totalAmount.toLocaleString("en-US", {
             notation: "compact",
-            minimumSignificantDigits: 3,
+            maximumFractionDigits: 1,
           })}
         </p>
       </div>

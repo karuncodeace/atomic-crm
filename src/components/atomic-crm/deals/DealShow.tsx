@@ -165,7 +165,7 @@ const DealDetails = ({ record }: { record: Deal }) => {
         {typeof record.amount === "number"
           ? record.amount.toLocaleString("en-US", {
               notation: "compact",
-              minimumSignificantDigits: 3,
+              maximumFractionDigits: 1,
             })
           : "—"}
       </DealField>

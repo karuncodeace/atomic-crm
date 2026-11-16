@@ -432,7 +432,7 @@ const DealConnectedAtField = () => {
   return <ConnectedDate value={record.last_connected_at} />;
 };
 
-const DealTableSkeleton = () => {
+export const DealTableSkeleton = () => {
   const row: ComponentProps<typeof Skeleton> = { className: "h-6 w-full" };
   return (
     <div className="flex flex-col gap-2 rounded-md border p-4">

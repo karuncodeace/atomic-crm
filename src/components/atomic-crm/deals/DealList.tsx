@@ -20,7 +20,8 @@ import { DealCreate } from "./DealCreate";
 import { DealEdit } from "./DealEdit";
 import { DealEmpty } from "./DealEmpty";
 import { DealListContent } from "./DealListContent";
-import { DealTableView } from "./DealTableView";
+import { DealTableSkeleton, DealTableView } from "./DealTableView";
+import { DealBoardSkeleton } from "./DealBoardSkeleton";
 import { DealCompanyView } from "./DealCompanyView";
 import {
   DealViewToggle,
@@ -71,7 +72,9 @@ const DealLayout = () => {
   const [viewMode] = useStore<DealViewMode>(DEAL_VIEW_STORE_KEY, "kanban");
   const hasFilters = filterValues && Object.keys(filterValues).length > 0;
 
-  if (isPending) return null;
+  if (isPending) {
+    return viewMode === "list" ? <DealTableSkeleton /> : <DealBoardSkeleton />;
+  }
   if (!data?.length && !hasFilters)
     return (
       <>

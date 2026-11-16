@@ -7,6 +7,7 @@ import {
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import type { Deal } from "../types";
 import { DealCardContent } from "./DealCard";
@@ -16,16 +17,23 @@ export const DealArchivedList = () => {
   const translate = useTranslate();
   const [locale = "en"] = useLocaleState();
   const { identity } = useGetIdentity();
-  const {
-    data: archivedLists,
-    total,
-    isPending,
-  } = useGetList("deals", {
-    pagination: { page: 1, perPage: 1000 },
+  const [openDialog, setOpenDialog] = useState(false);
+  // Only the count is needed to show the button: one row, not every archived
+  // lead. The full list loads when the dialog opens.
+  const { total, isPending } = useGetList("deals", {
+    pagination: { page: 1, perPage: 1 },
     sort: { field: "archived_at", order: "DESC" },
     filter: { "archived_at@not.is": null },
   });
-  const [openDialog, setOpenDialog] = useState(false);
+  const { data: archivedLists } = useGetList(
+    "deals",
+    {
+      pagination: { page: 1, perPage: 1000 },
+      sort: { field: "archived_at", order: "DESC" },
+      filter: { "archived_at@not.is": null },
+    },
+    { enabled: openDialog },
+  );
 
   useEffect(() => {
     if (!isPending && total === 0) {
@@ -33,14 +41,12 @@ export const DealArchivedList = () => {
     }
   }, [isPending, total]);
 
-  useEffect(() => {
-    setOpenDialog(false);
-  }, [archivedLists]);
-
-  if (!identity || isPending || !total || !archivedLists) return null;
+  if (!identity || isPending || !total) return null;
 
   // Group archived lists by date
-  const archivedListsByDate: { [date: string]: Deal[] } = archivedLists.reduce(
+  const archivedListsByDate: { [date: string]: Deal[] } = (
+    archivedLists ?? []
+  ).reduce(
     (acc, deal) => {
       const date = new Date(deal.archived_at).toDateString();
       if (!acc[date]) {
@@ -67,6 +73,13 @@ export const DealArchivedList = () => {
             {translate("resources.deals.archived.list_title")}
           </DialogTitle>
           <div className="flex flex-col gap-8">
+            {!archivedLists ? (
+              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3">
+                {Array.from({ length: 6 }, (_, i) => (
+                  <Skeleton key={i} className="h-24 rounded-2xl" />
+                ))}
+              </div>
+            ) : null}
             {Object.entries(archivedListsByDate).map(([date, deals]) => (
               <div key={date} className="flex flex-col gap-4">
                 <h4 className="font-bold">

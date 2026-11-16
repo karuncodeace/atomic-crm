@@ -700,6 +700,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/deals/DealBoardSkeleton.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/deals/DealArchivedList.tsx",
           "type": "registry:component"
         },
@@ -777,6 +781,10 @@
         },
         {
           "path": "src/components/atomic-crm/dashboard/WeekAgenda.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/TodayOutcomes.tsx",
           "type": "registry:component"
         },
         {

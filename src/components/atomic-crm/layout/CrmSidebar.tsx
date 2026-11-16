@@ -171,15 +171,25 @@ const NavTile = ({
     title={label}
     aria-current={isActive ? "page" : undefined}
     className={cn(
-      "relative flex h-[72px] flex-col items-center justify-center gap-1.5 rounded-xl px-2 text-center no-underline transition-colors outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
-      "group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:rounded-lg",
+      "group/tile relative flex h-[78px] flex-col items-center justify-center gap-2 rounded-2xl border px-2 text-center no-underline transition-[background-color,box-shadow,transform] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+      "group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:rounded-xl group-data-[collapsible=icon]:border-0",
       isActive
-        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-        : "bg-sidebar-accent text-sidebar-accent-foreground hover:bg-card",
+        ? "border-transparent bg-gradient-to-b from-sidebar-primary/90 to-sidebar-primary text-sidebar-primary-foreground shadow-raised"
+        : "border-sidebar-border/70 bg-card text-foreground shadow-card hover:-translate-y-px hover:shadow-raised",
     )}
   >
-    <Icon className="size-5" strokeWidth={1.75} aria-hidden />
-    <span className="w-full truncate text-[11px] font-medium leading-tight group-data-[collapsible=icon]:sr-only">
+    <span
+      className={cn(
+        "flex size-8 items-center justify-center rounded-lg transition-colors group-data-[collapsible=icon]:size-auto group-data-[collapsible=icon]:bg-transparent",
+        isActive
+          ? "bg-brand text-brand-foreground shadow-[inset_0_1px_0_rgb(255_255_255/0.45)]"
+          : "bg-secondary text-foreground group-hover/tile:bg-brand-soft",
+      )}
+      aria-hidden
+    >
+      <Icon className="size-[17px]" strokeWidth={1.9} />
+    </span>
+    <span className="w-full truncate text-[11.5px] leading-tight font-semibold group-data-[collapsible=icon]:sr-only">
       {label}
     </span>
     {badge}
@@ -290,13 +300,23 @@ const WorkspaceSection = () => {
                 to={to}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "flex items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] no-underline transition-colors",
+                  "group/link flex items-center gap-2.5 rounded-xl px-2 py-1.5 text-[13px] no-underline transition-colors",
                   isActive
-                    ? "bg-card font-medium text-foreground shadow-sm"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-foreground",
+                    ? "bg-card font-semibold text-foreground shadow-card"
+                    : "text-sidebar-foreground hover:bg-card/70 hover:text-foreground",
                 )}
               >
-                <Icon className="size-4" strokeWidth={1.75} aria-hidden />
+                <span
+                  className={cn(
+                    "flex size-7 items-center justify-center rounded-lg transition-colors",
+                    isActive
+                      ? "bg-brand-soft text-foreground"
+                      : "bg-sidebar-accent group-hover/link:bg-card",
+                  )}
+                  aria-hidden
+                >
+                  <Icon className="size-[15px]" strokeWidth={1.85} />
+                </span>
                 {label}
               </Link>
             </li>
@@ -391,7 +411,7 @@ const UserProfile = () => {
           render={
             <button
               type="button"
-              className="flex w-full items-center gap-2.5 rounded-xl border border-sidebar-border bg-sidebar-accent p-2 text-left transition-colors outline-none hover:bg-card focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0"
+              className="flex w-full items-center gap-2.5 rounded-2xl border border-sidebar-border/70 bg-card p-2.5 text-left shadow-card transition-shadow outline-none hover:shadow-raised focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:shadow-none"
               aria-label={translate("crm.sidebar.account", { _: "Account" })}
             />
           }

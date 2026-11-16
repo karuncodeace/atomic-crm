@@ -297,12 +297,21 @@ h3 {
 /* AxiCore 2.0 tile at the bottom of the CRM sidebar. Flat: the sidebar surface with a hairline top edge; the mark, 2.0 chip and arrow are flat fills
    with a hairline border; hover changes the fill only. Light and dark themes via the sidebar tokens. */
 .axc-tile {
-  background: var(--sidebar);
-  border-top: 1px solid var(--sidebar-border);
-  transition: background-color 0.15s ease;
+  background: var(--card);
+  border: 1px solid color-mix(in oklab, var(--sidebar-border) 70%, transparent);
+  border-radius: 1rem;
+  box-shadow: var(--elevation-card);
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.2s ease;
 }
 .axc-tile:hover {
-  background: var(--sidebar-accent);
+  box-shadow: var(--elevation-raised);
+}
+[data-collapsible="icon"] .axc-tile {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
 }
 .axc-mark {
   color: var(--sidebar-foreground);

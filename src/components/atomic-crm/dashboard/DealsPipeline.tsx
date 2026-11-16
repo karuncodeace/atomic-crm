@@ -67,7 +67,7 @@ export const DealsPipeline = () => {
           secondaryText={(deal) =>
             `${deal.amount.toLocaleString("en-US", {
               notation: "compact",
-              minimumSignificantDigits: 3,
+              maximumFractionDigits: 1,
             })} , ${findDealLabel(dealStages, deal.stage)}`
           }
           leftAvatar={(deal) => (

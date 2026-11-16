@@ -74,7 +74,7 @@ export const DealCardContent = ({
                 source="amount"
                 options={{
                   notation: "compact",
-                  minimumSignificantDigits: 3,
+                  maximumFractionDigits: 1,
                 }}
               />
             </p>
