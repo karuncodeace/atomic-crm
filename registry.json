@@ -336,6 +336,10 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/providers/fakerest/dataGenerator/callLogs.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/providers/commons/mergeContacts.ts",
           "type": "registry:component"
         },
@@ -744,6 +748,22 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/dashboard/useDashboardStats.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/exportTeamStats.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/dashboardStats.ts",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/dashboardLinks.ts",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/dashboard/Welcome.tsx",
           "type": "registry:component"
         },
@@ -752,7 +772,23 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/dashboard/TeamTable.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/dashboard/TasksList.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/StatusPanel.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/SchedulePanel.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/ScheduleLists.tsx",
           "type": "registry:component"
         },
         {
@@ -760,7 +796,23 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/dashboard/QuickStats.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/PersonAvatar.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/PerformancePanel.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/dashboard/MobileDashboard.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/LineChart.tsx",
           "type": "registry:component"
         },
         {
@@ -792,6 +844,14 @@
           "type": "registry:component"
         },
         {
+          "path": "src/components/atomic-crm/dashboard/DashboardHero.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/DashboardCard.tsx",
+          "type": "registry:component"
+        },
+        {
           "path": "src/components/atomic-crm/dashboard/DashboardActivityLog.tsx",
           "type": "registry:component"
         },
@@ -801,6 +861,10 @@
         },
         {
           "path": "src/components/atomic-crm/dashboard/ClientsCard.tsx",
+          "type": "registry:component"
+        },
+        {
+          "path": "src/components/atomic-crm/dashboard/CircularGauge.tsx",
           "type": "registry:component"
         },
         {
