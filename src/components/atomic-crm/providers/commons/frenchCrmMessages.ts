@@ -592,6 +592,18 @@ export const frenchCrmMessages = {
     },
     dashboard: {
       home: {
+        outcomes_total: "%{count} appels terminés",
+        open_follow_ups: "Ouvrir les relances",
+        callbacks_due_hint: "À faire aujourd'hui ou avant",
+        not_connected_hint: "Prospects à rappeler",
+        overdue_tasks_hint: "Date d'échéance dépassée",
+        brochures_hint: "En attente de votre validation",
+        open_brochures: "Valider les brochures",
+        needs_action_hint: "Ce qu'il faut traiter ensuite",
+        items_waiting: "en attente",
+        all_clear: "Rien à faire",
+        check_contacts: "Ouvrez chaque prospect pour les clore",
+        nothing_late: "Rien en retard",
         contacted_label: "Contactés",
         contacted_hint: "%{count} sur %{total} prospects après Nouveau",
         win_rate: "Taux de réussite",

@@ -585,6 +585,18 @@ export const englishCrmMessages = {
     },
     dashboard: {
       home: {
+        outcomes_total: "%{count} calls finished",
+        open_follow_ups: "Open follow-ups",
+        callbacks_due_hint: "Due today or earlier",
+        not_connected_hint: "Leads to try again",
+        overdue_tasks_hint: "Past their due date",
+        brochures_hint: "Waiting for your review",
+        open_brochures: "Review brochures",
+        needs_action_hint: "What to work on next",
+        items_waiting: "waiting",
+        all_clear: "All clear",
+        check_contacts: "Open each lead to close them",
+        nothing_late: "Nothing late",
         contacted_label: "Contacted",
         contacted_hint: "%{count} of %{total} leads past New",
         win_rate: "Win rate",

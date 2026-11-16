@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { DashboardCard, DashboardCardHeader } from "./DashboardCard";
 import type { DashboardStats, DayStats } from "./dashboardStats";
 import { percent } from "./useDashboardStats";
+import { TodayOutcomes } from "./TodayOutcomes";
 
 const PLOT_HEIGHT = 200;
 const TICKS = 4;
@@ -81,29 +82,6 @@ export const ActivityPanel = ({
       _: "Connected",
     }),
   };
-
-  const outcomes = [
-    {
-      key: "interested",
-      value: stats.outcomes_today.interested,
-      color: "var(--stage-interested)",
-    },
-    {
-      key: "callback",
-      value: stats.outcomes_today.callback,
-      color: "var(--stage-callback)",
-    },
-    {
-      key: "no_answer",
-      value: stats.outcomes_today.no_answer,
-      color: "var(--stage-not-answered)",
-    },
-    {
-      key: "not_interested",
-      value: stats.outcomes_today.not_interested,
-      color: "var(--stage-not-interested)",
-    },
-  ];
 
   return (
     <DashboardCard className="flex flex-col gap-6">
@@ -239,33 +217,7 @@ export const ActivityPanel = ({
         </div>
       )}
 
-      <div className="border-t border-border pt-4">
-        <p className="mb-3 text-xs font-medium text-muted-foreground">
-          {translate("crm.dashboard.home.outcomes_today", {
-            _: "Today's outcomes",
-          })}
-        </p>
-        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {outcomes.map(({ key, value, color }) => (
-            <li
-              key={key}
-              className="relative overflow-hidden rounded-lg bg-secondary/70 py-2 pr-3 pl-4"
-            >
-              <span
-                className="absolute inset-y-0 left-0 w-1"
-                style={{ background: color }}
-                aria-hidden
-              />
-              <span className="block truncate text-[11px] text-muted-foreground">
-                {translate(`resources.call_assignments.outcome.${key}`)}
-              </span>
-              <span className="text-lg leading-tight font-semibold text-foreground tabular-nums">
-                {value}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <TodayOutcomes outcomes={stats.outcomes_today} />
     </DashboardCard>
   );
 };

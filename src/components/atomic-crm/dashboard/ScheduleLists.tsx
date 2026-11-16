@@ -134,7 +134,13 @@ const ListState = ({
       </DashboardEmpty>
     );
   }
-  if (count === 0) return <DashboardEmpty>{empty}</DashboardEmpty>;
+  if (count === 0) {
+    return (
+      <div className="flex h-full min-h-48 items-center justify-center">
+        <DashboardEmpty>{empty}</DashboardEmpty>
+      </div>
+    );
+  }
   return <div className="flex flex-col gap-2">{children}</div>;
 };
 

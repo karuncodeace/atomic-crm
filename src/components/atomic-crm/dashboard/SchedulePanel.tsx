@@ -147,10 +147,10 @@ export const SchedulePanel = () => {
           </TabsTrigger>
         </TabsList>
         <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1 pb-1">
-          <TabsContent value="callbacks">
+          <TabsContent value="callbacks" className="h-full">
             <CallbacksList day={scheduleDay} />
           </TabsContent>
-          <TabsContent value="recent">
+          <TabsContent value="recent" className="h-full">
             <RecentConnectedList day={scheduleDay} />
           </TabsContent>
         </div>
