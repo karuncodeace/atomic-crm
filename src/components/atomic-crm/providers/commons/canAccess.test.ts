@@ -18,9 +18,9 @@ describe("canAccess", () => {
     }
   });
 
-  it("hides brochures from BDEs only", () => {
+  it("shows brochures to every role, BDEs included", () => {
     expect(canAccess("bde", { action: "list", resource: "brochures" })).toBe(
-      false,
+      true,
     );
     expect(
       canAccess("manager", { action: "list", resource: "brochures" }),

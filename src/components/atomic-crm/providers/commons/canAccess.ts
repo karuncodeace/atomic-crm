@@ -28,7 +28,7 @@ export const resolveRole = (sale: {
 };
 
 /**
- * Every role uses the same menus, except brochures, which BDEs never see.
+ * Every role uses the same menus (brochures included), except AxiCore.
  * Which rows each role sees is enforced by RLS, not here. Disabled users never
  * get a role from the auth provider, so they never reach canAccess.
  */
@@ -40,4 +40,4 @@ export const canAccess = <
 ) =>
   params.resource === "axicore"
     ? canUseAxiCore(role) // AxiCore 2.0: admins and managers
-    : !(role === "bde" && params.resource === "brochures");
+    : true;
