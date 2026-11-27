@@ -169,6 +169,13 @@ grant all on sequence public.call_assignments_id_seq to service_role;
 revoke all on table public.call_assignments from anon;
 revoke all on sequence public.call_assignments_id_seq from anon;
 
+grant all on table public.salestrail_sync_state to service_role;
+revoke all on table public.salestrail_sync_state from anon, authenticated;
+grant select on table public.call_recordings to authenticated;
+grant all on table public.call_recordings to service_role;
+grant all on sequence public.call_recordings_id_seq to service_role;
+revoke all on table public.call_recordings from anon;
+revoke all on sequence public.call_recordings_id_seq from anon, authenticated;
 grant select on table public.call_logs to authenticated;
 grant all on table public.call_logs to service_role;
 grant select on sequence public.call_logs_id_seq to authenticated;
@@ -188,6 +195,9 @@ grant all on function public.call_engine_settings() to authenticated;
 grant all on function public.call_engine_settings() to service_role;
 grant all on function public.add_working_days(date, integer) to authenticated;
 grant all on function public.add_working_days(date, integer) to service_role;
+-- Only the salestrail_sync edge function (service role) records SalesTrail calls
+revoke all on function public.record_salestrail_call(text, text, text, boolean, timestamp with time zone, integer) from public, anon, authenticated;
+grant all on function public.record_salestrail_call(text, text, text, boolean, timestamp with time zone, integer) to service_role;
 revoke all on function public.assign_daily_calls() from public, anon;
 grant all on function public.assign_daily_calls() to authenticated;
 grant all on function public.assign_daily_calls() to service_role;

@@ -92,8 +92,28 @@ const DealMiscInputs = () => {
         validate={required()}
       />
       <WebsitePackageInput />
+      <TextInput
+        source="meeting_link"
+        type="url"
+        placeholder="https://meet.google.com/..."
+        validate={isMeetingLink}
+        parse={(value: string) => value.trim() || null}
+        helperText={false}
+      />
     </div>
   );
+};
+
+/** Only http(s) links, so the saved value is always safe to open. */
+const isMeetingLink = (value?: string | null) => {
+  if (!value) return undefined;
+  try {
+    const { protocol } = new URL(value);
+    if (protocol === "https:" || protocol === "http:") return undefined;
+  } catch {
+    // not a URL: falls through to the error
+  }
+  return "resources.deals.errors.invalid_meeting_link";
 };
 
 /**

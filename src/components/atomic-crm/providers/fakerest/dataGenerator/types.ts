@@ -2,6 +2,7 @@ import type {
   Brochure,
   CallAssignment,
   CallLog,
+  CallRecording,
   Company,
   Contact,
   ContactNote,
@@ -27,5 +28,6 @@ export interface Db {
   brochures: Brochure[];
   call_assignments: CallAssignment[];
   call_logs: CallLog[];
+  call_recordings: CallRecording[];
   configuration: Array<{ id: number; config: ConfigurationContextValue }>;
 }

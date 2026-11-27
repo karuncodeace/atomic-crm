@@ -24,6 +24,7 @@ export default (): Db => {
   db.brochures = [];
   db.call_assignments = [];
   db.call_logs = generateCallLogs(db);
+  db.call_recordings = [];
   db.configuration = [
     {
       id: 1,

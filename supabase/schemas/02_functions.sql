@@ -130,3 +130,78 @@ begin
     return v_result;
 end;
 $$;
+
+CREATE OR REPLACE FUNCTION "public"."set_deal_updated_at"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    SET "search_path" TO ''
+    AS $$
+begin
+    -- Kanban reordering only shifts index: not a real change of the lead
+    if (to_jsonb(new) - 'index' - 'updated_at') is distinct from (to_jsonb(old) - 'index' - 'updated_at') then
+        new.updated_at = now();
+    end if;
+    return new;
+end;
+$$;
+
+CREATE OR REPLACE FUNCTION "public"."record_salestrail_call"("p_call_id" "text", "p_user_email" "text", "p_phone" "text", "p_is_inbound" boolean, "p_started_at" timestamp with time zone, "p_duration_seconds" integer) RETURNS bigint
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO ''
+    AS $$
+declare
+    v_digits text := right(regexp_replace(coalesce(p_phone, ''), '\D', '', 'g'), 10);
+    v_contact_id bigint;
+    v_sales_id bigint;
+    v_deal_id bigint;
+    v_id bigint;
+begin
+    -- Too short to identify a lead (service numbers, blank caller id)
+    if length(v_digits) < 10 then
+        return null;
+    end if;
+
+    -- Match on the last 10 digits, so "+91 98765 43210" and "09876543210" agree
+    select co.id into v_contact_id
+    from public.contacts co
+    where co.phone_e164 = p_phone
+       or right(regexp_replace(coalesce(co.phone_e164, ''), '\D', '', 'g'), 10) = v_digits
+       or exists (
+           select 1
+           from jsonb_array_elements(coalesce(co.phone_jsonb, '[]'::jsonb)) ph
+           where right(regexp_replace(coalesce(ph->>'number', ''), '\D', '', 'g'), 10) = v_digits
+       )
+    order by (co.phone_e164 = p_phone) desc nulls last, co.id desc
+    limit 1;
+
+    -- Not a lead (e.g. a personal call): never stored
+    if v_contact_id is null then
+        return null;
+    end if;
+
+    select s.id into v_sales_id
+    from public.sales s
+    where lower(s.email) = lower(p_user_email)
+       or lower(p_user_email) in (select lower(e) from jsonb_array_elements_text(s.secondary_emails) e)
+    order by s.disabled, s.id
+    limit 1;
+
+    select d.id into v_deal_id
+    from public.deals d
+    where v_contact_id = any (d.contact_ids)
+    order by (d.archived_at is null) desc, d.updated_at desc
+    limit 1;
+
+    insert into public.call_recordings (
+        salestrail_call_id, sales_id, contact_id, deal_id, phone_number,
+        is_inbound, started_at, duration_seconds
+    )
+    values (
+        p_call_id, v_sales_id, v_contact_id, v_deal_id, p_phone,
+        p_is_inbound, p_started_at, greatest(coalesce(p_duration_seconds, 0), 0)
+    )
+    on conflict (salestrail_call_id) do nothing
+    returning id into v_id;
+
+    return v_id;
+end;
+$$;

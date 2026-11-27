@@ -229,10 +229,15 @@ export const englishCrmMessages = {
         stage: "Stage",
         created_at: "Created",
         updated_at: "Last updated",
+        meeting_link: "Meeting link",
+      },
+      errors: {
+        invalid_meeting_link: "Enter a full link starting with https://",
       },
       action: {
         back: "Back to leads",
         back_to_deal: "Back to lead",
+        open_meeting: "Open meeting",
         create: "Create lead",
         new: "New Lead",
       },
@@ -273,6 +278,13 @@ export const englishCrmMessages = {
         add: "Add one",
         empty: "No pitch point yet.",
       },
+    },
+    call_recordings: {
+      name: "Call recording |||| Call recordings",
+      inbound: "Incoming call",
+      outbound: "Outgoing call",
+      pending: "Recording is being fetched from SalesTrail…",
+      unavailable: "Recording unavailable",
     },
     brochures: {
       name: "Brochure |||| Brochures",

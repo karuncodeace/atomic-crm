@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { Archive, ArchiveRestore, ArrowLeft } from "lucide-react";
+import { Archive, ArchiveRestore, ArrowLeft, Video } from "lucide-react";
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import {
@@ -36,6 +36,7 @@ import { NotesIterator } from "../notes/NotesIterator";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import type { Company, Deal } from "../types";
 import { ContactList } from "./ContactList";
+import { DealCallRecordings } from "./DealCallRecordings";
 import { findDealLabel } from "./dealUtils";
 
 /** Full page of a deal (lead), with its company details beside it. */
@@ -89,6 +90,7 @@ const DealShowContent = () => {
               )}
             </CardContent>
           </Card>
+          <DealCallRecordings dealId={record.id} />
           <Card>
             <CardContent>
               <DealSection
@@ -179,9 +181,28 @@ const DealDetails = ({ record }: { record: Deal }) => {
           {formatLocalizedDate(record.updated_at, locale)}
         </DealField>
       )}
+      <DealField label={translate("resources.deals.fields.meeting_link")}>
+        {isSafeLink(record.meeting_link) ? (
+          <a
+            href={record.meeting_link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-primary hover:underline"
+          >
+            <Video className="w-4 h-4" />
+            {translate("resources.deals.action.open_meeting")}
+          </a>
+        ) : (
+          "—"
+        )}
+      </DealField>
     </dl>
   );
 };
+
+/** Never render a javascript: (or other non-web) link saved by hand. */
+const isSafeLink = (value?: string | null): value is string =>
+  !!value && /^https?:\/\//i.test(value);
 
 const DealField = ({
   label,

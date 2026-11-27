@@ -275,6 +275,7 @@ const DesktopAdmin = (
       <Resource name="deal_notes" />
       <Resource name="call_assignments" list={MyCallsPage} />
       <Resource name="call_logs" />
+      <Resource name="call_recordings" />
       <Resource name="tasks" />
       <Resource name="sales" {...sales} />
       <Resource name="tags" />
@@ -360,6 +361,7 @@ const MobileAdmin = (
         <Resource name="brochures" {...brochures} />
         <Resource name="call_assignments" list={MyCallsPage} />
         <Resource name="call_logs" />
+        <Resource name="call_recordings" />
         <Resource name="tasks" />
       </Admin>
     </PersistQueryClientProvider>

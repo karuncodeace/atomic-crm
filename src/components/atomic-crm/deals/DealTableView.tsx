@@ -27,7 +27,7 @@ import { cn } from "@/lib/utils";
 import type { ComponentProps } from "react";
 
 import { Avatar } from "../contacts/Avatar";
-import { ConnectedDate } from "../misc/ConnectedDate";
+import { ShortDate } from "../misc/ShortDate";
 import { useConfigurationContext } from "../root/ConfigurationContext";
 import {
   COMPANY_CATEGORY_BADGE_CLASSES,
@@ -138,11 +138,13 @@ export const DealTableView = () => {
           </ReferenceField>
         </DataTable.Col>
         <DataTable.Col
-          source="last_connected_at"
-          label={translate("crm.common.connected_at", { _: "Connected" })}
+          source="updated_at"
+          label={translate("resources.deals.fields.updated_at", {
+            _: "Last updated",
+          })}
           className="hidden lg:table-cell whitespace-nowrap"
         >
-          <DealConnectedAtField />
+          <DealUpdatedAtField />
         </DataTable.Col>
         <DataTable.Col label={false} className="w-12" disableSort>
           <div onClick={(event) => event.stopPropagation()}>
@@ -425,11 +427,11 @@ const SaleNameField = () => {
   );
 };
 
-/** When the lead last answered a call, in place of the created date. */
-const DealConnectedAtField = () => {
+/** When the lead was last changed (stage, details, a call...). */
+const DealUpdatedAtField = () => {
   const record = useRecordContext<Deal>();
-  if (!record) return null;
-  return <ConnectedDate value={record.last_connected_at} />;
+  if (!record?.updated_at) return null;
+  return <ShortDate value={record.updated_at} />;
 };
 
 export const DealTableSkeleton = () => {

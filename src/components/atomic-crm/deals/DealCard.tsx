@@ -1,10 +1,12 @@
 import { Draggable } from "@hello-pangea/dnd";
+import { Clock } from "lucide-react";
 import { useRedirect, RecordContextProvider } from "ra-core";
 import { ReferenceField } from "@/components/admin/reference-field";
 import { NumberField } from "@/components/admin/number-field";
 import { Card, CardContent } from "@/components/ui/card";
 
 import { CompanyAvatar } from "../companies/CompanyAvatar";
+import { ShortDate } from "../misc/ShortDate";
 import type { Deal } from "../types";
 export const DealCard = ({ deal, index }: { deal: Deal; index: number }) => {
   if (!deal) return null;
@@ -69,7 +71,7 @@ export const DealCardContent = ({
                 <CompanyAvatar width={20} height={20} />
               </ReferenceField>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
               <NumberField
                 source="amount"
                 options={{
@@ -77,7 +79,13 @@ export const DealCardContent = ({
                   maximumFractionDigits: 1,
                 }}
               />
-            </p>
+              {deal.updated_at && (
+                <span className="inline-flex items-center gap-1">
+                  <Clock className="size-3" aria-hidden />
+                  <ShortDate value={deal.updated_at} className="text-xs" />
+                </span>
+              )}
+            </div>
           </CardContent>
         </Card>
       </RecordContextProvider>

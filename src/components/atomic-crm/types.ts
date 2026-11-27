@@ -65,6 +65,23 @@ export type CallLog = {
   created_at: string;
 } & Pick<RaRecord, "id">;
 
+export type CallRecordingStatus = "pending" | "stored" | "failed";
+
+/** An answered call recorded by SalesTrail, matched to a lead. */
+export type CallRecording = {
+  salestrail_call_id: string;
+  sales_id?: Identifier | null;
+  contact_id: Identifier;
+  deal_id?: Identifier | null;
+  phone_number: string;
+  is_inbound: boolean;
+  started_at: string;
+  duration_seconds: number;
+  status: CallRecordingStatus;
+  storage_path?: string | null;
+  created_at: string;
+} & Pick<RaRecord, "id">;
+
 export type AssignDailyCallsResult = {
   date: string;
   skipped: boolean;
@@ -227,6 +244,8 @@ export type Deal = {
   index: number;
   /** Last answered call on one of its contacts. */
   last_connected_at?: string | null;
+  /** Meeting link pasted after a meeting with the lead. */
+  meeting_link?: string | null;
 } & Pick<RaRecord, "id">;
 
 export type BrochureStatus = "pending" | "approved" | "not_approved";

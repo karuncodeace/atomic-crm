@@ -235,10 +235,16 @@ export const frenchCrmMessages = {
         stage: "Étape",
         created_at: "Créée le",
         updated_at: "Dernière mise à jour",
+        meeting_link: "Lien de la réunion",
+      },
+      errors: {
+        invalid_meeting_link:
+          "Saisissez un lien complet commençant par https://",
       },
       action: {
         back: "Retour aux leads",
         back_to_deal: "Retour au lead",
+        open_meeting: "Ouvrir la réunion",
         create: "Créer un lead",
         new: "Nouveau lead",
       },
@@ -279,6 +285,13 @@ export const frenchCrmMessages = {
         add: "En ajouter un",
         empty: "Pas encore d'argumentaire.",
       },
+    },
+    call_recordings: {
+      name: "Enregistrement d'appel |||| Enregistrements d'appels",
+      inbound: "Appel entrant",
+      outbound: "Appel sortant",
+      pending: "Récupération de l'enregistrement depuis SalesTrail…",
+      unavailable: "Enregistrement indisponible",
     },
     brochures: {
       name: "Brochure |||| Brochures",

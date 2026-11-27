@@ -18,6 +18,9 @@ alter table public.company_sectors enable row level security;
 alter table public.import_batches enable row level security;
 alter table public.call_assignments enable row level security;
 alter table public.call_logs enable row level security;
+alter table public.call_recordings enable row level security;
+-- No policies: service role only
+alter table public.salestrail_sync_state enable row level security;
 alter table public.brochures enable row level security;
 alter table public.user_invitations enable row level security;
 
@@ -84,6 +87,16 @@ create policy "Enable read for own or managers" on public.call_assignments
 create policy "Enable read for own or managers" on public.call_logs
     for select to authenticated
     using ((select public.crm_role()) = 'admin' or sales_id = (select public.current_sales_id()));
+
+-- Call recordings: admins, the BDE who made the call, and whoever can see the lead.
+-- Written only by the salestrail_sync edge function (service role).
+create policy "Enable read for own, lead owner or admins" on public.call_recordings
+    for select to authenticated
+    using (
+        (select public.crm_role()) = 'admin'
+        or sales_id = (select public.current_sales_id())
+        or exists (select 1 from public.deals d where d.id = call_recordings.deal_id)
+    );
 
 -- Brochures
 create policy "Enable read access for authenticated users" on public.brochures for select to authenticated using (public.crm_role() is not null);
