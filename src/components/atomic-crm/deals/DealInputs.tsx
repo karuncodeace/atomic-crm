@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ReferenceArrayInput } from "@/components/admin/reference-array-input";
 import { ReferenceInput } from "@/components/admin/reference-input";
 import { TextInput } from "@/components/admin/text-input";
+import { ArrayInput } from "@/components/admin/array-input";
+import { SimpleFormIterator } from "@/components/admin/simple-form-iterator";
 import { NumberInput } from "@/components/admin/number-input";
 import { SelectInput } from "@/components/admin/select-input";
 import { Separator } from "@/components/ui/separator";
@@ -41,7 +43,37 @@ const DealInfoInputs = () => {
     <div className="flex flex-col gap-4 flex-1">
       <TextInput source="name" validate={required()} helperText={false} />
       <TextInput source="description" multiline rows={3} helperText={false} />
+      <MeetingLinksInput />
     </div>
+  );
+};
+
+/** Any number of meeting (recording) links, each with an optional title. */
+const MeetingLinksInput = () => {
+  const translate = useTranslate();
+  return (
+    <ArrayInput source="meeting_links" helperText={false}>
+      <SimpleFormIterator inline disableReordering disableClear>
+        <TextInput
+          source="url"
+          type="url"
+          label={false}
+          placeholder="https://meet.google.com/..."
+          validate={[required(), isMeetingLink]}
+          parse={(value: string) => value.trim()}
+          helperText={false}
+          className="flex-2"
+        />
+        <TextInput
+          source="title"
+          label={false}
+          placeholder={translate("resources.deals.inputs.meeting_title")}
+          parse={(value: string) => value.trim()}
+          helperText={false}
+          className="flex-1"
+        />
+      </SimpleFormIterator>
+    </ArrayInput>
   );
 };
 
@@ -92,14 +124,6 @@ const DealMiscInputs = () => {
         validate={required()}
       />
       <WebsitePackageInput />
-      <TextInput
-        source="meeting_link"
-        type="url"
-        placeholder="https://meet.google.com/..."
-        validate={isMeetingLink}
-        parse={(value: string) => value.trim() || null}
-        helperText={false}
-      />
     </div>
   );
 };

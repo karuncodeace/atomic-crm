@@ -79,6 +79,7 @@ const DealShowContent = () => {
                   </ReferenceArrayField>
                 </DealSection>
               )}
+              <DealMeetingLinks record={record} />
               {record.description && (
                 <DealSection
                   title={translate("resources.deals.fields.description")}
@@ -181,22 +182,38 @@ const DealDetails = ({ record }: { record: Deal }) => {
           {formatLocalizedDate(record.updated_at, locale)}
         </DealField>
       )}
-      <DealField label={translate("resources.deals.fields.meeting_link")}>
-        {isSafeLink(record.meeting_link) ? (
-          <a
-            href={record.meeting_link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-primary hover:underline"
-          >
-            <Video className="w-4 h-4" />
-            {translate("resources.deals.action.open_meeting")}
-          </a>
-        ) : (
-          "—"
-        )}
-      </DealField>
     </dl>
+  );
+};
+
+/** The meeting (recording) links, newest last as they were added. */
+const DealMeetingLinks = ({ record }: { record: Deal }) => {
+  const translate = useTranslate();
+  const links = (record.meeting_links ?? []).filter((link) =>
+    isSafeLink(link?.url),
+  );
+  if (!links.length) return null;
+  return (
+    <DealSection title={translate("resources.deals.fields.meeting_links")}>
+      <ul className="flex flex-col gap-1.5">
+        {links.map((link, index) => (
+          <li key={`${link.url}-${index}`}>
+            <a
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+            >
+              <Video className="w-4 h-4 shrink-0" />
+              {link.title ||
+                translate("resources.deals.action.open_meeting_n", {
+                  n: index + 1,
+                })}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </DealSection>
   );
 };
 

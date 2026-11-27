@@ -235,7 +235,7 @@ export const frenchCrmMessages = {
         stage: "Étape",
         created_at: "Créée le",
         updated_at: "Dernière mise à jour",
-        meeting_link: "Lien de la réunion",
+        meeting_links: "Liens des réunions",
       },
       errors: {
         invalid_meeting_link:
@@ -244,7 +244,7 @@ export const frenchCrmMessages = {
       action: {
         back: "Retour aux leads",
         back_to_deal: "Retour au lead",
-        open_meeting: "Ouvrir la réunion",
+        open_meeting_n: "Réunion %{n}",
         create: "Créer un lead",
         new: "Nouveau lead",
       },
@@ -264,6 +264,7 @@ export const frenchCrmMessages = {
       },
       inputs: {
         linked_to: "Lié à",
+        meeting_title: "Titre (facultatif)",
       },
       unarchived: {
         action: "Renvoyer au tableau",

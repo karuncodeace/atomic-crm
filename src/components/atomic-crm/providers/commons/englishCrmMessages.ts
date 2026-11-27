@@ -229,7 +229,7 @@ export const englishCrmMessages = {
         stage: "Stage",
         created_at: "Created",
         updated_at: "Last updated",
-        meeting_link: "Meeting link",
+        meeting_links: "Meeting links",
       },
       errors: {
         invalid_meeting_link: "Enter a full link starting with https://",
@@ -237,7 +237,7 @@ export const englishCrmMessages = {
       action: {
         back: "Back to leads",
         back_to_deal: "Back to lead",
-        open_meeting: "Open meeting",
+        open_meeting_n: "Meeting %{n}",
         create: "Create lead",
         new: "New Lead",
       },
@@ -257,6 +257,7 @@ export const englishCrmMessages = {
       },
       inputs: {
         linked_to: "Linked to",
+        meeting_title: "Title (optional)",
       },
       unarchived: {
         action: "Send back to the board",

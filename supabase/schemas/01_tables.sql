@@ -110,8 +110,10 @@ create table public.deals (
     index smallint,
     -- Last answered call on one of its contacts, set from call_logs
     last_connected_at timestamp with time zone,
-    -- Meeting link pasted by the BDE / manager / admin after a meeting
-    meeting_link text
+    -- Meeting (recording) links pasted by the BDE / manager / admin after
+    -- meetings: [{"url": "https://...", "title": "Demo call"}]
+    meeting_links jsonb not null default '[]'::jsonb,
+    constraint deals_meeting_links_is_array check (jsonb_typeof(meeting_links) = 'array')
 );
 
 create table public.deal_notes (

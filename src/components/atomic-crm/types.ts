@@ -228,6 +228,11 @@ export type ContactNote = {
   attachments?: AttachmentNote[];
 } & Pick<RaRecord, "id">;
 
+export type MeetingLink = {
+  url: string;
+  title?: string | null;
+};
+
 export type Deal = {
   name: string;
   company_id: Identifier;
@@ -244,8 +249,8 @@ export type Deal = {
   index: number;
   /** Last answered call on one of its contacts. */
   last_connected_at?: string | null;
-  /** Meeting link pasted after a meeting with the lead. */
-  meeting_link?: string | null;
+  /** Meeting (recording) links pasted after meetings with the lead. */
+  meeting_links?: MeetingLink[];
 } & Pick<RaRecord, "id">;
 
 export type BrochureStatus = "pending" | "approved" | "not_approved";
