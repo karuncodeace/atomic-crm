@@ -225,7 +225,7 @@ create table public.call_recordings (
     created_at timestamp with time zone not null default now(),
     salestrail_call_id text not null,
     sales_id bigint,
-    contact_id bigint not null,
+    contact_id bigint,
     deal_id bigint,
     phone_number text not null,
     is_inbound boolean not null default false,

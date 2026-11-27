@@ -71,7 +71,7 @@ export type CallRecordingStatus = "pending" | "stored" | "failed";
 export type CallRecording = {
   salestrail_call_id: string;
   sales_id?: Identifier | null;
-  contact_id: Identifier;
+  contact_id?: Identifier | null;
   deal_id?: Identifier | null;
   phone_number: string;
   is_inbound: boolean;

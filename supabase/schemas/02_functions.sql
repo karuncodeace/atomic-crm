@@ -151,6 +151,7 @@ CREATE OR REPLACE FUNCTION "public"."record_salestrail_call"("p_call_id" "text",
 declare
     v_digits text := right(regexp_replace(coalesce(p_phone, ''), '\D', '', 'g'), 10);
     v_contact_id bigint;
+    v_company_id bigint;
     v_sales_id bigint;
     v_deal_id bigint;
     v_id bigint;
@@ -160,11 +161,12 @@ begin
         return null;
     end if;
 
-    -- Match on the last 10 digits, so "+91 98765 43210" and "09876543210" agree
-    select co.id into v_contact_id
+    -- Match on the last 10 digits, so "+91 98765 43210" and "09876543210"
+    -- agree: first the contact's phones, then the company's.
+    select co.id, co.company_id into v_contact_id, v_company_id
     from public.contacts co
-    where co.phone_e164 = p_phone
-       or right(regexp_replace(coalesce(co.phone_e164, ''), '\D', '', 'g'), 10) = v_digits
+    where right(regexp_replace(coalesce(co.phone_e164, ''), '\D', '', 'g'), 10) = v_digits
+       or right(regexp_replace(coalesce(co.whatsapp_number, ''), '\D', '', 'g'), 10) = v_digits
        or exists (
            select 1
            from jsonb_array_elements(coalesce(co.phone_jsonb, '[]'::jsonb)) ph
@@ -173,8 +175,35 @@ begin
     order by (co.phone_e164 = p_phone) desc nulls last, co.id desc
     limit 1;
 
-    -- Not a lead (e.g. a personal call): never stored
     if v_contact_id is null then
+        select c.id into v_company_id
+        from public.companies c
+        where right(regexp_replace(coalesce(c.phone_number, ''), '\D', '', 'g'), 10) = v_digits
+           or right(regexp_replace(coalesce(c.whatsapp_number, ''), '\D', '', 'g'), 10) = v_digits
+        order by c.id desc
+        limit 1;
+
+        if v_company_id is not null then
+            select co.id into v_contact_id
+            from public.contacts co
+            where co.company_id = v_company_id
+            order by co.is_primary desc, co.id
+            limit 1;
+        end if;
+    end if;
+
+    -- The lead: one listing the contact, else one of its company; open first
+    select d.id into v_deal_id
+    from public.deals d
+    where (v_contact_id is not null and v_contact_id = any (d.contact_ids))
+       or (v_company_id is not null and d.company_id = v_company_id)
+    order by (v_contact_id is not null and v_contact_id = any (d.contact_ids)) desc,
+             (d.archived_at is null) desc,
+             d.updated_at desc
+    limit 1;
+
+    -- Not a lead (e.g. a personal call): never stored
+    if v_contact_id is null and v_deal_id is null then
         return null;
     end if;
 
@@ -183,12 +212,6 @@ begin
     where lower(s.email) = lower(p_user_email)
        or lower(p_user_email) in (select lower(e) from jsonb_array_elements_text(s.secondary_emails) e)
     order by s.disabled, s.id
-    limit 1;
-
-    select d.id into v_deal_id
-    from public.deals d
-    where v_contact_id = any (d.contact_ids)
-    order by (d.archived_at is null) desc, d.updated_at desc
     limit 1;
 
     insert into public.call_recordings (

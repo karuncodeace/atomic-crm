@@ -51,6 +51,28 @@ describe("copyRecording", () => {
     );
   });
 
+  it("stores a recording SalesTrail serves as octet-stream as audio", async () => {
+    const deps = buildDeps({
+      download: async () =>
+        new Response(new Uint8Array([0x49, 0x44, 0x33, 4, 0]), {
+          status: 200,
+          headers: { "content-type": "application/octet-stream" },
+        }),
+    });
+
+    const update = await copyRecording(row, deps);
+
+    expect(update).toMatchObject({
+      status: "stored",
+      storage_path: "12121212-2323-3434-4545-123412341234.mp3",
+    });
+    expect(deps.upload).toHaveBeenCalledWith(
+      "12121212-2323-3434-4545-123412341234.mp3",
+      expect.any(ArrayBuffer),
+      "audio/mpeg",
+    );
+  });
+
   it("keeps waiting while the phone has not uploaded the recording yet", async () => {
     const update = await copyRecording(
       row,

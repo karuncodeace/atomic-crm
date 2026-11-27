@@ -93,3 +93,37 @@ const EXTENSIONS: Record<string, string> = {
 /** File extension for a recording, from its content type (mp3 by default). */
 export const recordingExtension = (contentType: string | null): string =>
   EXTENSIONS[(contentType ?? "").split(";")[0].trim().toLowerCase()] ?? "mp3";
+
+const startsWith = (bytes: Uint8Array, signature: string, offset = 0) =>
+  [...signature].every(
+    (char, index) => bytes[offset + index] === char.charCodeAt(0),
+  );
+
+/**
+ * The audio type of a recording. SalesTrail's file storage serves recordings
+ * as application/octet-stream, which the bucket refuses, so the type is read
+ * from the file's first bytes when the header is not an audio type.
+ */
+export const audioContentType = (
+  headerType: string | null,
+  bytes: Uint8Array,
+): string => {
+  const declared = (headerType ?? "").split(";")[0].trim().toLowerCase();
+  if (declared.startsWith("audio/")) return declared;
+
+  if (startsWith(bytes, "ftyp", 4)) {
+    return startsWith(bytes, "3gp", 8) ? "audio/3gpp" : "audio/mp4";
+  }
+  if (startsWith(bytes, "RIFF") && startsWith(bytes, "WAVE", 8)) {
+    return "audio/wav";
+  }
+  if (startsWith(bytes, "OggS")) return "audio/ogg";
+  if (startsWith(bytes, "#!AMR")) return "audio/amr";
+  if (bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf) {
+    return "audio/webm";
+  }
+  // ADTS AAC: 0xFFF1 / 0xFFF9 (checked before the wider MP3 frame sync)
+  if (bytes[0] === 0xff && (bytes[1] & 0xf6) === 0xf0) return "audio/aac";
+  // ID3 tag, or an MP3 frame sync, and the fallback
+  return "audio/mpeg";
+};

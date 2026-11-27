@@ -1,4 +1,4 @@
-import { recordingExtension } from "./salestrailCalls.ts";
+import { audioContentType, recordingExtension } from "./salestrailCalls.ts";
 
 /** A recording still missing this long after the call is given up on. */
 export const RECORDING_GIVE_UP_MS = 24 * 60 * 60 * 1000;
@@ -80,9 +80,13 @@ export const copyRecording = async (
         deps.now(),
       );
     }
-    const contentType = audio.headers.get("content-type") ?? "audio/mpeg";
+    const body = await audio.arrayBuffer();
+    const contentType = audioContentType(
+      audio.headers.get("content-type"),
+      new Uint8Array(body, 0, Math.min(body.byteLength, 16)),
+    );
     const path = `${row.salestrail_call_id}.${recordingExtension(contentType)}`;
-    await deps.upload(path, await audio.arrayBuffer(), contentType);
+    await deps.upload(path, body, contentType);
     return { status: "stored", storage_path: path, attempts, last_error: null };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

@@ -1,6 +1,10 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { parseSalestrailCalls, recordingExtension } from "./salestrailCalls";
+import {
+  audioContentType,
+  parseSalestrailCalls,
+  recordingExtension,
+} from "./salestrailCalls";
 
 const answeredCall = {
   userId: "11111111-user-id22-3333-444444444444",
@@ -74,5 +78,40 @@ describe("recordingExtension", () => {
     expect(recordingExtension("audio/mp4")).toBe("m4a");
     expect(recordingExtension("audio/mpeg; charset=binary")).toBe("mp3");
     expect(recordingExtension(null)).toBe("mp3");
+  });
+});
+
+const bytesOf = (...parts: Array<string | number>) =>
+  new Uint8Array(
+    parts.flatMap((part) =>
+      typeof part === "number" ? [part] : [...part].map((c) => c.charCodeAt(0)),
+    ),
+  );
+
+describe("audioContentType", () => {
+  it("keeps a declared audio type", () => {
+    expect(audioContentType("audio/mp4", bytesOf("ID3"))).toBe("audio/mp4");
+  });
+
+  it("reads the real type of a recording served as octet-stream", () => {
+    const octet = "application/octet-stream";
+    expect(audioContentType(octet, bytesOf(0, 0, 0, 32, "ftypM4A "))).toBe(
+      "audio/mp4",
+    );
+    expect(audioContentType(octet, bytesOf(0, 0, 0, 32, "ftyp3gp4"))).toBe(
+      "audio/3gpp",
+    );
+    expect(audioContentType(octet, bytesOf("RIFF", 0, 0, 0, 0, "WAVE"))).toBe(
+      "audio/wav",
+    );
+    expect(audioContentType(octet, bytesOf("OggS"))).toBe("audio/ogg");
+    expect(audioContentType(octet, bytesOf("#!AMR"))).toBe("audio/amr");
+    expect(audioContentType(octet, bytesOf(0xff, 0xf1))).toBe("audio/aac");
+    expect(audioContentType(octet, bytesOf("ID3"))).toBe("audio/mpeg");
+    expect(audioContentType(octet, bytesOf(0xff, 0xfb))).toBe("audio/mpeg");
+  });
+
+  it("falls back to mp3 for an unknown file without a type", () => {
+    expect(audioContentType(null, bytesOf("????"))).toBe("audio/mpeg");
   });
 });
